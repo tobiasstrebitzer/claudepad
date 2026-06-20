@@ -66,6 +66,19 @@ The backend, when it returns, is an **optional, opt-in addon defined by an open 
 | D-32 | **v1 ships the clean seam, not the store.** The static bundle defines the `StoreProvider` interface and a default **`NoStoreProvider`** (everything stays client-side); **no provider implementation and no `claudepad.io/store` URL or store-specific code** ship in v1. | v1 has zero store dependency and can launch without it, while the integration point exists so the addon drops in later without re-architecture. |
 | D-33 | **No `claudepad.io/store`-specific code or mentions in the v1 client.** The store URL is runtime/build config with default empty; the core is store-agnostic. | The store must remain a swappable spec implementation, never hardwired. |
 
+### P0 implementation decisions (made while scaffolding the monorepo, 2026-06-20)
+
+These record where the **as-built** stack deviates from the intended-stack sketch in `_context.md` §3 / the PRDs. None change product behavior; each was the lower-risk path against the current (mid-2026) ecosystem.
+
+| # | Decision | Why |
+|---|----------|-----|
+| D-34 | **Tailwind v4 (CSS-first `@theme`)** instead of the v3-style `tailwind.config.ts` PRD-01 §6.2 sketched. Semantic tokens map to utilities in `globals.css`; `tokens.css` stays the single hex source. | v4 is the current major and its CSS-variable-first model is a *closer* fit to PRD-01's "CSS-variable token system" (FR-1/FR-2) than a JS config. Theme swap is still a pure `data-theme` flip (FR-3). |
+| D-35 | **React 18 retained** (per `_context.md` §3) even though React 19 is current; toolchain otherwise current: **Vite 8, @vitejs/plugin-react 6, Vitest 4** (single Vite across app + tests). | Honors the PRD's React-18 call; Vitest 2 (which bundles Vite 5) clashed with Vite 8 + plugin-react 6, so the runner was aligned up to Vitest 4 to keep one Vite. |
+| D-36 | **shadcn primitives hand-composed in-repo** on Base UI (`@base-ui-components/react`) with `cva` + token Tailwind, rather than run through the shadcn CLI. | This *is* the shadcn ownership model (components live in `src/components/ui/`, editable in-repo — PRD-01 §6.3); the CLI needs interactive/registry setup that doesn't cleanly target Base UI rc + Tailwind v4. |
+| D-37 | **Fonts self-hosted via `@fontsource`** (Newsreader/Inter/JetBrains Mono), bundled by Vite. | Satisfies FR-7 "self-hosted, no third-party font CDN at runtime / no-phone-home" without hand-managing woff2 files; resolves Q-B's leaning. |
+| D-38 | **Accent contrast: keep the exact clay `--accent` (#CC785C); hold text-on-accent to AA-large 3:1**, used only for large/bold button labels. `--warn` darkened #C28A3A→#B87F30 to clear 3:1 on canvas. | White-on-clay is 3.28:1 (< 4.5 small-text AA) but ≥ 3:1 (AA-large); the approved warm-clay look is preserved and the one relaxation is documented + enforced by `scripts/check-contrast.mjs` (FR-21). |
+| D-39 | **As-built package layout:** `@claudepad/schema` (parser, PRD-02), `@claudepad/shared` (crypto core, PRD-05 §6.10), `@claudepad/client` (PRD-01). No `cli` package yet (lands with PRD-04). | Crypto lives in `shared` per PRD-05 §6.1; the schema parser is its own zero-dep leaf per PRD-02 FR-29. |
+
 ## Open questions (carry into PRDs)
 
 Resolved during the consolidation pass: **Q-2→D-13, Q-3→D-14/D-16, Q-4→D-19, Q-6→D-15.** Still open:

@@ -1,0 +1,9 @@
+{
+  "version": "2.1.160",
+  "expectedEventCount": 14,
+  "kindHistogram": {
+    "meta": 12,
+    "user": 1,
+    "assistant": 1
+  }
+}

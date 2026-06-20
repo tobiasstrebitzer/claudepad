@@ -1,0 +1,66 @@
+/*
+ * claudepad design tokens — the SINGLE source of color truth (PRD-01 §7.1, FR-1/FR-6).
+ * This is the ONLY file permitted to contain raw color hex (enforced by
+ * scripts/check-no-raw-hex.mjs). Light is canonical; dark is a warm-dark token swap.
+ * Components consume the semantic names via Tailwind utilities (see globals.css @theme),
+ * never these raw values directly.
+ */
+
+:root,
+[data-theme='light'] {
+  /* Surfaces */
+  --bg: #fafaf7; /* app canvas — paige / warm off-white */
+  --surface: #ffffff; /* cards, panels */
+  --sidebar: #f3f2ee; /* sidebar / secondary surfaces */
+  --border: #e8e6df; /* 1px hairline borders */
+
+  /* Text */
+  --text: #1f1e1d; /* primary text — warm near-black */
+  --text-muted: #6b6862; /* secondary text */
+
+  /* Accent — the clay/terracotta "spark" */
+  --accent: #cc785c;
+  --accent-hover: #b5634a;
+  --accent-tint: rgba(204, 120, 92, 0.1); /* active rows / soft hover bg */
+  --accent-fg: #ffffff; /* text/icon on accent fill */
+
+  /* Status (low-saturation, warm) */
+  --success: #5e8c6a;
+  --warn: #b87f30; /* amber, darkened from #c28a3a to clear 3:1 on canvas (FR-21) */
+  --danger: #c25b4e;
+
+  /* Focus ring (accent-derived) */
+  --ring: #cc785c;
+
+  /* Elevation (hairline-favored; shadows rare) */
+  --shadow-sm: 0 1px 2px rgba(31, 30, 29, 0.05);
+  --shadow-md: 0 4px 16px rgba(31, 30, 29, 0.08);
+}
+
+[data-theme='dark'] {
+  /* Surfaces — warm dark, never #000 */
+  --bg: #1a1917;
+  --surface: #222120;
+  --sidebar: #1f1e1c;
+  --border: #33312e;
+
+  /* Text */
+  --text: #eceae4;
+  --text-muted: #a6a29a;
+
+  /* Accent — lifted for contrast on dark, hue preserved */
+  --accent: #d98e73;
+  --accent-hover: #c57a60;
+  --accent-tint: rgba(217, 142, 115, 0.14);
+  --accent-fg: #1a1917;
+
+  /* Status */
+  --success: #7fa98a;
+  --warn: #d8a85a;
+  --danger: #db776a;
+
+  --ring: #d98e73;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.5);
+}

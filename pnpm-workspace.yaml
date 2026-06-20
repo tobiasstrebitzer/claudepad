@@ -1,0 +1,6 @@
+packages:
+  - 'packages/*'
+
+# esbuild ships a platform binary via its install script; Vite + Vitest need it.
+allowBuilds:
+  esbuild: true

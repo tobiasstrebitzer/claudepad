@@ -1,0 +1,31 @@
+/*
+ * Self-hosted fonts (PRD-01 FR-7): bundled via @fontsource — NO third-party /
+ * Google Fonts CDN at runtime (no-phone-home posture). Serif is display-only;
+ * sans is UI/body; mono is code + secret placeholders.
+ *
+ * @fontsource ships woff2 + @font-face; these imports are bundled by Vite.
+ * Robust system fallbacks are declared in tokens below so the UI renders
+ * correctly even before/without the webfonts.
+ */
+
+/* Newsreader — serif display ("Afternoon, Toby" energy). Q-B leaning. */
+@import '@fontsource/newsreader/400.css';
+@import '@fontsource/newsreader/500.css';
+@import '@fontsource/newsreader/600.css';
+
+/* Inter — UI/body sans. */
+@import '@fontsource/inter/400.css';
+@import '@fontsource/inter/500.css';
+@import '@fontsource/inter/600.css';
+
+/* JetBrains Mono — code + placeholders. */
+@import '@fontsource/jetbrains-mono/400.css';
+@import '@fontsource/jetbrains-mono/500.css';
+
+:root {
+  --cp-font-serif: 'Newsreader', 'Source Serif 4', Georgia, 'Times New Roman', serif;
+  --cp-font-sans:
+    'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --cp-font-mono:
+    'JetBrains Mono', ui-monospace, 'SF Mono', 'Cascadia Code', Menlo, Consolas, monospace;
+}

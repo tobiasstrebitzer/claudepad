@@ -1,0 +1,12 @@
+{
+  "version": "2.1.183",
+  "expectedEventCount": 23,
+  "kindHistogram": {
+    "user": 1,
+    "meta": 14,
+    "thinking": 3,
+    "tool_use": 2,
+    "tool_result": 2,
+    "assistant": 1
+  }
+}
