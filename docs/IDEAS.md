@@ -10,6 +10,31 @@ shipped or dropped.
 
 ---
 
+## ▶ Next session scope · _logged 2026-06-21_
+
+Pick up here next session.
+
+**1. Ingest / share-entry improvements (do first):**
+- **Rename the blob extension `.cpblob` → `.cpad`** everywhere (ShareDialog
+  download `claudepad-share-<name>.cpad`, ReceiveDialog `accept`, any docs/PRD
+  references). The `cp-blob-` *string* prefix can stay; this is just the file
+  extension.
+- **Accept encrypted blobs on the home drop/paste surface**, not just `.jsonl`.
+  Dropping/pasting a `cp-blob-…` (or `.cpad` file) should route into the
+  receive→decrypt flow instead of the JSONL parser. Detect by the `cp-blob-`
+  prefix (see `client/src/ingest/useSession.ts` + `@claudepad/ingest` `classify`,
+  and `client/src/share/ReceiveDialog.tsx`/`blob.ts`).
+- **Unified top-bar Open button → file picker** that accepts both `.jsonl` and
+  `.cpad`, dispatching to parse vs. decrypt by content. (Sidebar brand-nav
+  `FolderOpen` button + the Overview "Open encrypted…" action could converge.)
+- **Sidebar UI/UX pass** — general polish (no specific defects logged yet;
+  review spacing, the connect/identity footer, and the collapsed-rail state).
+
+**2. Then P4 (Playback, PRD-08):** timeline scrubber, speed control,
+presentation-mode auto-pacing — pure client-side. See `ROADMAP.md` §4.
+
+---
+
 ## Go-to-market / launch
 
 ### Fast-paced "Show HN" launch path · _logged 2026-06-20_
