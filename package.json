@@ -1,6 +1,6 @@
 {
   "name": "claudepad",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "private": true,
   "description": "Turn a raw Claude Code session into a clean, shareable, end-to-end-encrypted artifact — entirely client-side.",
   "license": "MIT",
