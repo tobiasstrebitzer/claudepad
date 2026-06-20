@@ -89,7 +89,7 @@ export function AppShell({
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto">{children}</main>
+        <main className="min-h-0 flex-1 overflow-y-auto">{children}</main>
       </div>
     </div>
   );

@@ -10,7 +10,9 @@ test.describe('app shell — desktop (1280px)', () => {
     await page.goto('/#/');
     await expect(page.getByRole('navigation', { name: 'Sessions' })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Open menu' })).toBeHidden();
-    await expect(page.getByRole('heading', { name: /Welcome back/ })).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: /Drop a session to begin/ }),
+    ).toBeVisible();
   });
 
   test('theme toggle flips <html data-theme>', async ({ page }) => {

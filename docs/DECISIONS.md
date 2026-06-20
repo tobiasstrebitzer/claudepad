@@ -79,6 +79,16 @@ These record where the **as-built** stack deviates from the intended-stack sketc
 | D-38 | **Accent contrast: keep the exact clay `--accent` (#CC785C); hold text-on-accent to AA-large 3:1**, used only for large/bold button labels. `--warn` darkened #C28A3A→#B87F30 to clear 3:1 on canvas. | White-on-clay is 3.28:1 (< 4.5 small-text AA) but ≥ 3:1 (AA-large); the approved warm-clay look is preserved and the one relaxation is documented + enforced by `scripts/check-contrast.mjs` (FR-21). |
 | D-39 | **As-built package layout:** `@claudepad/schema` (parser, PRD-02), `@claudepad/shared` (crypto core, PRD-05 §6.10), `@claudepad/client` (PRD-01). No `cli` package yet (lands with PRD-04). | Crypto lives in `shared` per PRD-05 §6.1; the schema parser is its own zero-dep leaf per PRD-02 FR-29. |
 
+### P1 implementation decisions (MVP-0: viewer + ingest, 2026-06-20)
+
+| # | Decision | Why |
+|---|----------|-----|
+| D-40 | **The SessionViewer (PRD-03) lives inside `@claudepad/client`** (`src/viewer/**`), not a standalone `packages/viewer`. | It composes the client's PRD-01 design tokens/primitives; a separate package would invert the dependency (client→viewer) and duplicate the token layer. Turn components stay pure (event + flags) so PRD-08 playback can still wrap them. |
+| D-41 | **`@claudepad/ingest`** holds the pure, isomorphic ingest helpers (shape `classify`, OS onboarding paths, size caps); the React surfaces (drop/paste/onboarding/banner) live in the client. | Matches PRD-04 §6.1 — the pure helpers are unit-testable and reused by the CLI later; only the browser wiring is client-specific. |
+| D-42 | **Provisional secret-placeholder token** = `⟦cp-secret:<id>:<TYPE>:<len>⟧`, carrying only id/type/len (never any substring/hash of the value). The viewer renders it as `[<TYPE> ••••••••(len)]`. | PRD-06 isn't built; PRD-03 only renders placeholders. This is the documented contract PRD-06 must emit (or update here deliberately). react-markdown can't override text nodes, so chips are injected via a rehype transform that runs **after** sanitize. |
+| D-43 | **Shiki via the fine-grained core** (`shiki/core` + `@shikijs/langs/*` explicit grammar imports) with the **pure-JS regex engine** (no oniguruma wasm), single `github-light` theme, curated ~13-lang subset. | Resolves PRD-03 Q-3: the default full `shiki` bundle emitted 100+ unused grammar chunks + a 622 KB wasm; the fine-grained core cuts that to ~13 lazy lang chunks and removes the wasm, keeping the auditable single-bundle/offline posture. A dark code theme is a follow-up. |
+| D-44 | **No persisted session history in v1** (FR-18): the sidebar "recent" list is illustrative until an opt-in local cache lands (PRD-04 OQ-D). Sharing is surfaced-but-disabled (P3). | Local-only by default; nothing is written to storage beyond the theme preference. |
+
 ## Open questions (carry into PRDs)
 
 Resolved during the consolidation pass: **Q-2→D-13, Q-3→D-14/D-16, Q-4→D-19, Q-6→D-15.** Still open:

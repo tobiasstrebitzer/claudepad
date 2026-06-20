@@ -1,9 +1,7 @@
 import * as React from 'react';
 import { AppShell } from './components/shell/AppShell';
-import { Button } from './components/ui/button';
-import { Share2 } from 'lucide-react';
-import { Home } from './pages/Home';
 import { Gallery } from './pages/Gallery';
+import { SessionExperience } from './ingest';
 import type { RecentItem } from './components/shell/Sidebar';
 
 // Minimal hash router (PRD-01 §6.1: lightweight, single static bundle — works when
@@ -18,40 +16,28 @@ function useHashRoute(): string {
   return hash;
 }
 
-const RECENT: RecentItem[] = [
-  { id: 'a', title: 'Fix Google OAuth redirect URI configuration' },
-  { id: 'b', title: 'Scaffold the claudepad monorepo' },
-  { id: 'c', title: 'Tolerant JSONL parser design' },
-  { id: 'd', title: 'Encrypt-to-recipient sealed box' },
-];
+// No persisted history in v1 (FR-18) — the sidebar's recent list is illustrative
+// until an opt-in local cache lands (PRD-04 OQ-D).
+const RECENT: RecentItem[] = [];
 
 export function App() {
   const route = useHashRoute();
-  const [activeId, setActiveId] = React.useState<string | undefined>('a');
-
   const isGallery = route.startsWith('#/gallery');
+
+  // Reflect the focused turn in the URL as a non-secret query param, without
+  // polluting history (PRD-03 FR-17). Lives outside the hash so routing is intact.
+  const onAnchorChange = React.useCallback((id: string) => {
+    const url = `${window.location.pathname}?msg=${encodeURIComponent(id)}${window.location.hash}`;
+    window.history.replaceState(null, '', url);
+  }, []);
 
   return (
     <AppShell
       route={route}
       recent={RECENT}
-      activeId={isGallery ? undefined : activeId}
-      onSelect={setActiveId}
-      title={
-        isGallery
-          ? 'Design system · Gallery'
-          : 'Fix Google OAuth redirect URI configuration'
-      }
-      actions={
-        !isGallery && (
-          <Button size="sm" variant="primary">
-            <Share2 />
-            Share
-          </Button>
-        )
-      }
+      title={isGallery ? 'Design system · Gallery' : undefined}
     >
-      {isGallery ? <Gallery /> : <Home />}
+      {isGallery ? <Gallery /> : <SessionExperience onAnchorChange={onAnchorChange} />}
     </AppShell>
   );
 }
