@@ -3,7 +3,7 @@
  *
  * NOTE on the stack (DECISIONS deviation): _context.md §3 sketched a v3-style
  * `tailwind.config.ts`. We use Tailwind v4's CSS-first `@theme`, which maps
- * semantic tokens to utilities directly in CSS — a closer fit to PRD-01's
+ * semantic tokens to utilities directly in CSS - a closer fit to PRD-01's
  * "CSS-variable token system" mandate. Components reference semantic utility
  * names (bg-bg, text-text, …), never raw hex (FR-2/FR-6).
  */
@@ -39,7 +39,7 @@
   --font-serif: var(--cp-font-serif);
   --font-mono: var(--cp-font-mono);
 
-  /* Type scale (FR-8, §7.2) — size + line-height */
+  /* Type scale (FR-8, §7.2) - size + line-height */
   --text-display-xl: 2.5rem;
   --text-display-xl--line-height: 3rem;
   --text-display-lg: 2rem;
@@ -119,5 +119,20 @@
       transition-duration: 0.001ms !important;
       scroll-behavior: auto !important;
     }
+  }
+
+  /* Shiki dual-theme code (highlighter.ts emits `--shiki-light`/`--shiki-dark`
+     per token, no inline color/background). Pick the palette off the same
+     `data-theme` the design tokens swap on; the block's themed background
+     (bg-sidebar) shows through the transparent <pre>. */
+  .cp-shiki pre,
+  .cp-shiki code,
+  .cp-shiki span {
+    color: var(--shiki-light);
+  }
+  [data-theme='dark'] .cp-shiki pre,
+  [data-theme='dark'] .cp-shiki code,
+  [data-theme='dark'] .cp-shiki span {
+    color: var(--shiki-dark);
   }
 }

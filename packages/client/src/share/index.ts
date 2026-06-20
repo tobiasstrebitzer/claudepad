@@ -3,6 +3,7 @@
 // orchestration + UI.
 
 export { createShare, openShare, type OpenShareResult } from './blob';
+export { isShareBlob, CP_BLOB_PREFIX } from './detect';
 export { ShareButton } from './ShareButton';
 export { ShareDialog } from './ShareDialog';
 export { ReceiveDialog } from './ReceiveDialog';

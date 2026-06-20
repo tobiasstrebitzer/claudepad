@@ -8,13 +8,18 @@ import { SessionExperience, useSession, sessionTopBar } from './ingest';
 import { RevealProvider, ExpandProvider, demoSecretMap } from './viewer';
 import { IdentityProvider } from './identity';
 import { ReceiveDialog, type OpenShareResult } from './share';
+import { PlaybackProvider, TransportBar } from './playback';
 import { useVault, readSessionFile, type VaultSession } from './fs';
 import type { SecretMap } from './viewer';
 import type { RecentItem } from './components/shell/Sidebar';
 import { Button } from './components/ui/button';
-import { Inbox } from 'lucide-react';
+import { FolderOpen } from 'lucide-react';
 
-// Minimal hash router (PRD-01 §6.1: lightweight, single static bundle — works when
+// Both a raw `.jsonl` session and an encrypted `.cpad` share enter through the
+// same picker; the content (not the extension) decides parse vs. decrypt.
+const OPEN_ACCEPT = '.jsonl,.json,.txt,.ndjson,.cpad,application/json,text/plain';
+
+// Minimal hash router (PRD-01 §6.1: lightweight, single static bundle - works when
 // served as one static asset). Full routing mechanics are confirmed in PRD-03.
 function useHashRoute(): string {
   const [hash, setHash] = React.useState(() => window.location.hash || '#/');
@@ -31,7 +36,7 @@ function useHashRoute(): string {
 // (still empty) recent list.
 const RECENT: RecentItem[] = [];
 
-// On connect, auto-open the most recent session — but skip very large ones so the
+// On connect, auto-open the most recent session - but skip very large ones so the
 // connect gesture stays instant (the user can still open them by hand).
 const AUTO_OPEN_MAX_BYTES = 8 * 1024 * 1024;
 
@@ -39,15 +44,39 @@ export function App() {
   const route = useHashRoute();
   const isGallery = route.startsWith('#/gallery');
 
-  const session = useSession();
   const vault = useVault();
   const [activeSessionId, setActiveSessionId] = React.useState<string>();
   const [viewMode, setViewMode] = React.useState<ViewMode>('pretty');
   const [receiveOpen, setReceiveOpen] = React.useState(false);
-  // Secret map from a decrypted body+secrets blob — drives high-priv reveal.
+  // A `cp-blob-…` dropped/pasted/picked on the home surface, seeded into the
+  // receive dialog so it opens already-decrypting.
+  const [receiveBlob, setReceiveBlob] = React.useState<string>();
+  // Secret map from a decrypted body+secrets blob - drives high-priv reveal.
   const [receivedSecretMap, setReceivedSecretMap] = React.useState<SecretMap>();
 
-  // Open a session straight from the connected folder (lazy read — contents are
+  // An encrypted share landed on an ingest surface → hand it to receive→decrypt
+  // instead of the session parser (PRD-11; IDEAS "accept blobs on the home surface").
+  const onShareBlob = React.useCallback((blob: string) => {
+    setReceiveBlob(blob);
+    setReceiveOpen(true);
+  }, []);
+
+  const session = useSession({ onShareBlob });
+
+  // A single picker for both `.jsonl` sessions and `.cpad` shares - loadFile
+  // routes by content (the blob sniff in useSession sends shares to onShareBlob).
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const openFilePicker = React.useCallback(() => fileInputRef.current?.click(), []);
+  const onPickFile = React.useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      e.target.value = ''; // allow re-picking the same file
+      if (file) void session.loadFile(file, 'file-picker');
+    },
+    [session],
+  );
+
+  // Open a session straight from the connected folder (lazy read - contents are
   // only touched here, on click). Navigate home so the viewer is visible.
   const onSelectSession = React.useCallback(
     async (s: VaultSession) => {
@@ -75,10 +104,18 @@ export function App() {
       setReceivedSecretMap(result.secretMap ?? undefined);
       session.showSession(result.session, `share from ${result.from.name}`);
       setReceiveOpen(false);
+      setReceiveBlob(undefined);
       if (window.location.hash.startsWith('#/gallery')) window.location.hash = '#/';
     },
     [session],
   );
+
+  // Drop the seeded blob when the receive dialog closes so a later manual open
+  // starts blank.
+  const onReceiveOpenChange = React.useCallback((open: boolean) => {
+    setReceiveOpen(open);
+    if (!open) setReceiveBlob(undefined);
+  }, []);
 
   // Keep the sidebar highlight + view mode in sync when the session is cleared.
   React.useEffect(() => {
@@ -127,9 +164,9 @@ export function App() {
       : {
           crumbs: [{ label: 'Overview' }],
           actions: (
-            <Button size="sm" variant="secondary" onClick={() => setReceiveOpen(true)}>
-              <Inbox />
-              Open encrypted…
+            <Button size="sm" variant="secondary" onClick={openFilePicker}>
+              <FolderOpen />
+              Open…
             </Button>
           ),
         };
@@ -139,15 +176,16 @@ export function App() {
       <IdentityProvider>
         <RevealProvider secretMap={secretMap}>
           <ExpandProvider>
+            <PlaybackProvider session={loaded?.session ?? null}>
             <AppShell
               route={route}
               recent={RECENT}
               activeId={activeSessionId}
-              onOpen={onHome}
               vault={
                 vault.supported ? { ...vault, activeSessionId, onSelectSession } : undefined
               }
               topbar={topbar}
+              footer={<TransportBar />}
             >
               {isGallery ? (
                 <Gallery />
@@ -161,9 +199,20 @@ export function App() {
             </AppShell>
             <ReceiveDialog
               open={receiveOpen}
-              onOpenChange={setReceiveOpen}
+              onOpenChange={onReceiveOpenChange}
               onReceived={onReceived}
+              initialBlob={receiveBlob}
             />
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept={OPEN_ACCEPT}
+              className="sr-only"
+              onChange={onPickFile}
+              aria-hidden="true"
+              tabIndex={-1}
+            />
+            </PlaybackProvider>
           </ExpandProvider>
         </RevealProvider>
       </IdentityProvider>

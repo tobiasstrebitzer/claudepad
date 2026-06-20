@@ -5,7 +5,8 @@ import { cn } from '../lib/cn';
 import { Button } from '../components/ui/button';
 import { Skeleton } from '../components/ui/skeleton';
 import { useCorrelateTools } from './hooks/useCorrelateTools';
-import { useAnchor } from './hooks/useAnchor';
+import { useAnchor, anchorIdFor } from './hooks/useAnchor';
+import { usePlayback, TYPING_BUFFER_RATIO } from '../playback';
 import { buildToc, TableOfContents } from './components/TableOfContents';
 import { TranscriptList, type TranscriptHandle } from './components/TranscriptList';
 import { RawBlock } from './components/blocks/RawBlock';
@@ -26,7 +27,7 @@ export interface SessionViewerProps {
 
 /**
  * Top-level session renderer (PRD-03): TOC + virtualized transcript. Pure render
- * surface — holds no keys, does no crypto, makes no network calls. The Tooltip/
+ * surface - holds no keys, does no crypto, makes no network calls. The Tooltip/
  * Reveal/Expand providers and the session title/meta now live in the app shell
  * (D-49), so the unified top bar can host the secrets/expand controls; this
  * component assumes those providers are mounted above it.
@@ -56,11 +57,51 @@ function ViewerInner({
   const toc = React.useMemo(() => buildToc(rows), [rows]);
   const { highlightId, reportAnchor } = useAnchor(initialAnchor, options?.onAnchorChange);
 
+  // Playback (PRD-08): when the surface is active, reveal only rows up to the
+  // playhead, drive the active-row highlight + scroll from the engine, and let
+  // the engine own the active row (so user scrolling doesn't fight it).
+  const pb = usePlayback();
+  const playbackActive = pb.active;
+  const playbackActiveRow = pb.frame.activeRowIndex;
+
   const transcriptRef = React.useRef<TranscriptHandle>(null);
   const [activeRowIndex, setActiveRowIndex] = React.useState<number | null>(
     rows.length ? 0 : null,
   );
   const [tocOpen, setTocOpen] = React.useState(showToc);
+
+  const visibleRows = React.useMemo(
+    () => (playbackActive ? rows.slice(0, Math.max(0, pb.frame.revealedCount)) : rows),
+    [rows, playbackActive, pb.frame.revealedCount],
+  );
+
+  // The active turn reuses PRD-03's `highlighted` ring (FR-15) by overriding the
+  // anchor highlight while playing.
+  const activeHighlightId =
+    playbackActive && playbackActiveRow >= 0 && rows[playbackActiveRow]
+      ? anchorIdFor(rows[playbackActiveRow].event, rows[playbackActiveRow].index)
+      : undefined;
+
+  // Typing reveal (FR-17): only the active turn types, paced so its prose
+  // finishes within the dwell minus a short end-pause. Never under reduced-motion.
+  let typingRowIndex: number | undefined;
+  let typingFraction: number | undefined;
+  if (playbackActive && pb.appear === 'type' && !pb.reducedMotion && playbackActiveRow >= 0) {
+    const { activeSegStartMs, activeSegDwellMs } = pb.frame;
+    const typeWindow = activeSegDwellMs * (1 - TYPING_BUFFER_RATIO);
+    const elapsed = pb.playheadMs - activeSegStartMs;
+    typingRowIndex = playbackActiveRow;
+    typingFraction = typeWindow > 0 ? Math.min(1, Math.max(0, elapsed / typeWindow)) : 1;
+  }
+
+  // Smooth-scroll the active turn into view; instant under reduced-motion or fast
+  // speeds (FR-16/21).
+  React.useEffect(() => {
+    if (!playbackActive || playbackActiveRow < 0) return;
+    const behavior: ScrollBehavior =
+      pb.reducedMotion || pb.speed >= 4 ? 'auto' : 'smooth';
+    transcriptRef.current?.scrollToRow(playbackActiveRow, { align: 'center', behavior });
+  }, [playbackActive, playbackActiveRow, pb.reducedMotion, pb.speed]);
 
   // Deep-link: scroll the initial anchor into view on mount (FR-16).
   React.useEffect(() => {
@@ -85,12 +126,18 @@ function ViewerInner({
 
   const onJump = React.useCallback(
     (rowIndex: number) => {
+      // During playback a TOC jump seeks the playhead (the engine then reveals +
+      // scrolls); otherwise it's a plain scroll.
+      if (playbackActive) {
+        pb.seekToRow(rowIndex);
+        return;
+      }
       transcriptRef.current?.scrollToRow(rowIndex);
       setActiveRowIndex(rowIndex);
       const entry = toc[rowIndex];
       if (entry) reportAnchor(entry.anchorId);
     },
-    [toc, reportAnchor],
+    [toc, reportAnchor, playbackActive, pb],
   );
 
   if (loading) return <LoadingState />;
@@ -114,7 +161,7 @@ function ViewerInner({
           >
             <TableOfContents
               entries={toc}
-              activeRowIndex={activeRowIndex}
+              activeRowIndex={playbackActive ? playbackActiveRow : activeRowIndex}
               onJump={onJump}
               onCollapse={() => setTocOpen(false)}
             />
@@ -133,10 +180,12 @@ function ViewerInner({
           )}
           <TranscriptList
             ref={transcriptRef}
-            rows={rows}
-            highlightId={highlightId}
+            rows={visibleRows}
+            highlightId={activeHighlightId ?? highlightId}
             virtualize={virtualize}
-            onActiveRowChange={onActiveRowChange}
+            onActiveRowChange={playbackActive ? undefined : onActiveRowChange}
+            typingRowIndex={typingRowIndex}
+            typingFraction={typingFraction}
           />
         </div>
       </div>

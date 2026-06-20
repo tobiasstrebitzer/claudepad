@@ -1,5 +1,5 @@
-// Client orchestration of the trustless share artifact (PRD-11). The crypto —
-// the ephemeral sealed box, the two content keys, the recipient wrap — lives in
+// Client orchestration of the trustless share artifact (PRD-11). The crypto -
+// the ephemeral sealed box, the two content keys, the recipient wrap - lives in
 // @claudepad/shared (proven by poc/verify.mjs). This layer turns a redacted
 // session + secret map into the wire form `cp-blob-<base64url(JSON)>` and back,
 // and decodes the decrypted bytes into a Session + SecretMap for the viewer.
@@ -18,8 +18,7 @@ import {
 } from '@claudepad/shared';
 import type { Session } from '@claudepad/schema';
 import type { SecretMap } from '@claudepad/secrets';
-
-const CP_BLOB_PREFIX = 'cp-blob-';
+import { CP_BLOB_PREFIX } from './detect';
 
 export interface CreateShareOpts {
   sender: Identity;
@@ -61,7 +60,7 @@ export interface OpenShareResult {
 
 /**
  * Decrypt a `cp-blob-…` addressed to `me`. A blob not addressed to us fails the
- * AES-GCM wrap tag inside openBlob (CryptoAuthError) — fail-closed, no partial
+ * AES-GCM wrap tag inside openBlob (CryptoAuthError) - fail-closed, no partial
  * render (PRD-11 FR-11).
  */
 export async function openShare(me: Identity, encoded: string): Promise<OpenShareResult> {
@@ -73,7 +72,7 @@ export async function openShare(me: Identity, encoded: string): Promise<OpenShar
 
   const opened = await openBlob({ me, blob });
 
-  // The body is a serialized normalized Session — re-parse defensively so a
+  // The body is a serialized normalized Session - re-parse defensively so a
   // hostile/corrupt blob can't smuggle a non-conforming object into the viewer.
   const session = sessionFromBytes(opened.bodyBytes);
   const secretMap =

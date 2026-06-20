@@ -11,13 +11,14 @@ type AppShellProps = {
   recent: RecentItem[];
   activeId?: string;
   onSelect?: (id: string) => void;
-  /** Trigger the single-session open flow (drop/paste/file-picker). */
-  onOpen?: () => void;
   /** Folder-backed navigation (Chromium only). */
   vault?: VaultNav;
   route: string;
   /** The single top bar's contents (breadcrumbs + context + actions). */
   topbar?: TopBarContent;
+  /** Pinned below the scrolling canvas, inside the content column (e.g. the
+   * playback transport bar) - sits right of the sidebar and never overlaps. */
+  footer?: React.ReactNode;
   children: React.ReactNode;
 };
 
@@ -28,10 +29,10 @@ export function AppShell({
   recent,
   activeId,
   onSelect,
-  onOpen,
   vault,
   route,
   topbar,
+  footer,
   children,
 }: AppShellProps) {
   const [drawerOpen, setDrawerOpen] = React.useState(false);
@@ -53,7 +54,6 @@ export function AppShell({
           recent={recent}
           activeId={activeId}
           onSelect={onSelect}
-          onOpen={onOpen}
           onCollapse={() => setCollapsed(true)}
           vault={vault}
           route={route}
@@ -74,7 +74,6 @@ export function AppShell({
               recent={recent}
               activeId={activeId}
               onSelect={onSelect}
-              onOpen={onOpen}
               vault={vault}
               route={route}
             />
@@ -111,7 +110,7 @@ export function AppShell({
                   >
                     <PanelLeftOpen />
                   </Button>
-                  <a href="#/" className="rounded-md" aria-label="claudepad home">
+                  <a href="#/" className="rounded-md flex" aria-label="claudepad home">
                     <Wordmark size="small" />
                   </a>
                 </span>
@@ -122,6 +121,7 @@ export function AppShell({
         />
 
         <main className="min-h-0 flex-1 overflow-y-auto">{children}</main>
+        {footer}
       </div>
     </div>
   );

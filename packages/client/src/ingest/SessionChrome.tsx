@@ -7,6 +7,7 @@ import { ViewSwitch, type ViewMode } from '../components/shell/ViewSwitch';
 import type { TopBarContent } from '../components/shell/TopBar';
 import { SecretsControl, ExpandControl } from '../viewer';
 import { ShareButton } from '../share';
+import { PlayToggleButton } from '../playback';
 import { formatAbsolute, formatRelative } from '../viewer/format';
 
 // The unified top bar's contents for a loaded session (D-49): breadcrumbs +
@@ -56,7 +57,7 @@ function SessionLabels({ diagnostics }: { diagnostics: DiagnosticRecord[] }) {
             }
           />
           <TooltipContent>
-            Parsed with caveats — {diagnostics[0]?.message ?? 'see diagnostics'}
+            Parsed with caveats - {diagnostics[0]?.message ?? 'see diagnostics'}
             {notes > 1 ? ` (+${notes - 1} more)` : ''}
           </TooltipContent>
         </Tooltip>
@@ -83,6 +84,7 @@ function SessionActions({
           <ExpandControl />
         </>
       )}
+      <PlayToggleButton />
       <ShareButton session={session} />
       <Button size="sm" variant="ghost" onClick={onClear} aria-label="Clear session">
         <X />

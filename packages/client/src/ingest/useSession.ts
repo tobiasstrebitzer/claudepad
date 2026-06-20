@@ -1,10 +1,11 @@
 import * as React from 'react';
 import { parseSession, type Session, type DiagnosticRecord } from '@claudepad/schema';
 import { classify, checkSize, type IngestShape } from '@claudepad/ingest';
+import { isShareBlob } from '../share/detect';
 
 // Browser ingest state machine (PRD-04). Local-only by default: acquiring a session
 // makes zero network requests and persists nothing (FR-3/FR-18). Sharing is a separate,
-// explicit P3 action — never a side effect of loading (FR-23).
+// explicit P3 action - never a side effect of loading (FR-23).
 
 export type IngestSource = 'drop' | 'paste' | 'file-picker' | 'fs';
 
@@ -37,11 +38,36 @@ export interface SessionApi {
 
 const byteLength = (s: string): number => new TextEncoder().encode(s).length;
 
-export function useSession(): SessionApi {
+export interface UseSessionOpts {
+  /**
+   * Called when an ingested payload is an encrypted share (`cp-blob-…`) rather
+   * than a session. The drop/paste/file-picker surfaces accept both; a blob is
+   * handed off to the receive→decrypt flow instead of the parser (it never
+   * touches session state). Without a handler, a blob falls through to the
+   * normal "not a session" rejection.
+   */
+  onShareBlob?: (blob: string) => void;
+}
+
+export function useSession(opts: UseSessionOpts = {}): SessionApi {
   const [state, setState] = React.useState<SessionState>({ status: 'idle' });
+
+  // Keep the latest handler without re-creating the ingest callback (which
+  // would churn the paste/drop wiring downstream).
+  const onShareBlob = opts.onShareBlob;
+  const onShareBlobRef = React.useRef(onShareBlob);
+  React.useEffect(() => {
+    onShareBlobRef.current = onShareBlob;
+  }, [onShareBlob]);
 
   const ingest = React.useCallback(
     async (text: string, bytes: number, fileName?: string, confirmed = false) => {
+      // An encrypted share routes to decrypt, not the parser - checked before the
+      // size caps (those bound the session parser, not opaque ciphertext).
+      if (onShareBlobRef.current && isShareBlob(text)) {
+        onShareBlobRef.current(text.trim());
+        return;
+      }
       const verdict = checkSize(bytes);
       if (verdict.overHardCap) {
         setState({ status: 'too-large', bytes });
@@ -53,7 +79,7 @@ export function useSession(): SessionApi {
           status: 'rejected',
           got: shape,
           reason:
-            'No JSON lines detected — this doesn’t look like a Claude Code session.',
+            'No JSON lines detected - this doesn’t look like a Claude Code session.',
         });
         return;
       }

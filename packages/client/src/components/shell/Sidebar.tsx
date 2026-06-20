@@ -1,6 +1,5 @@
 import * as React from 'react';
 import {
-  FolderOpen,
   PanelLeftClose,
   Unlink,
   Palette,
@@ -36,8 +35,6 @@ type SidebarProps = {
   recent: RecentItem[];
   activeId?: string;
   onSelect?: (id: string) => void;
-  /** Open a single session via drop/paste/file-picker (the always-available path). */
-  onOpen?: () => void;
   /** Collapse the sidebar (desktop); omitted in the mobile drawer. */
   onCollapse?: () => void;
   /** current hash route, to mark the gallery link active */
@@ -54,7 +51,6 @@ export function Sidebar({
   recent,
   activeId,
   onSelect,
-  onOpen,
   onCollapse,
   route,
   vault,
@@ -69,19 +65,13 @@ export function Sidebar({
       aria-label="Sessions"
     >
       <div className="px-3 h-14 flex items-center gap-1">
-        <a href="#/" className="mr-auto rounded-md" aria-label="claudepad home">
+        <a
+          href="#/"
+          className="mr-auto flex items-center rounded-md"
+          aria-label="claudepad home"
+        >
           <Wordmark size="full" />
         </a>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="size-8"
-          onClick={onOpen}
-          aria-label="Open a session"
-          title="Open a session"
-        >
-          <FolderOpen />
-        </Button>
         {onCollapse && (
           <Button
             variant="ghost"
@@ -193,7 +183,7 @@ function VaultBody({ vault }: { vault: VaultNav }) {
         <ConnectCard
           onConnect={() => void vault.connect()}
           label="Connect ~/.claude"
-          blurb="Browse and open sessions straight from disk — granted once, read-only, never uploaded."
+          blurb="Browse and open sessions straight from disk - granted once, read-only, never uploaded."
         />
       );
 
@@ -202,7 +192,7 @@ function VaultBody({ vault }: { vault: VaultNav }) {
         <ConnectCard
           onConnect={() => void vault.reconnect()}
           label="Reconnect folder"
-          blurb="Your earlier grant lapsed — one click restores access."
+          blurb="Your earlier grant lapsed - one click restores access."
         />
       );
 

@@ -8,10 +8,12 @@ export const AssistantTurn = React.memo(function AssistantTurn({
   event,
   anchorId,
   highlighted,
+  typingFraction,
 }: {
   event: AssistantEvent;
   anchorId: string;
   highlighted?: boolean;
+  typingFraction?: number;
 }) {
   return (
     <TurnShell
@@ -28,7 +30,7 @@ export const AssistantTurn = React.memo(function AssistantTurn({
         ) : undefined
       }
     >
-      <ContentBlocks blocks={event.content} />
+      <ContentBlocks blocks={event.content} typingFraction={typingFraction} />
     </TurnShell>
   );
 });

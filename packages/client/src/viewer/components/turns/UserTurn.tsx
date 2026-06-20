@@ -7,10 +7,12 @@ export const UserTurn = React.memo(function UserTurn({
   event,
   anchorId,
   highlighted,
+  typingFraction,
 }: {
   event: UserEvent;
   anchorId: string;
   highlighted?: boolean;
+  typingFraction?: number;
 }) {
   return (
     <TurnShell
@@ -20,7 +22,7 @@ export const UserTurn = React.memo(function UserTurn({
       roleLabel="User"
       highlighted={highlighted}
     >
-      <ContentBlocks blocks={event.content} />
+      <ContentBlocks blocks={event.content} typingFraction={typingFraction} />
     </TurnShell>
   );
 });

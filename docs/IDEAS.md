@@ -1,4 +1,4 @@
-# claudepad — Ideas & future-task tracker
+# claudepad - Ideas & future-task tracker
 
 A lightweight running list of ideas and not-yet-scheduled tasks that don't (yet)
 belong in a PRD, the ROADMAP, or the decision log. Promote an item into
@@ -12,26 +12,30 @@ shipped or dropped.
 
 ## ▶ Next session scope · _logged 2026-06-21_
 
-Pick up here next session.
+**1. Ingest / share-entry improvements - ✅ shipped 2026-06-21.**
+- `.cpblob` → **`.cpad`** everywhere (ShareDialog download, ReceiveDialog
+  `accept`, all docs/PRDs; the `cp-blob-` string prefix stays).
+- The home drop/paste/file-picker surfaces now **accept encrypted blobs** - a
+  `cp-blob-…` (string or `.cpad` file) is sniffed (`share/detect.ts`
+  `isShareBlob`) in `useSession` and handed to the receive→decrypt flow
+  (`onShareBlob` → `ReceiveDialog initialBlob`, auto-decrypts on open) instead
+  of the parser.
+- A **single Open picker** (`OPEN_ACCEPT`, `.jsonl` + `.cpad`) backs both the
+  sidebar brand-nav button and the Overview "Open…" action; content (not the
+  extension) routes parse vs. decrypt.
 
-**1. Ingest / share-entry improvements (do first):**
-- **Rename the blob extension `.cpblob` → `.cpad`** everywhere (ShareDialog
-  download `claudepad-share-<name>.cpad`, ReceiveDialog `accept`, any docs/PRD
-  references). The `cp-blob-` *string* prefix can stay; this is just the file
-  extension.
-- **Accept encrypted blobs on the home drop/paste surface**, not just `.jsonl`.
-  Dropping/pasting a `cp-blob-…` (or `.cpad` file) should route into the
-  receive→decrypt flow instead of the JSONL parser. Detect by the `cp-blob-`
-  prefix (see `client/src/ingest/useSession.ts` + `@claudepad/ingest` `classify`,
-  and `client/src/share/ReceiveDialog.tsx`/`blob.ts`).
-- **Unified top-bar Open button → file picker** that accepts both `.jsonl` and
-  `.cpad`, dispatching to parse vs. decrypt by content. (Sidebar brand-nav
-  `FolderOpen` button + the Overview "Open encrypted…" action could converge.)
-- **Sidebar UI/UX pass** — general polish (no specific defects logged yet;
-  review spacing, the connect/identity footer, and the collapsed-rail state).
+**Still open - deeper sidebar visual pass:** the brand-nav Open label was
+updated, but a broader polish of spacing, the connect/identity footer, and the
+collapsed-rail state is deferred (kept light here to avoid touching the
+contrast/e2e gates without a specific defect).
 
-**2. Then P4 (Playback, PRD-08):** timeline scrubber, speed control,
-presentation-mode auto-pacing — pure client-side. See `ROADMAP.md` §4.
+**2. P4 (Playback, PRD-08) - ✅ shipped 2026-06-21.** Pure timeline engine
+(`packages/client/src/playback/**`), rAF clock, an in-flow transport bar
+(play/pause, prev/next, scrubber) with a **settings popover** (pacing mode,
+speed, **appear: instant/type**, reading-speed), keyboard map + help, deep-link
+params, reduced-motion, progressive reveal + active highlight + scroll-to-active.
+Present mode **fast-tracks** thinking/meta; **typing appear** streams the active
+turn paced to its dwell. See `DECISIONS.md` D-59/D-60 and the P4 follow-ups below.
 
 ---
 
@@ -39,7 +43,7 @@ presentation-mode auto-pacing — pure client-side. See `ROADMAP.md` §4.
 
 ### Fast-paced "Show HN" launch path · _logged 2026-06-20_
 
-**Idea:** try a fast, lean path to a **Show HN: claudepad** launch on Hacker News —
+**Idea:** try a fast, lean path to a **Show HN: claudepad** launch on Hacker News -
 get the frictionless folder-connect + prettify experience in front of people
 *early*, rather than waiting for full v1 (identity + trustless sharing).
 
@@ -48,7 +52,7 @@ demoable and self-hostable; the "connect `~/.claude` once → browse every sessi
 moment is a strong, screenshot-able hook that no other tool has.
 
 **Prep / open questions:**
-- Minimum-lovable cut for Show HN — prettify + folder-connect + sample session,
+- Minimum-lovable cut for Show HN - prettify + folder-connect + sample session,
   sharing explicitly "coming soon"? (Launch *before* P2/P3, tease sharing.)
 - Hosted `claudepad.io` static instance + a one-command self-host story.
 - Privacy framing front-and-center: no upload, no backend, read-only folder access
@@ -57,7 +61,7 @@ moment is a strong, screenshot-able hook that no other tool has.
 - HN timing/title; line up a few early upvoters; prepare for the "why not just read
   the JSONL?" and "is my data uploaded?" questions.
 
-**Status:** idea — not scheduled.
+**Status:** idea - not scheduled.
 
 
 ## Additional Features
@@ -77,9 +81,14 @@ moment is a strong, screenshot-able hook that no other tool has.
 - Ability to customize theme-global design tokens (e.g. base colors).
 - Ability to customize individual Turn components.
 
+### Turn Rendering for Usability
+
+- I'd like user/agent messages to stand out more, and system / tool calls to be slightly less prominent.
+- Also, would be nice if we can group some event-chains, e.g.: 6 chained "attachment" read events, maybe better to show "Read 6 files" (with option to expand). same for commands/tool calls. boundary should always be user/agent messages (i.e. never cross these)
+
 ## P3 hardening follow-ups · _logged 2026-06-21_
 
-Deferred from the P3 (Trustless Sharing + Secrets) build — the end-to-end flow
+Deferred from the P3 (Trustless Sharing + Secrets) build - the end-to-end flow
 ships and is tested; these are quality/scale hardening for the pre-launch
 security pass (PRD-09). See `DECISIONS.md` D-58.
 
@@ -98,3 +107,23 @@ security pass (PRD-09). See `DECISIONS.md` D-58.
   re-encryption at the cost of exposing the recipient count.
 - **Address book (PRD-11 OQ-A / PRD-10 OQ-C).** Remember recent recipients'
   public cards + local aliases so keys aren't re-pasted each share.
+
+## P4 playback follow-ups · _logged 2026-06-21_
+
+Deferred from the P4 (Playback) build - the engine + transport + viewer
+integration ship and are tested (unit + e2e). These are surface polish/validation
+for the launch pass (PRD-09). See `DECISIONS.md` D-60.
+
+- **In-transcript folded affordances (PRD-08 FR-11/12).** Tool-spam runs and
+  idle gaps are already folded/collapsed in the *timeline* and marked on the
+  *scrubber*; the in-surface "ran `Read` ×7" collapsible and the "… N min later
+  …" idle divider are not yet rendered. Reuse PRD-03's collapsible tool component.
+- **Ghosted future-events preview (Q-5b).** A faint preview of upcoming events;
+  off by default, evaluate after dogfooding.
+- **Pacing tuning + ≥5k-event perf smoke (PRD-08 Q-5 / FR-20).** Tune
+  `readingSpeed`/`idleThreshold`/weights against a labeled set of real recorded
+  presentations before locking v1 numbers (they're data in one config); add the
+  Playwright performance smoke on a long-session fixture (engine is O(n) +
+  memoized; reveal inherits PRD-03 virtualization).
+- **Per-share saved tempo (PRD-08 OQ).** Let a sharer persist mode/speed into a
+  link's playback params (query string only - never the key fragment).

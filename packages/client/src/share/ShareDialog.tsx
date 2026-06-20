@@ -1,8 +1,8 @@
 // The share wizard (PRD-11 §4.1 + PRD-06 review). Four steps in one dialog:
-//   1. Review   — mandatory secret review; redact/dismiss, add a literal, ACK limits
-//   2. Recipient— paste cp-pub-…, confirm name + fingerprint out of band
-//   3. Grant    — body-only vs body+secrets (secrets disabled when none redacted)
-//   4. Result   — the cp-blob-…, auto-copied + downloadable, with honest trade-offs
+//   1. Review   - mandatory secret review; redact/dismiss, add a literal, ACK limits
+//   2. Recipient- paste cp-pub-…, confirm name + fingerprint out of band
+//   3. Grant    - body-only vs body+secrets (secrets disabled when none redacted)
+//   4. Result   - the cp-blob-…, auto-copied + downloadable, with honest trade-offs
 //
 // All crypto + redaction is local; nothing is uploaded (PRD-11 FR-17).
 
@@ -137,7 +137,7 @@ export function ShareDialog({
       // Defensive hard gate (PRD-06 FR-25): never ship a body that still contains
       // a confirmed secret value.
       const leaked = findLeakedValues(body, secretMap);
-      if (leaked.length > 0) throw new Error('Redaction failed an integrity check — not sharing.');
+      if (leaked.length > 0) throw new Error('Redaction failed an integrity check - not sharing.');
       const cpblob = await createShare({
         sender: idState.identity,
         recipientCard: recipientInput,
@@ -314,7 +314,7 @@ function ReviewStep({
       <label className="mt-3 flex items-start gap-2 text-body-sm text-text">
         <Checkbox checked={ack} onCheckedChange={(v) => setAck(v === true)} className="mt-0.5" />
         <span>
-          I’ve reviewed these detections and understand detection is best-effort —
+          I’ve reviewed these detections and understand detection is best-effort -
           missed secrets stay readable to every recipient.
         </span>
       </label>
@@ -529,7 +529,7 @@ function ResultStep({
     const url = URL.createObjectURL(new Blob([blob], { type: 'text/plain' }));
     const a = document.createElement('a');
     a.href = url;
-    a.download = `claudepad-share-${recipientName}.cpblob`;
+    a.download = `claudepad-share-${recipientName}.cpad`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -542,7 +542,7 @@ function ResultStep({
         </span>
       </DialogTitle>
       <DialogDescription>
-        Drop it anywhere — Slack, email, a file. Only {recipientName} can read it.
+        Drop it anywhere - Slack, email, a file. Only {recipientName} can read it.
       </DialogDescription>
 
       <div className="mt-3 flex items-stretch gap-2">
@@ -552,7 +552,7 @@ function ResultStep({
         <Button variant="secondary" size="icon" aria-label="Copy blob" onClick={() => copy(blob)}>
           {copied ? <Check className="text-success" /> : <Copy />}
         </Button>
-        <Button variant="secondary" size="icon" aria-label="Download .cpblob" onClick={download}>
+        <Button variant="secondary" size="icon" aria-label="Download .cpad" onClick={download}>
           <Download />
         </Button>
       </div>
@@ -560,7 +560,7 @@ function ResultStep({
       <div className="mt-3 flex items-start gap-2 rounded-md border border-border bg-bg p-2.5 text-label text-muted">
         <ShieldAlert className="mt-0.5 size-4 shrink-0 text-warn" />
         <span>
-          No server holds this. If it’s lost, it’s gone — it can’t be expired,
+          No server holds this. If it’s lost, it’s gone - it can’t be expired,
           revoked, or recovered.
         </span>
       </div>

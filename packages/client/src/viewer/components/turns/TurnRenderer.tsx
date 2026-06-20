@@ -13,18 +13,29 @@ import { MetaBlock } from './MetaBlock';
 export const TurnRenderer = React.memo(function TurnRenderer({
   row,
   highlightId,
+  typingFraction,
 }: {
   row: RenderRow;
   highlightId?: string;
+  /** PRD-08 typing reveal - only set for the active playback turn. */
+  typingFraction?: number;
 }) {
   return (
     <BlockErrorBoundary fallbackValue={row.event}>
-      <Row row={row} highlightId={highlightId} />
+      <Row row={row} highlightId={highlightId} typingFraction={typingFraction} />
     </BlockErrorBoundary>
   );
 });
 
-function Row({ row, highlightId }: { row: RenderRow; highlightId?: string }) {
+function Row({
+  row,
+  highlightId,
+  typingFraction,
+}: {
+  row: RenderRow;
+  highlightId?: string;
+  typingFraction?: number;
+}) {
   const anchorId = anchorIdFor(row.event, row.index);
   const highlighted = highlightId === anchorId;
 
@@ -45,10 +56,22 @@ function Row({ row, highlightId }: { row: RenderRow; highlightId?: string }) {
   const event = row.event;
   switch (event.kind) {
     case 'user':
-      return <UserTurn event={event} anchorId={anchorId} highlighted={highlighted} />;
+      return (
+        <UserTurn
+          event={event}
+          anchorId={anchorId}
+          highlighted={highlighted}
+          typingFraction={typingFraction}
+        />
+      );
     case 'assistant':
       return (
-        <AssistantTurn event={event} anchorId={anchorId} highlighted={highlighted} />
+        <AssistantTurn
+          event={event}
+          anchorId={anchorId}
+          highlighted={highlighted}
+          typingFraction={typingFraction}
+        />
       );
     case 'thinking':
       return <ThinkingBlock event={event} anchorId={anchorId} />;

@@ -1,7 +1,7 @@
 // The receive flow (PRD-11 §4.2). Paste a cp-blob-… (or upload a .cpblob),
 // decrypt it with the current identity, show the sender's fingerprint (self-claimed
 // name, trust only on a match), then hand the session to the viewer. A blob not
-// addressed to us fails closed — no partial render (FR-11).
+// addressed to us fails closed - no partial render (FR-11).
 
 import * as React from 'react';
 import { Loader2, ShieldCheck, TriangleAlert, Upload } from 'lucide-react';
@@ -21,40 +21,54 @@ export function ReceiveDialog({
   open,
   onOpenChange,
   onReceived,
+  initialBlob,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onReceived: (result: OpenShareResult) => void;
+  /**
+   * A `cp-blob-…` to seed the dialog with - set when a blob arrives via the
+   * home drop/paste/file-picker surface. With an unlocked identity it decrypts
+   * straight away; otherwise it's held in the field until unlock.
+   */
+  initialBlob?: string;
 }) {
   const { state: idState } = useIdentityContext();
   const [input, setInput] = React.useState('');
   const [busy, setBusy] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [result, setResult] = React.useState<OpenShareResult | null>(null);
+  const unlocked = idState.status === 'unlocked';
 
-  React.useEffect(() => {
-    if (open) {
-      setInput('');
+  const decrypt = React.useCallback(
+    async (text: string) => {
+      if (idState.status !== 'unlocked') return;
+      setBusy(true);
       setError(null);
-      setResult(null);
-    }
-  }, [open]);
+      try {
+        setResult(await openShare(idState.identity, text));
+      } catch {
+        // Fail closed: don't distinguish "not for you" from "corrupt" beyond this.
+        setError(
+          'This blob isn’t addressed to you, or it’s corrupt. Nothing was decrypted.',
+        );
+      } finally {
+        setBusy(false);
+      }
+    },
+    [idState],
+  );
 
-  const decrypt = async (text: string) => {
-    if (idState.status !== 'unlocked') return;
-    setBusy(true);
+  // Reset on open; if a blob was handed in, seed the field and auto-decrypt it
+  // (frictionless: a dropped/pasted share opens already-decrypting).
+  React.useEffect(() => {
+    if (!open) return;
     setError(null);
-    try {
-      setResult(await openShare(idState.identity, text));
-    } catch {
-      // Fail closed: don't distinguish "not for you" from "corrupt" beyond this.
-      setError(
-        'This blob isn’t addressed to you, or it’s corrupt. Nothing was decrypted.',
-      );
-    } finally {
-      setBusy(false);
-    }
-  };
+    setResult(null);
+    const seed = initialBlob?.trim() ?? '';
+    setInput(seed);
+    if (seed && unlocked) void decrypt(seed);
+  }, [open, initialBlob, unlocked, decrypt]);
 
   const onUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -71,7 +85,7 @@ export function ReceiveDialog({
           <>
             <DialogTitle>Unlock your identity first</DialogTitle>
             <DialogDescription>
-              A blob is encrypted to your public key — you need your identity
+              A blob is encrypted to your public key - you need your identity
               unlocked to decrypt it. Set it up from the sidebar.
             </DialogDescription>
           </>
@@ -82,7 +96,7 @@ export function ReceiveDialog({
             <DialogTitle>Open an encrypted share</DialogTitle>
             <DialogDescription>
               Paste a <code>cp-blob-…</code> someone sent you, or upload a{' '}
-              <code>.cpblob</code> file.
+              <code>.cpad</code> file.
             </DialogDescription>
 
             <Textarea
@@ -105,7 +119,7 @@ export function ReceiveDialog({
               >
                 <input
                   type="file"
-                  accept=".cpblob,text/plain"
+                  accept=".cpad,text/plain"
                   className="sr-only"
                   onChange={onUpload}
                 />
@@ -141,7 +155,7 @@ function Received({
         </span>
       </DialogTitle>
       <DialogDescription>
-        Claims to be from <span className="font-medium text-text">{result.from.name}</span> —
+        Claims to be from <span className="font-medium text-text">{result.from.name}</span> -
         trust the content only if this fingerprint matches theirs.
       </DialogDescription>
 
@@ -149,7 +163,7 @@ function Received({
         <Fingerprint pub={result.from.pub} size="sm" />
         <p className="mt-2 text-label text-muted">
           Granted: {result.tier === 'body+secret' ? 'body + secrets' : 'body only'}
-          {result.tier === 'body' && ' — secrets show as placeholders.'}
+          {result.tier === 'body' && ' - secrets show as placeholders.'}
         </p>
       </div>
 

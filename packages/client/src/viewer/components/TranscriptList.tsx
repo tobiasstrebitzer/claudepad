@@ -4,9 +4,14 @@ import { cn } from '../../lib/cn';
 import type { RenderRow } from '../hooks/useCorrelateTools';
 import { TurnRenderer } from './turns/TurnRenderer';
 
+export interface ScrollToRowOptions {
+  behavior?: ScrollBehavior;
+  align?: 'start' | 'center';
+}
+
 export interface TranscriptHandle {
-  /** Scroll a row into view (used for deep-link + TOC jumps). */
-  scrollToRow(rowIndex: number): void;
+  /** Scroll a row into view (used for deep-link + TOC jumps + playback). */
+  scrollToRow(rowIndex: number, opts?: ScrollToRowOptions): void;
 }
 
 interface TranscriptListProps {
@@ -16,41 +21,34 @@ interface TranscriptListProps {
   virtualize?: boolean;
   /** Report the top-most visible row as the user scrolls. */
   onActiveRowChange?: (rowIndex: number) => void;
+  /** Playback typing reveal (PRD-08): the fraction applies to `typingRowIndex`. */
+  typingRowIndex?: number;
+  typingFraction?: number;
 }
 
 /**
- * Virtualized transcript host (FR-23). Dynamic measured row heights —
+ * Virtualized transcript host (FR-23). Dynamic measured row heights -
  * expanding a tool result changes height, so we use `measureElement`. Anchor
  * scrolling uses `scrollToIndex` since target rows may be unmounted.
  */
 export const TranscriptList = React.forwardRef<TranscriptHandle, TranscriptListProps>(
   function TranscriptList(
-    { rows, highlightId, virtualize = true, onActiveRowChange },
+    { rows, highlightId, virtualize = true, onActiveRowChange, typingRowIndex, typingFraction },
     ref,
   ) {
+    const shared = { rows, highlightId, onActiveRowChange, typingRowIndex, typingFraction };
     if (!virtualize) {
-      return (
-        <PlainList
-          ref={ref}
-          rows={rows}
-          highlightId={highlightId}
-          onActiveRowChange={onActiveRowChange}
-        />
-      );
+      return <PlainList ref={ref} {...shared} />;
     }
-    return (
-      <VirtualList
-        ref={ref}
-        rows={rows}
-        highlightId={highlightId}
-        onActiveRowChange={onActiveRowChange}
-      />
-    );
+    return <VirtualList ref={ref} {...shared} />;
   },
 );
 
 const VirtualList = React.forwardRef<TranscriptHandle, TranscriptListProps>(
-  function VirtualList({ rows, highlightId, onActiveRowChange }, ref) {
+  function VirtualList(
+    { rows, highlightId, onActiveRowChange, typingRowIndex, typingFraction },
+    ref,
+  ) {
     const scrollRef = React.useRef<HTMLDivElement>(null);
 
     const virtualizer = useVirtualizer({
@@ -65,8 +63,11 @@ const VirtualList = React.forwardRef<TranscriptHandle, TranscriptListProps>(
     React.useImperativeHandle(
       ref,
       () => ({
-        scrollToRow: (rowIndex: number) =>
-          virtualizer.scrollToIndex(rowIndex, { align: 'start', behavior: 'auto' }),
+        scrollToRow: (rowIndex: number, opts?: ScrollToRowOptions) =>
+          virtualizer.scrollToIndex(rowIndex, {
+            align: opts?.align ?? 'start',
+            behavior: opts?.behavior ?? 'auto',
+          }),
       }),
       [virtualizer],
     );
@@ -105,7 +106,11 @@ const VirtualList = React.forwardRef<TranscriptHandle, TranscriptListProps>(
                 }}
                 className="pb-3"
               >
-                <TurnRenderer row={row} highlightId={highlightId} />
+                <TurnRenderer
+                  row={row}
+                  highlightId={highlightId}
+                  typingFraction={item.index === typingRowIndex ? typingFraction : undefined}
+                />
               </div>
             );
           })}
@@ -116,19 +121,22 @@ const VirtualList = React.forwardRef<TranscriptHandle, TranscriptListProps>(
 );
 
 const PlainList = React.forwardRef<TranscriptHandle, TranscriptListProps>(
-  function PlainList({ rows, highlightId }, ref) {
+  function PlainList({ rows, highlightId, typingRowIndex, typingFraction }, ref) {
     const containerRef = React.useRef<HTMLDivElement>(null);
 
     React.useImperativeHandle(
       ref,
       () => ({
-        scrollToRow: (rowIndex: number) => {
+        scrollToRow: (rowIndex: number, opts?: ScrollToRowOptions) => {
           const row = rows[rowIndex];
           if (!row) return;
           const el = containerRef.current?.querySelector(
             `[data-row-index="${rowIndex}"]`,
           );
-          (el as HTMLElement | null)?.scrollIntoView({ block: 'start' });
+          (el as HTMLElement | null)?.scrollIntoView({
+            block: opts?.align === 'center' ? 'center' : 'start',
+            behavior: opts?.behavior ?? 'auto',
+          });
         },
       }),
       [rows],
@@ -138,7 +146,11 @@ const PlainList = React.forwardRef<TranscriptHandle, TranscriptListProps>(
       <div ref={containerRef} className={cn('space-y-3 px-4 py-4')}>
         {rows.map((row, i) => (
           <div key={i} data-row-index={i}>
-            <TurnRenderer row={row} highlightId={highlightId} />
+            <TurnRenderer
+              row={row}
+              highlightId={highlightId}
+              typingFraction={i === typingRowIndex ? typingFraction : undefined}
+            />
           </div>
         ))}
       </div>

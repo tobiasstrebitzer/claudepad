@@ -11,7 +11,7 @@ type DropZoneProps = {
 };
 
 // Drag-and-drop + file-picker target (PRD-04 FR-1/FR-2/FR-4). The shape detector,
-// not the extension, decides validity — so the picker filter is a hint, not a gate.
+// not the extension, decides validity - so the picker filter is a hint, not a gate.
 export function DropZone({ onFile, onMultiple, children }: DropZoneProps) {
   const [dragging, setDragging] = React.useState(false);
   const inputRef = React.useRef<HTMLInputElement>(null);
@@ -52,7 +52,8 @@ export function DropZone({ onFile, onMultiple, children }: DropZoneProps) {
         <Upload className="size-5" />
       </div>
       <p className="mt-4 text-body text-text">
-        Drag a <code className="font-mono text-code">.jsonl</code> session here
+        Drag a <code className="font-mono text-code">.jsonl</code> session or{' '}
+        <code className="font-mono text-code">.cpad</code> share here
       </p>
       <p className="mt-1 text-body-sm text-muted">or paste a transcript (⌘V / Ctrl-V)</p>
       <div className="mt-5">
@@ -64,7 +65,7 @@ export function DropZone({ onFile, onMultiple, children }: DropZoneProps) {
       <input
         ref={inputRef}
         type="file"
-        accept=".jsonl,.json,.txt,.ndjson,application/json,text/plain"
+        accept=".jsonl,.json,.txt,.ndjson,.cpad,application/json,text/plain"
         className="sr-only"
         onChange={(e) => {
           const files = Array.from(e.target.files ?? []);

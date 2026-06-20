@@ -26,7 +26,7 @@ test.describe('ingest + viewer', () => {
       page.getByRole('heading', { name: 'Refactor the auth module' }),
     ).toBeVisible();
     await expect(page.getByText('local only')).toBeVisible();
-    // Secret placeholder is masked — the raw token never leaks.
+    // Secret placeholder is masked - the raw token never leaks.
     await expect(page.getByText(/AWS_KEY ••••••••\(20\)/)).toBeVisible();
     await expect(page.locator('body')).not.toContainText('cp-secret');
     // Clear returns to the empty state.
@@ -39,7 +39,8 @@ test.describe('ingest + viewer', () => {
   test('non-session input is rejected with guidance (FR-6)', async ({ page }) => {
     await page.goto('/#/');
     // Pick a prose file (not a session) → friendly rejection, never a crash.
-    await page.locator('input[type="file"]').setInputFiles({
+    // (The DropZone picker; the App also mounts a hidden top-bar/sidebar picker.)
+    await page.locator('input[type="file"]').first().setInputFiles({
       name: 'notes.txt',
       mimeType: 'text/plain',
       buffer: Buffer.from('just some notes I copied from a doc, not a session'),
@@ -70,7 +71,7 @@ test.describe('ingest + viewer', () => {
     await expect(
       page.getByRole('heading', { name: 'Refactor the auth module' }),
     ).toBeVisible();
-    // The code block highlights from a bundled grammar — still no external fetch.
+    // The code block highlights from a bundled grammar - still no external fetch.
     await expect(
       external,
       `unexpected external requests: ${external.join(', ')}`,
