@@ -8,7 +8,7 @@ import type {
 
 /**
  * A render-plan row: one top-level virtualized item. Tool results that
- * correlate to a tool_use are NOT emitted as their own row — they are nested
+ * correlate to a tool_use are NOT emitted as their own row - they are nested
  * under the owning tool_use row. Uncorrelated results still get a standalone
  * row (FR-9). Correlation is render-time only and never mutates the Session.
  */
@@ -21,7 +21,7 @@ export type RenderRow =
  * Correlate tool_use ↔ tool_result.
  *
  * Primary key: `tool_result.forToolId === tool_use.toolId` (Anthropic
- * tool_use_id — the reliable link). Tie-break / fallback for results lacking a
+ * tool_use_id - the reliable link). Tie-break / fallback for results lacking a
  * forToolId: the nearest *preceding* unmatched tool_use with a matching
  * `forName`, else the nearest preceding unmatched tool_use. A result that
  * matches nothing renders standalone.

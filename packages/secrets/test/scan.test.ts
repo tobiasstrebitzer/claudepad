@@ -17,7 +17,7 @@ function sessionWith(text: string): Session {
   };
 }
 
-describe('prefix detection (FR-2a, 100% recall on known shapes — AC-10)', () => {
+describe('prefix detection (FR-2a, 100% recall on known shapes - AC-10)', () => {
   const cases: [string, string, string][] = [
     ['OPENAI_KEY', 'sk-proj-abcDEF0123456789ghijklmnop', 'sk-proj-abcDEF0123456789ghijklmnop'],
     ['GH_TOKEN', 'ghp_0123456789abcdefABCDEF0123456789abcd', 'ghp_0123456789abcdefABCDEF0123456789abcd'],

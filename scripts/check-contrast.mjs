@@ -11,7 +11,7 @@ const css = readFileSync(
   'utf8',
 ).replace(/\/\*[\s\S]*?\*\//g, ''); // strip comments so they can't fuse with decls
 
-// Documented pairings — keep in sync with Gallery PAIRINGS. min = AA target.
+// Documented pairings - keep in sync with Gallery PAIRINGS. min = AA target.
 const PAIRINGS = [
   { fg: '--text', bg: '--bg', min: 4.5, note: 'body on canvas' },
   { fg: '--text', bg: '--surface', min: 4.5, note: 'body on surface' },

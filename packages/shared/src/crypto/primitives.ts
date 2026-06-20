@@ -1,4 +1,4 @@
-// Low-level WebCrypto wrappers — pure, zero-dependency, isomorphic.
+// Low-level WebCrypto wrappers - pure, zero-dependency, isomorphic.
 // Mirrors the exact calls in poc/verify.mjs. Uses globalThis.crypto so it runs
 // identically in browsers and Node 20+ (no `node:crypto` import).
 
@@ -58,7 +58,7 @@ export async function aesDecrypt(key: CryptoKey, layer: AesLayer): Promise<Uint8
     );
     return new Uint8Array(pt);
   } catch {
-    // WebCrypto throws an OperationError on auth failure — never leak it raw.
+    // WebCrypto throws an OperationError on auth failure - never leak it raw.
     throw new CryptoAuthError('AES-GCM authentication failed');
   }
 }

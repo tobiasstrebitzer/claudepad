@@ -2,7 +2,7 @@ export { SessionViewer } from './SessionViewer';
 export type { SessionViewerProps, SessionViewerOptions } from './SessionViewer';
 export { RawSessionView } from './components/RawSessionView';
 
-// View providers + controls — mounted at the app root (D-49) so the unified top
+// View providers + controls - mounted at the app root (D-49) so the unified top
 // bar can host the secrets/expand controls above the transcript.
 export { RevealProvider, type SecretMap } from './hooks/useReveal';
 export { ExpandProvider } from './hooks/useExpand';

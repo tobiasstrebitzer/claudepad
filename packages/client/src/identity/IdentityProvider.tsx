@@ -1,6 +1,6 @@
 // A single identity instance shared across the app via context. The app shell
 // renders the sidebar twice (desktop + mobile drawer) and the footer control
-// lives in both, so prop-threading a hook would split state — context keeps one
+// lives in both, so prop-threading a hook would split state - context keeps one
 // source of truth. Tests can pass a `storage` adapter to avoid real IndexedDB.
 
 import * as React from 'react';

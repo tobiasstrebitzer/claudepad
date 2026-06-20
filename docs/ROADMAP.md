@@ -1,6 +1,6 @@
-# claudepad — Roadmap to v1
+# claudepad - Roadmap to v1
 
-> Drop a Claude Code session, see it beautifully, share it with one person — encrypted so only they can read it, with no server in the middle.
+> Drop a Claude Code session, see it beautifully, share it with one person - encrypted so only they can read it, with no server in the middle.
 
 **Status:** Pre-development (crypto core proven via `poc/`) · **Target:** v1.0 (open-source, self-hostable, **entirely client-side**)
 **Last updated:** 2026-06-20
@@ -11,16 +11,16 @@
 
 `claudepad.io` turns a raw Claude Code session (`~/.claude/projects/*.jsonl`) into a clean, shareable, private artifact. Two promises:
 
-- **Easy** — the fewest possible steps from "I have a session" to "here's something I can send."
-- **Secure** — sharing is **trustless**: you encrypt a session *to a specific recipient's public key*, and the result is an inert blob you can drop anywhere (Slack, email, a file). Only the invited recipient can read it. No host — not even claudepad.io — can read it, because **there is no host**: v1 is entirely client-side.
+- **Easy** - the fewest possible steps from "I have a session" to "here's something I can send."
+- **Secure** - sharing is **trustless**: you encrypt a session *to a specific recipient's public key*, and the result is an inert blob you can drop anywhere (Slack, email, a file). Only the invited recipient can read it. No host - not even claudepad.io - can read it, because **there is no host**: v1 is entirely client-side.
 
-It ships as an open-source project anyone can self-host (it's a static site — "self-host" means "serve some files"), with `claudepad.io` as a free hosted instance running the same code.
+It ships as an open-source project anyone can self-host (it's a static site - "self-host" means "serve some files"), with `claudepad.io` as a free hosted instance running the same code.
 
 ## 2. The serverless decision (what v1 is and isn't)
 
 After a working proof of concept (`poc/`), v1 commits to a **pure-client, trustless** architecture (DECISIONS D-20…D-29):
 
-**v1 IS:** identity minted in-browser (an ECDH keypair), encrypt-to-recipient sharing with per-recipient secret tiering, human-verifiable key fingerprints, optional passkey/device protection of your identity, full session prettify, and playback — **all in the browser, zero backend.**
+**v1 IS:** identity minted in-browser (an ECDH keypair), encrypt-to-recipient sharing with per-recipient secret tiering, human-verifiable key fingerprints, optional passkey/device protection of your identity, full session prettify, and playback - **all in the browser, zero backend.**
 
 **v1 is NOT (deferred to vNext):** any server blob store, hosted `/s/<id>` short URLs, fragment-link "share with anyone" mode, expiry / burn-after-read / revocation, an inbox to discover what's shared with you, and durable availability/pinning. These need a server or coordinated storage; we consciously trade them for trustlessness.
 
@@ -64,16 +64,16 @@ P1 (PRD-01–04) is a usable offline prettifier. P2–P3 are the trustless-shari
 | 09 | Self-Hosting (Static) & Launch | P5 | Static deploy, config, packaging, threat-model docs, security review. |
 | 10 | Identity, Trust & Device Keys | P2 | Mint/import identity, fingerprints, WebAuthn-PRF device protection. |
 | 11 | Trustless Recipient Sharing | P3 | The share/receive flow: encrypt-to-recipient, tiers, drop-anywhere blob. |
-| ~~07~~ | ~~Backend Blob Store & API~~ | **vNext** | Deferred — kept for when an optional convenience store returns. |
+| ~~07~~ | ~~Backend Blob Store & API~~ | **vNext** | Deferred - kept for when an optional convenience store returns. |
 
 Full briefs in `docs/prd/README.md`; canonical shared facts in `docs/prd/_context.md`; the crypto/identity design in `docs/TRUSTLESS-MODEL.md`. The reference implementation is `poc/` (`poc/verify.mjs` = 16-check conformance anchor).
 
 ## 6. Out of scope for v1 (vNext)
 
-- **The entire server layer** — blob store (PRD-07), hosted short URLs, fragment-link mode, expiry/burn/revocation, inbox/discovery, pinning. (D-29.)
-- **Sender authentication beyond fingerprints** — optional detached signatures / social proofs (Keybase-style).
+- **The entire server layer** - blob store (PRD-07), hosted short URLs, fragment-link mode, expiry/burn/revocation, inbox/discovery, pinning. (D-29.)
+- **Sender authentication beyond fingerprints** - optional detached signatures / social proofs (Keybase-style).
 - **Group/many-recipient sharing** with forward secrecy (MLS-style).
-- **Multi-source ingest** — Codex, Gemini CLI, Cursor, etc. (PRD-02 stays source-agnostic; only Claude Code is parsed for v1.)
+- **Multi-source ingest** - Codex, Gemini CLI, Cursor, etc. (PRD-02 stays source-agnostic; only Claude Code is parsed for v1.)
 - **Organizations / teams / billing.**
 
 ## 7. Success metrics (v1)

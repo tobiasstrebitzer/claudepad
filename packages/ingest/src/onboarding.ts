@@ -2,7 +2,7 @@ import type { OS, OnboardingInfo } from './types';
 
 // OS-aware onboarding guidance (PRD-04 §4.1, FR-7/FR-8): where Claude Code session
 // files live, and a one-liner that lists the most-recently-modified ones (the latest
-// session). These are display strings only — they never read or transmit file contents.
+// session). These are display strings only - they never read or transmit file contents.
 
 const INFO: Record<OS, OnboardingInfo> = {
   mac: {

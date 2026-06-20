@@ -20,7 +20,7 @@ import { useReveal } from '../hooks/useReveal';
 // viewer context and self-hides when not applicable, so the bar can render them
 // unconditionally for a loaded session.
 
-/** Reveal/hide all redacted secrets — only shown when a secret map is present. */
+/** Reveal/hide all redacted secrets - only shown when a secret map is present. */
 export function SecretsControl() {
   const reveal = useReveal();
   if (!reveal.hasMap) return null;

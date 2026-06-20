@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { cn } from '../../lib/cn';
 
-// Skeleton (FR-11) — loading placeholder. Pulse respects reduced-motion (globals).
+// Skeleton (FR-11) - loading placeholder. Pulse respects reduced-motion (globals).
 export function Skeleton({ className, ...props }: React.ComponentProps<'div'>) {
   return (
     <div

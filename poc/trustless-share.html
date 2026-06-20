@@ -70,7 +70,7 @@
 <div class="wrap">
   <header>
     <h1><span class="spark">✳</span> claudepad <span class="muted" style="font-size:15px">· trustless share</span></h1>
-    <p>Proof of concept — no server, no accounts on a backend. Your identity and all crypto live in this browser. A shared blob can be dropped <em>anywhere</em> (Slack, a file, a gist) and only the invited recipient can read it.</p>
+    <p>Proof of concept - no server, no accounts on a backend. Your identity and all crypto live in this browser. A shared blob can be dropped <em>anywhere</em> (Slack, a file, a gist) and only the invited recipient can read it.</p>
   </header>
 
   <!-- ───────────── IDENTITY ───────────── -->
@@ -78,12 +78,12 @@
     <h2>1 · Your identity</h2>
     <div id="noIdentity">
       <p class="muted">You only need an identity to <strong>share</strong> (or to receive). Using claudepad just for yourself? Skip this.</p>
-      <label>Sign up — mint a new identity (pick a display name)</label>
+      <label>Sign up - mint a new identity (pick a display name)</label>
       <div class="row">
         <input type="text" id="newName" placeholder="e.g. Toby" style="max-width:220px" />
         <button class="primary" id="mintBtn">Mint identity</button>
       </div>
-      <label style="margin-top:18px">Sign in — paste an existing identity secret</label>
+      <label style="margin-top:18px">Sign in - paste an existing identity secret</label>
       <textarea id="importBox" placeholder="paste your identity secret (cp-id-…) here"></textarea>
       <div class="row"><button id="importBtn">Sign in</button></div>
     </div>
@@ -92,7 +92,7 @@
       <div class="row" style="justify-content:space-between">
         <span class="pill"><span class="dot" style="background:var(--muted)"></span> 🔒 Identity <strong id="lockedName"></strong> is locked by your device</span>
       </div>
-      <p class="muted" style="margin-top:12px">Your private key is encrypted at rest with your passkey/security key. Unlock it with your fingerprint, Face ID, or security key — nothing leaves this browser.</p>
+      <p class="muted" style="margin-top:12px">Your private key is encrypted at rest with your passkey/security key. Unlock it with your fingerprint, Face ID, or security key - nothing leaves this browser.</p>
       <div class="row">
         <button class="primary" id="unlockBtn">🔓 Unlock with device</button>
         <button id="forgetBtn">Forget on this browser</button>
@@ -105,21 +105,21 @@
         <span class="pill"><span class="dot"></span> Signed in as <strong id="whoName"></strong></span>
         <button id="logoutBtn">Sign out</button>
       </div>
-      <label style="margin-top:16px">Your <strong>public key</strong> — give this to friends so they can share with you. (Safe to post publicly.)</label>
+      <label style="margin-top:16px">Your <strong>public key</strong> - give this to friends so they can share with you. (Safe to post publicly.)</label>
       <div class="mono-out" id="myPublicCard"></div>
-      <div class="fp-label">Your <strong>fingerprint</strong> — read this aloud to a friend so they can confirm the key they got is really yours:</div>
+      <div class="fp-label">Your <strong>fingerprint</strong> - read this aloud to a friend so they can confirm the key they got is really yours:</div>
       <div id="myFp"></div>
       <div class="row">
         <button id="copyPubBtn">Copy public key</button>
         <button id="exportBtn">Download identity secret (back this up!)</button>
       </div>
-      <div class="warn">⚠ Your <strong>identity secret</strong> is your only key. If you clear this browser without backing it up, it's gone forever — and so is access to anything shared with you. There's no server to recover it.</div>
+      <div class="warn">⚠ Your <strong>identity secret</strong> is your only key. If you clear this browser without backing it up, it's gone forever - and so is access to anything shared with you. There's no server to recover it.</div>
 
       <div id="deviceProt" style="margin-top:18px;padding-top:16px;border-top:1px solid var(--border)">
         <div class="fp-label" style="margin-top:0">🔐 Device protection</div>
-        <div id="deviceUnsupported" class="muted" style="display:none">Passkey/security-key protection needs a real origin — it doesn't run from <code>file://</code>. Serve this over <code>http://localhost</code> to try it.</div>
+        <div id="deviceUnsupported" class="muted" style="display:none">Passkey/security-key protection needs a real origin - it doesn't run from <code>file://</code>. Serve this over <code>http://localhost</code> to try it.</div>
         <div id="deviceOffer" style="display:none">
-          <p class="muted" style="margin:6px 0 0">Encrypt your stored identity with a passkey or security key, so it can only be unlocked with your fingerprint / Face ID / hardware key — still no server. If your passkey syncs (iCloud/Google), your identity can roam to your other devices.</p>
+          <p class="muted" style="margin:6px 0 0">Encrypt your stored identity with a passkey or security key, so it can only be unlocked with your fingerprint / Face ID / hardware key - still no server. If your passkey syncs (iCloud/Google), your identity can roam to your other devices.</p>
           <div class="row"><button id="protectBtn">🔐 Protect with this device</button></div>
           <div id="protectErr"></div>
         </div>
@@ -134,16 +134,16 @@
   <!-- ───────────── SHARE ───────────── -->
   <section class="card">
     <h2>2 · Share a session (encrypt for one recipient)</h2>
-    <label>Recipient's public key — paste what they gave you</label>
+    <label>Recipient's public key - paste what they gave you</label>
     <textarea id="recipBox" placeholder="paste recipient public key (cp-pub-…)"></textarea>
     <div class="hint" id="recipWho"></div>
 
-    <label style="margin-top:14px">Session content (the body — what a low-priv viewer sees)</label>
+    <label style="margin-top:14px">Session content (the body - what a low-priv viewer sees)</label>
     <textarea id="bodyBox" placeholder="Paste a (redacted) Claude Code session here…">Assistant: Deploy with `vercel --prod`.
 User: where do I put the API token?
-Assistant: In .env as TOKEN=[SECRET ••••••••(20)] — never commit it.</textarea>
+Assistant: In .env as TOKEN=[SECRET ••••••••(20)] - never commit it.</textarea>
 
-    <label style="margin-top:14px">Secrets (optional — only a high-priv recipient sees these)</label>
+    <label style="margin-top:14px">Secrets (optional - only a high-priv recipient sees these)</label>
     <textarea id="secretBox" placeholder='{"S1":"sk-live-…"}'>{"S1":"sk-live-EXAMPLE-do-not-use-0xAA42"}</textarea>
 
     <div class="row">
@@ -159,14 +159,14 @@ Assistant: In .env as TOKEN=[SECRET ••••••••(20)] — never comm
 
     <div id="shareOut" style="display:none">
       <div class="result ok">
-        <h3>Shareable blob — only your recipient can read it</h3>
+        <h3>Shareable blob - only your recipient can read it</h3>
         <div class="mono-out" id="blobOut"></div>
         <div class="row">
           <button id="copyBlobBtn">Copy blob</button>
           <button id="downloadBlobBtn">Download .cpblob</button>
           <span class="muted" id="copyState"></span>
         </div>
-        <p class="hint">Drop this anywhere — a public Slack channel, an email, a file. It's inert text to everyone except the recipient you chose.</p>
+        <p class="hint">Drop this anywhere - a public Slack channel, an email, a file. It's inert text to everyone except the recipient you chose.</p>
       </div>
     </div>
   </section>
@@ -182,8 +182,8 @@ Assistant: In .env as TOKEN=[SECRET ••••••••(20)] — never comm
   </section>
 
   <div class="foot">
-    <strong>What this proves:</strong> minting an identity, encrypting to a recipient's public key, and per-recipient tiering (body vs body+secrets) all happen <em>entirely client-side</em> — no server is contacted. <br>
-    <strong>What it deliberately skips (the trustless trade-offs):</strong> durable availability/pinning, an inbox to discover what's shared with you, and any expiry / burn / revoke (immutable once public). Identity is stored in <code>localStorage</code> (exportable — and therefore your responsibility to protect). Sender name is self-claimed and <em>unverified</em>. Uses ECDH P-256 → HKDF-SHA256 → AES-256-GCM via WebCrypto.
+    <strong>What this proves:</strong> minting an identity, encrypting to a recipient's public key, and per-recipient tiering (body vs body+secrets) all happen <em>entirely client-side</em> - no server is contacted. <br>
+    <strong>What it deliberately skips (the trustless trade-offs):</strong> durable availability/pinning, an inbox to discover what's shared with you, and any expiry / burn / revoke (immutable once public). Identity is stored in <code>localStorage</code> (exportable - and therefore your responsibility to protect). Sender name is self-claimed and <em>unverified</em>. Uses ECDH P-256 → HKDF-SHA256 → AES-256-GCM via WebCrypto.
   </div>
 </div>
 
@@ -273,7 +273,7 @@ const prfSalt = () => subtle.digest('SHA-256', enc.encode('claudepad-poc-prf-sal
 async function createPasskey(name, salt){
   // Evaluate PRF *during* registration so a single ceremony yields the secret
   // (no second get()). Authenticators that can't eval-at-create return no
-  // results and we fall back to one get() — see protectBtn.
+  // results and we fall back to one get() - see protectBtn.
   const cred = await navigator.credentials.create({ publicKey: {
     rp: { id: location.hostname, name: 'claudepad PoC' },
     user: { id: rand(16), name: name + ' · claudepad', displayName: name },
@@ -342,7 +342,7 @@ $('importBtn').onclick = () => {
 };
 $('logoutBtn').onclick = () => {
   if (STORED && STORED.protected){ ME=null; renderIdentity(); return; } // protected → just re-lock
-  if(confirm('Sign out? Make sure you exported your identity secret — it cannot be recovered.')){ ME=null; STORED=null; localStorage.removeItem(KEY); renderIdentity(); }
+  if(confirm('Sign out? Make sure you exported your identity secret - it cannot be recovered.')){ ME=null; STORED=null; localStorage.removeItem(KEY); renderIdentity(); }
 };
 $('copyPubBtn').onclick = () => copy(publicCard(ME), $('copyPubBtn'));
 $('exportBtn').onclick = () => download(idToken(ME), `claudepad-identity-${ME.name}.txt`);
@@ -367,7 +367,7 @@ $('unlockBtn').onclick = async () => {
     const kek = await deriveKEK(await prfOutput(buf(STORED.credentialId)));
     ME = JSON.parse(dec.decode(await aesDec(kek, STORED.wrapped)));
     renderIdentity();
-  } catch(e){ $('unlockErr').innerHTML = res('bad','Unlock failed — wrong device, or the passkey was declined.'); }
+  } catch(e){ $('unlockErr').innerHTML = res('bad','Unlock failed - wrong device, or the passkey was declined.'); }
   finally { $('unlockBtn').disabled = false; $('unlockBtn').textContent = '🔓 Unlock with device'; }
 };
 $('unprotectBtn').onclick = () => {
@@ -375,7 +375,7 @@ $('unprotectBtn').onclick = () => {
   saveIdentity(); renderIdentity(); // ME has .priv → re-stores plaintext
 };
 $('forgetBtn').onclick = () => {
-  if (confirm('Forget this locked identity on this browser? You can only restore it by signing in with the exported secret — or, if your passkey syncs, on another synced device.')){
+  if (confirm('Forget this locked identity on this browser? You can only restore it by signing in with the exported secret - or, if your passkey syncs, on another synced device.')){
     ME=null; STORED=null; localStorage.removeItem(KEY); renderIdentity();
   }
 };
@@ -390,7 +390,7 @@ $('recipBox').addEventListener('input', async () => {
   try {
     const c = parseCard($('recipBox').value);
     const fp = await fingerprint(c.pub);
-    $('recipWho').innerHTML = `→ will encrypt for <strong>${escapeHtml(c.name)}</strong> — confirm this fingerprint matches what they told you:<br>${fpHtml(fp)}`;
+    $('recipWho').innerHTML = `→ will encrypt for <strong>${escapeHtml(c.name)}</strong> - confirm this fingerprint matches what they told you:<br>${fpHtml(fp)}`;
   }
   catch { $('recipWho').textContent = $('recipBox').value.trim() ? 'Not a valid public key yet…' : ''; }
 });
@@ -399,7 +399,7 @@ $('encryptBtn').onclick = async () => {
   if (!$('recipBox').value.trim()){ alert('Paste the recipient\'s public key.'); return; }
   let blob;
   try { blob = await createBlob({ sender:ME, recipientCard:$('recipBox').value, body:$('bodyBox').value, secrets:$('secretBox').value, tier:TIER }); }
-  catch(e){ alert('Could not encrypt — is the recipient public key valid?\n\n'+e); return; }
+  catch(e){ alert('Could not encrypt - is the recipient public key valid?\n\n'+e); return; }
   const token = 'cp-blob-' + b64(enc.encode(JSON.stringify(blob)));
   $('blobOut').textContent = token;
   $('shareOut').style.display = 'block';
@@ -421,21 +421,21 @@ $('openBtn').onclick = async () => {
     const senderFp = await fingerprint(r.from.pub);
     const tierTag = r.secrets!=null ? '<span class="tag">body + secrets</span>' : '<span class="tag low">body only</span>';
     let html = `<div class="result ok"><h3>Decrypted ${tierTag}</h3>`;
-    html += `<div class="muted">claims to be from <strong>${escapeHtml(r.from.name)}</strong> — only trust it if this fingerprint matches theirs:</div>${fpHtml(senderFp)}`;
+    html += `<div class="muted">claims to be from <strong>${escapeHtml(r.from.name)}</strong> - only trust it if this fingerprint matches theirs:</div>${fpHtml(senderFp)}`;
     html += `<pre style="margin-top:12px">${escapeHtml(r.body)}</pre>`;
     if (r.secrets!=null) html += `<div class="secretblock"><h3>Secrets (high-priv)</h3><pre>${escapeHtml(r.secrets)}</pre></div>`;
     else if (blob.tier!=='body') html += `<div class="secretblock muted">This blob has a secrets layer, but you weren't granted it.</div>`;
     html += `</div>`;
     out.innerHTML = html;
   } catch {
-    out.innerHTML = res('bad','🔒 This blob isn\'t addressed to your identity (or it\'s corrupt). The decryption key doesn\'t match — exactly what should happen if you\'re not the invited recipient.');
+    out.innerHTML = res('bad','🔒 This blob isn\'t addressed to your identity (or it\'s corrupt). The decryption key doesn\'t match - exactly what should happen if you\'re not the invited recipient.');
   }
 };
 
 // ---- helpers ----
 function res(kind,msg){ return `<div class="result ${kind}">${escapeHtml(msg)}</div>`; }
 function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-async function copy(text, btn){ try { await navigator.clipboard.writeText(text); if(btn){ const t=btn.textContent; btn.textContent='Copied ✓'; setTimeout(()=>btn.textContent=t,1200);} } catch { if(btn) btn.textContent='Copy failed — select manually'; } }
+async function copy(text, btn){ try { await navigator.clipboard.writeText(text); if(btn){ const t=btn.textContent; btn.textContent='Copied ✓'; setTimeout(()=>btn.textContent=t,1200);} } catch { if(btn) btn.textContent='Copy failed - select manually'; } }
 function download(text, filename){ const blob=new Blob([text],{type:'text/plain'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=filename; a.click(); URL.revokeObjectURL(url); }
 
 loadIdentity();

@@ -1,7 +1,7 @@
 // Persist the granted directory handle across visits.
 //
 // A FileSystemDirectoryHandle is structured-cloneable, so it can live directly in
-// IndexedDB. On a return visit we re-derive permission from it (see vault.ts) —
+// IndexedDB. On a return visit we re-derive permission from it (see vault.ts) -
 // the handle itself is the durable "connection", which is what makes a one-time
 // connect possible. Nothing here reads session contents.
 

@@ -42,7 +42,7 @@ const components = {
       const match = /language-(\w[\w+-]*)/.exec(className ?? '');
       return <CodeBlock code={text} lang={match?.[1]} />;
     }
-    // Inline code — still run through SecretText for embedded placeholders.
+    // Inline code - still run through SecretText for embedded placeholders.
     return (
       <code
         className={cn(

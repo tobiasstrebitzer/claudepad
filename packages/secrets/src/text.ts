@@ -1,6 +1,6 @@
 // Where secrets can live in a normalized Session (PRD-06 FR-1), and how to walk
 // those locations for scanning (read) and redaction (rewrite). Everything else is
-// copied through unchanged — PRD-02's "preserve unknown, never crash" invariant
+// copied through unchanged - PRD-02's "preserve unknown, never crash" invariant
 // (FR-26).
 //
 // Scanned locations: text/code content blocks of user/assistant/thinking events,

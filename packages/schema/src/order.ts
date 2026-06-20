@@ -1,4 +1,4 @@
-// order.ts — total ordering of events (FR-25, FR-28).
+// order.ts - total ordering of events (FR-25, FR-28).
 //
 // Precedence: (1) parentUuid→uuid DAG topologically sorted; (2) timestamp
 // ascending where the DAG is ambiguous/absent; (3) original file/line order as
@@ -9,7 +9,7 @@ import type { SessionEvent } from './types';
 
 interface Node {
   event: SessionEvent;
-  /** Stable original index (file/line order) — the ultimate tiebreaker. */
+  /** Stable original index (file/line order) - the ultimate tiebreaker. */
   fileIndex: number;
   /** Base id with any #N block suffix removed, for DAG linkage. */
   baseId: string | undefined;
@@ -64,7 +64,7 @@ export function orderEvents(events: SessionEvent[]): SessionEvent[] {
       return 0;
     }
     if (guard.has(n)) {
-      // Cycle — treat as root to stay finite.
+      // Cycle - treat as root to stay finite.
       return 0;
     }
     const parentGroup = byBaseId.get(n.parentBaseId);
@@ -125,7 +125,7 @@ export function orderEvents(events: SessionEvent[]): SessionEvent[] {
     if (a.depth !== b.depth) return a.depth - b.depth;
     // 4. Timestamp ascending.
     if (a.node.tsMs !== b.node.tsMs) return a.node.tsMs - b.node.tsMs;
-    // 5. Original file/line order — the final, deterministic tiebreaker.
+    // 5. Original file/line order - the final, deterministic tiebreaker.
     return a.node.fileIndex - b.node.fileIndex;
   });
 

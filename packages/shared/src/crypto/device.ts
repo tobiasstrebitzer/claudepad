@@ -1,4 +1,4 @@
-// Pattern-A device protection (data layer only — no WebAuthn here, that's PRD-10).
+// Pattern-A device protection (data layer only - no WebAuthn here, that's PRD-10).
 // The identity at rest is wrapped under a KEK derived from a WebAuthn-PRF output, so
 // the private key is encrypted until a passkey unlock re-derives the same KEK.
 // Mirrors poc/verify.mjs test [6].

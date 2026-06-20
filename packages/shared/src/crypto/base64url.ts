@@ -7,7 +7,7 @@
 
 import { CryptoFormatError } from './errors';
 
-const CHUNK = 0x8000; // 32k bytes per fromCharCode call — safely under arg limits.
+const CHUNK = 0x8000; // 32k bytes per fromCharCode call - safely under arg limits.
 
 /** Encode bytes as base64url (no padding). */
 export function bytesToB64url(u8: Uint8Array): string {

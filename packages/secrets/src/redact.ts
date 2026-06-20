@@ -1,5 +1,5 @@
 // Redactor (PRD-06 FR-20…FR-27): turn confirmed detections into a placeholder
-// body + a secret map. Redaction is by VALUE — every exact occurrence of a
+// body + a secret map. Redaction is by VALUE - every exact occurrence of a
 // confirmed value, anywhere in the scannable strings, becomes its token. This
 // guarantees the hard gate (FR-25): no confirmed value survives in the body.
 

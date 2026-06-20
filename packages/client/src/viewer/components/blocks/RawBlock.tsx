@@ -40,7 +40,7 @@ export function RawBlock({
           )}
         />
         <FileQuestion className="size-3.5 shrink-0" />
-        <span>{label} — show raw JSON</span>
+        <span>{label} - show raw JSON</span>
       </CollapsibleTrigger>
       <CollapsiblePanel>
         <pre className="overflow-x-auto px-3 py-2 font-mono text-code text-text">

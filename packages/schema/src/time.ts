@@ -1,4 +1,4 @@
-// time.ts — ISO-8601 UTC normalization (FR-26).
+// time.ts - ISO-8601 UTC normalization (FR-26).
 //
 // Valid ISO timestamps pass through (re-emitted as canonical UTC ISO);
 // invalid/missing → undefined (never `Invalid Date`). Never invents a value.

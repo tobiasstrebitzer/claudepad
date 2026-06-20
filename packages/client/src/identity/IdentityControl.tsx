@@ -1,5 +1,5 @@
 // The identity affordance in the sidebar footer (replaces the old hardcoded
-// "self-host" stub). One click opens the full panel in a popover — frictionless:
+// "self-host" stub). One click opens the full panel in a popover - frictionless:
 // the identity is always one reach away, never its own page. The trigger reflects
 // the current state (none / locked / signed-in) at a glance.
 

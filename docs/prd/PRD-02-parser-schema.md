@@ -1,13 +1,13 @@
-# PRD-02 — Session Parser & Normalized Schema
+# PRD-02 - Session Parser & Normalized Schema
 
 > **Phase:** P0 (Foundation) · **Status:** Draft · **Owner PRD for:** the shared normalized `Session` type spec
-> Read [`_context.md`](./_context.md) first — it is canonical. This PRD **owns and finalizes** the normalized session model sketched in `_context.md` §6 and the shared types package consumed by the viewer (PRD-03), ingest (PRD-04), crypto (PRD-05), secrets (PRD-06), and playback (PRD-08).
+> Read [`_context.md`](./_context.md) first - it is canonical. This PRD **owns and finalizes** the normalized session model sketched in `_context.md` §6 and the shared types package consumed by the viewer (PRD-03), ingest (PRD-04), crypto (PRD-05), secrets (PRD-06), and playback (PRD-08).
 
 ---
 
 ## 1. Summary & problem
 
-claudepad's entire value chain — prettified rendering, secret redaction, encryption, and playback — operates on a single in-memory data structure, **not** on raw Claude Code JSONL. PRD-02 builds the tolerant ingest core that converts a raw Claude Code session file (`~/.claude/projects/*.jsonl`), or a pasted clipboard fragment, into a normalized, source-agnostic `Session` model. The Claude Code JSONL format is **undocumented, versioned, and changes between releases** (this PRD's fixtures already span 15 versions, `2.1.140`–`2.1.183`, with event kinds not present in earlier indicative specs). The parser must therefore treat the input as adversarial and evolving: it must never throw while rendering, must preserve unknown fields rather than drop them, and must degrade gracefully when it meets a shape it has never seen. This is the single highest-leverage resilience component in the product — every downstream PRD assumes "the `Session` is always valid and renderable."
+claudepad's entire value chain - prettified rendering, secret redaction, encryption, and playback - operates on a single in-memory data structure, **not** on raw Claude Code JSONL. PRD-02 builds the tolerant ingest core that converts a raw Claude Code session file (`~/.claude/projects/*.jsonl`), or a pasted clipboard fragment, into a normalized, source-agnostic `Session` model. The Claude Code JSONL format is **undocumented, versioned, and changes between releases** (this PRD's fixtures already span 15 versions, `2.1.140`–`2.1.183`, with event kinds not present in earlier indicative specs). The parser must therefore treat the input as adversarial and evolving: it must never throw while rendering, must preserve unknown fields rather than drop them, and must degrade gracefully when it meets a shape it has never seen. This is the single highest-leverage resilience component in the product - every downstream PRD assumes "the `Session` is always valid and renderable."
 
 ## 2. Goals / Non-goals
 
@@ -82,7 +82,7 @@ The parser **always returns** a `ParseResult`. It never rejects/throws for conte
 
 ```
  ┌───────────────────────────────────────────────────────────┐
- │ ⚠  Parsed with 3 notes — newer Claude Code format (2.1.183) │
+ │ ⚠  Parsed with 3 notes - newer Claude Code format (2.1.183) │
  │    2 unknown blocks preserved · 1 line could not be read    │   [Details ▾]
  └───────────────────────────────────────────────────────────┘
 ```
@@ -99,7 +99,7 @@ Numbered, testable. Each maps to at least one fixture/Vitest case (§10, §6.6).
 - **FR-3** A line that fails `JSON.parse` MUST NOT abort parsing; it MUST emit a `DiagnosticRecord { kind: 'unparseable-line', line, snippet }` and be skipped (or preserved as a `meta` event when `preserveUnparseable` is set; see FR-21).
 - **FR-4** The parser MUST detect the **input form**: `jsonl` (≥1 valid object lines), `single-json` (a single JSON object/array, e.g. one pasted message), `clipboard-fragment` (newline-joined human-pasted text that is not valid JSON), or `unknown`. Form detection MUST be heuristic and side-effect-free.
 - **FR-5** For `clipboard-fragment` / non-JSON text, the parser MUST still return a valid `Session` containing the text as a single `user` event with a `text` block, plus a diagnostic noting low-confidence interpretation. (Supports PRD-04 paste.)
-- **FR-6** An empty or whitespace-only input MUST return a valid, empty `Session` (zero events) plus a diagnostic — never an exception.
+- **FR-6** An empty or whitespace-only input MUST return a valid, empty `Session` (zero events) plus a diagnostic - never an exception.
 
 ### Source & version detection
 - **FR-7** The parser MUST set `session.source` (v1: always `'claude-code'`) via a detector. Detection MUST be based on structural signals (presence of `sessionId`, `uuid`, `parentUuid`, Anthropic `message.role`/`content` shapes), **not** filename.
@@ -117,12 +117,12 @@ Numbered, testable. Each maps to at least one fixture/Vitest case (§10, §6.6).
 - **FR-17** A `user` record whose `content` array contains **only** `tool_result` blocks (a tool-turn, not human input) MUST NOT be rendered as a human "user" message; it MUST emit `tool_result` event(s) only. (Prevents PRD-03 from drawing empty user bubbles.)
 - **FR-18** `type: "system"` records (e.g. `subtype: "turn_duration"`) MUST map to `meta` events carrying `subtype` and salient fields (`durationMs`, `messageCount`) in `raw`; they are non-conversational metadata.
 - **FR-19** Records with `isMeta: true` MUST be flagged on the resulting event (`meta` flag) so PRD-03 can de-emphasize/collapse them.
-- **FR-20** Session-scoped metadata records — `ai-title` (→ `meta.title`), `mode`, `permission-mode`, `last-prompt`, `file-history-snapshot`, `attachment`, `queue-operation`, `bridge-session`, `pr-link`, and the legacy `summary` line — MUST be recognized: title/cwd/model/startedAt are lifted into `session.meta`; the remainder become `meta` events (or are folded into session meta) **without** appearing as conversation turns. Each unmapped-but-recognized type MUST round-trip its raw record into the event's `raw`.
+- **FR-20** Session-scoped metadata records - `ai-title` (→ `meta.title`), `mode`, `permission-mode`, `last-prompt`, `file-history-snapshot`, `attachment`, `queue-operation`, `bridge-session`, `pr-link`, and the legacy `summary` line - MUST be recognized: title/cwd/model/startedAt are lifted into `session.meta`; the remainder become `meta` events (or are folded into session meta) **without** appearing as conversation turns. Each unmapped-but-recognized type MUST round-trip its raw record into the event's `raw`.
 
 ### Unknown-field preservation (the resilience core)
 - **FR-21** Any record with an **unrecognized `type`** MUST become a `meta` event with `note` set to the type and the entire original record preserved in `raw`. The parser MUST NOT drop it. (Addresses ROADMAP risk: "format is undocumented & changes.")
 - **FR-22** Any **unrecognized content block `type`** MUST become a `ContentBlock{type:'raw', value: <original block>}`. PRD-03 renders it as a collapsed "unknown block" rather than failing.
-- **FR-23** Every event MUST retain its source `uuid` (when present) as `event.id`, and the original record MUST be retrievable via `event.raw` (kept by default; strippable via option for payload size — see FR-30).
+- **FR-23** Every event MUST retain its source `uuid` (when present) as `event.id`, and the original record MUST be retrievable via `event.raw` (kept by default; strippable via option for payload size - see FR-30).
 - **FR-24** The parser MUST never let a single bad event corrupt others: mapping is per-record and wrapped so a thrown adapter error becomes a `meta` event + `adapter-error` diagnostic, not a top-level crash.
 
 ### Ordering & timestamp normalization (for PRD-08)
@@ -178,7 +178,7 @@ interface SourceAdapter {
 
 Adding Codex/Gemini later = a new adapter file + fixtures; **no change** to `types.ts`, `order.ts`, or any downstream PRD. This is the concrete payoff of "source-agnostic."
 
-### 6.3 Tolerance strategy — three layers
+### 6.3 Tolerance strategy - three layers
 
 1. **Lexical** (`tokenize.ts`): never assume well-formed NDJSON. Partial last line, blank lines, `\r\n`, stray prose → handled.
 2. **Structural** (`detect.ts` + adapter): unknown `type` → `meta`+`raw`; unknown block → `raw`; missing fields → optional/undefined, not error.
@@ -191,7 +191,7 @@ The non-negotiable invariant, asserted by a property test (§10): **for any byte
 Claude Code records form a `parentUuid → uuid` linked structure (verified: `parentUuid: null` at root, each subsequent record points back). Pure timestamp sort is insufficient because (a) some records (e.g. `mode`, `ai-title`) carry no timestamp, and (b) streamed assistant chunks can share a millisecond. We topo-sort the DAG and use timestamp + file order only to break ties (FR-25). This gives PRD-08 a faithful causal order and a stable scrubber.
 
 ### 6.5 Trade-offs & decisions
-- **Keep `raw` by default (FR-30).** Costs memory on huge sessions but is the safety net for unknown formats and the *only* place PRD-06 can find secrets hiding in unmodeled fields. `preserveRaw:false` is offered for the share/upload path once PRD-06 has scanned (so ciphertext stays lean). Trade-off: fidelity vs. payload — defaulted to fidelity.
+- **Keep `raw` by default (FR-30).** Costs memory on huge sessions but is the safety net for unknown formats and the *only* place PRD-06 can find secrets hiding in unmodeled fields. `preserveRaw:false` is offered for the share/upload path once PRD-06 has scanned (so ciphertext stays lean). Trade-off: fidelity vs. payload - defaulted to fidelity.
 - **`thinking` as its own event kind, not a ContentBlock.** Matches `_context.md` §6 and lets PRD-03/PRD-08 collapse/skip reasoning independently; the cost is splitting one assistant record into multiple events (handled in §6.1 `events.ts`).
 - **No streaming/incremental parse in v1.** Sessions are read whole (largest observed are a few MB; `maxBytes` guard included). Streaming is a vNext optimization for very large sessions.
 - **Detection by structure, not filename (FR-7).** Pasted fragments have no filename; structure-based detection works for both file and clipboard paths (PRD-04).
@@ -205,7 +205,7 @@ Directly answers ROADMAP risk *"Claude Code JSONL format is undocumented & chang
 - **Tests:**
   - *Golden snapshots* per version fixture (event count, kinds, order, lifted meta).
   - *Property test* (`fast-check`): random bytes / mutated valid JSONL → `parseSession` never throws and always returns a `ParseResult` (the FR-24/§6.3 invariant).
-  - *Round-trip-of-fidelity* test: every input record is accounted for (mapped to an event or a diagnostic; nothing silently vanished) — `mappedRecords + droppedToDiagnostics === totalRecords`.
+  - *Round-trip-of-fidelity* test: every input record is accounted for (mapped to an event or a diagnostic; nothing silently vanished) - `mappedRecords + droppedToDiagnostics === totalRecords`.
   - *Ordering* test: deterministic order; DAG-then-timestamp precedence; sidechain laning.
   - *Coverage gate:* `parse.ts`, `order.ts`, `adapters/claude-code/**` held to a high line/branch threshold in CI.
 - **CI hook:** a lightweight script can scan a developer's local `~/.claude/projects` (opt-in, never committed) to flag unseen `type`/block values, prompting a fixture addition before they hit users.
@@ -217,7 +217,7 @@ This section is the **authoritative finalization** of `_context.md` §6. Where i
 ### 7.1 Core types
 
 ```ts
-// @claudepad/schema — types.ts
+// @claudepad/schema - types.ts
 
 export const SCHEMA_VERSION = '1' as const;
 
@@ -262,7 +262,7 @@ export interface EventBase {
   parentId?: string | null;
   /** ISO-8601 UTC, or undefined when source had no/invalid timestamp (FR-26). */
   ts?: string;
-  /** 'main' | 'sidechain:<id>' — sub-agent laning (FR-28). */
+  /** 'main' | 'sidechain:<id>' - sub-agent laning (FR-28). */
   lane?: string;
   /** True when source flagged isMeta (de-emphasize in UI) (FR-19). */
   meta?: boolean;
@@ -309,7 +309,7 @@ export type DiagnosticKind =
 
 export interface DiagnosticRecord {
   kind: DiagnosticKind;
-  /** 'info' | 'warn' — never 'error' that blocks rendering. */
+  /** 'info' | 'warn' - never 'error' that blocks rendering. */
   level: 'info' | 'warn';
   message: string;
   line?: number;          // 1-based source line, when applicable
@@ -390,30 +390,30 @@ export function parseSession(
 }
 ```
 
-Note: one assistant record → two events (`thinking` + `tool_use`), ids suffixed `#0/#1` to stay unique while preserving the source `uuid` prefix; the tool-result `user` record produced **no** user event (FR-17). The real `.mcp.json` output contains live-looking secrets — preserved verbatim here so **PRD-06** can detect and redact them; PRD-02 deliberately does not touch them.
+Note: one assistant record → two events (`thinking` + `tool_use`), ids suffixed `#0/#1` to stay unique while preserving the source `uuid` prefix; the tool-result `user` record produced **no** user event (FR-17). The real `.mcp.json` output contains live-looking secrets - preserved verbatim here so **PRD-06** can detect and redact them; PRD-02 deliberately does not touch them.
 
 ## 8. Security & privacy
 
 - **Conforms to zero-knowledge (§5.1, D-1).** The parser is **pure and offline** (FR-29/FR-30): no network, no telemetry, no globals beyond `TextDecoder`. It runs identically in browser and CLI before any encryption, so plaintext never leaves the client to be understood.
-- **Faithful, non-destructive.** PRD-02 **must not** redact, mask, or drop content (it preserves `raw` by default). Redaction is PRD-06's job and happens *after* parsing. If PRD-02 silently dropped an unmodeled field, a secret hiding there would (a) be invisible to PRD-06's scanner yet (b) still ship inside `raw` elsewhere — so preservation + scanning, not dropping, is the safe combination.
+- **Faithful, non-destructive.** PRD-02 **must not** redact, mask, or drop content (it preserves `raw` by default). Redaction is PRD-06's job and happens *after* parsing. If PRD-02 silently dropped an unmodeled field, a secret hiding there would (a) be invisible to PRD-06's scanner yet (b) still ship inside `raw` elsewhere - so preservation + scanning, not dropping, is the safe combination.
 - **Diagnostics are content-light.** `DiagnosticRecord.snippet` is truncated and intended for "line 42 unparseable" UX, not content dumps; downstream UI MUST treat snippets as potentially sensitive (they originate from the raw file) and keep them client-side only.
-- **`preserveRaw:false` on the share path.** Once PRD-06 has scanned and PRD-05 is ready to encrypt, the upload path MAY re-parse (or strip) with `preserveRaw:false` so `raw` blobs (including thinking `signature`s and duplicate payloads) don't bloat ciphertext — reducing the metadata surface the server sees (§5.7).
+- **`preserveRaw:false` on the share path.** Once PRD-06 has scanned and PRD-05 is ready to encrypt, the upload path MAY re-parse (or strip) with `preserveRaw:false` so `raw` blobs (including thinking `signature`s and duplicate payloads) don't bloat ciphertext - reducing the metadata surface the server sees (§5.7).
 - **No code execution.** `tool_use.input` and `tool_result.output` are carried as opaque `unknown` and never `eval`'d, interpolated into HTML, or executed; rendering safety (escaping/sanitization) is PRD-03's responsibility, but PRD-02 guarantees it hands over inert data.
 - **Risks introduced:** memory footprint of `raw` on very large sessions (mitigated by `maxBytes` + `preserveRaw:false`); a malformed file can produce many diagnostics (bounded/aggregated to avoid UI flooding).
 
 ## 9. Dependencies
 
 **Upstream (this PRD depends on):**
-- **`_context.md` §6** — the indicative model this PRD finalizes (and should be updated to defer here).
-- **D-10 / D-12** — normalized, source-agnostic, unknown-fields-preserved; Claude Code only for v1.
-- None code-wise: PRD-02 is a leaf, zero-runtime-dep package — it's the foundation, intentionally built first (ROADMAP critical path PRD-01 → **PRD-02** → PRD-03).
+- **`_context.md` §6** - the indicative model this PRD finalizes (and should be updated to defer here).
+- **D-10 / D-12** - normalized, source-agnostic, unknown-fields-preserved; Claude Code only for v1.
+- None code-wise: PRD-02 is a leaf, zero-runtime-dep package - it's the foundation, intentionally built first (ROADMAP critical path PRD-01 → **PRD-02** → PRD-03).
 
 **Downstream (these PRDs consume `@claudepad/schema`):**
-- **PRD-03 (Viewer)** — renders `Session.events`; relies on `ContentBlock` variants, `raw`/`meta` graceful degradation, and `lane` for sidechain grouping.
-- **PRD-04 (Ingest)** — calls `parseSession` on drag-drop/paste/CLI input; surfaces `diagnostics` in the onboarding UI; relies on `clipboard-fragment`/`single-json` forms (FR-4/FR-5).
-- **PRD-05 (Crypto)** — encrypts the normalized `Session` (and PRD-06's secret map); benefits from `preserveRaw:false` lean output.
-- **PRD-06 (Secrets)** — scans `ContentBlock` text + `tool_use.input` + `tool_result.output` + `raw`; replaces detected values with placeholders **post-parse**. Hard dependency on PRD-02 preserving plaintext faithfully.
-- **PRD-08 (Playback)** — depends on the **total ordering + ISO timestamps + `lane`** (FR-25..28) and `meta.startedAt/endedAt` to drive the timeline/scrubber and pacing.
+- **PRD-03 (Viewer)** - renders `Session.events`; relies on `ContentBlock` variants, `raw`/`meta` graceful degradation, and `lane` for sidechain grouping.
+- **PRD-04 (Ingest)** - calls `parseSession` on drag-drop/paste/CLI input; surfaces `diagnostics` in the onboarding UI; relies on `clipboard-fragment`/`single-json` forms (FR-4/FR-5).
+- **PRD-05 (Crypto)** - encrypts the normalized `Session` (and PRD-06's secret map); benefits from `preserveRaw:false` lean output.
+- **PRD-06 (Secrets)** - scans `ContentBlock` text + `tool_use.input` + `tool_result.output` + `raw`; replaces detected values with placeholders **post-parse**. Hard dependency on PRD-02 preserving plaintext faithfully.
+- **PRD-08 (Playback)** - depends on the **total ordering + ISO timestamps + `lane`** (FR-25..28) and `meta.startedAt/endedAt` to drive the timeline/scrubber and pacing.
 
 ## 10. Acceptance criteria / DoD
 
@@ -433,12 +433,12 @@ Note: one assistant record → two events (`thinking` + `tool_use`), ids suffixe
 ## 11. Open questions
 
 - **OQ-1 (raw retention default).** Keep `preserveRaw:true` by default everywhere, or default it off on the share/upload path automatically after PRD-06 scans? *Leaning: on by default for local/view fidelity; PRD-05/06 explicitly opt into `preserveRaw:false` before encryption.* Needs sign-off with PRD-05.
-- **OQ-2 (code-block promotion).** Should the parser promote fenced ` ```lang ` text inside `text` blocks into `{type:'code', lang}` ContentBlocks, or leave that entirely to PRD-03's markdown renderer? *Leaning: leave raw text; let PRD-03 own markdown/code detection — keeps the parser source-faithful and avoids double-parsing.* Confirm with PRD-03.
+- **OQ-2 (code-block promotion).** Should the parser promote fenced ` ```lang ` text inside `text` blocks into `{type:'code', lang}` ContentBlocks, or leave that entirely to PRD-03's markdown renderer? *Leaning: leave raw text; let PRD-03 own markdown/code detection - keeps the parser source-faithful and avoids double-parsing.* Confirm with PRD-03.
 - **OQ-3 (sidechain rendering contract).** PRD-02 lanes sub-agent events (`lane: 'sidechain:<id>'`); do PRD-03/PRD-08 want them inlined-but-collapsible, in a side panel, or hidden by default? Schema supports all three; the *default presentation* is a PRD-03/08 decision.
 - **OQ-4 (session `id` when `sessionId` absent).** For pasted fragments with no `sessionId`, derive `id` from a content hash (stable, deterministic) vs. a random UUID (simpler, non-deterministic). *Leaning: content hash for dedupe/idempotency; confirm hash choice is non-cryptographic/cheap and not confused with PRD-05 keys.*
-- **OQ-5 (image bytes).** v1 corpus showed no image blocks, but Claude Code supports pasted images. Confirm the real shape (`source.type: 'base64' | 'url'`, `media_type`) against a fixture before locking `ContentBlock{type:'image'}` `encoding` field — treat current shape as best-effort until a real image fixture exists.
+- **OQ-5 (image bytes).** v1 corpus showed no image blocks, but Claude Code supports pasted images. Confirm the real shape (`source.type: 'base64' | 'url'`, `media_type`) against a fixture before locking `ContentBlock{type:'image'}` `encoding` field - treat current shape as best-effort until a real image fixture exists.
 - **OQ-6 (`toolUseResult` vs inline `tool_result`).** Real records carry both a top-level `toolUseResult` (structured: `stdout`/`stderr`/etc.) and an inline `tool_result` block (flattened string). Which is canonical for PRD-03 rendering, and do we expose both? *Leaning: prefer the richer `toolUseResult` as `output`, keep the inline block in `raw`; revisit per tool type with PRD-03.*
 
 ## 12. Phase / milestone
 
-**Phase P0 — Foundation.** On the ROADMAP critical path immediately after PRD-01 (`PRD-01 → PRD-02 → PRD-03 → …`). Nothing user-visible ships from P0, but PRD-02 is the data spine every downstream feature is built on; it must land, with its fixture corpus and never-throws guarantees, before the P1 viewer (PRD-03) and ingest (PRD-04) work begins. Directly owns the ROADMAP success metric *"Parser resilience: renders the last N released Claude Code session formats without crashing; unknown fields degrade gracefully"* and mitigates the top ROADMAP risk *"Claude Code JSONL format is undocumented & changes."*
+**Phase P0 - Foundation.** On the ROADMAP critical path immediately after PRD-01 (`PRD-01 → PRD-02 → PRD-03 → …`). Nothing user-visible ships from P0, but PRD-02 is the data spine every downstream feature is built on; it must land, with its fixture corpus and never-throws guarantees, before the P1 viewer (PRD-03) and ingest (PRD-04) work begins. Directly owns the ROADMAP success metric *"Parser resilience: renders the last N released Claude Code session formats without crashing; unknown fields degrade gracefully"* and mitigates the top ROADMAP risk *"Claude Code JSONL format is undocumented & changes."*

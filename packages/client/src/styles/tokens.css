@@ -1,5 +1,5 @@
 /*
- * claudepad design tokens — the SINGLE source of color truth (PRD-01 §7.1, FR-1/FR-6).
+ * claudepad design tokens - the SINGLE source of color truth (PRD-01 §7.1, FR-1/FR-6).
  * This is the ONLY file permitted to contain raw color hex (enforced by
  * scripts/check-no-raw-hex.mjs). Light is canonical; dark is a warm-dark token swap.
  * Components consume the semantic names via Tailwind utilities (see globals.css @theme),
@@ -9,16 +9,16 @@
 :root,
 [data-theme='light'] {
   /* Surfaces */
-  --bg: #fafaf7; /* app canvas — paige / warm off-white */
+  --bg: #fafaf7; /* app canvas - paige / warm off-white */
   --surface: #ffffff; /* cards, panels */
   --sidebar: #f3f2ee; /* sidebar / secondary surfaces */
   --border: #e8e6df; /* 1px hairline borders */
 
   /* Text */
-  --text: #1f1e1d; /* primary text — warm near-black */
+  --text: #1f1e1d; /* primary text - warm near-black */
   --text-muted: #6b6862; /* secondary text */
 
-  /* Accent — the clay/terracotta "spark" */
+  /* Accent - the clay/terracotta "spark" */
   --accent: #cc785c;
   --accent-hover: #b5634a;
   --accent-tint: rgba(204, 120, 92, 0.1); /* active rows / soft hover bg */
@@ -38,7 +38,7 @@
 }
 
 [data-theme='dark'] {
-  /* Surfaces — warm dark, never #000 */
+  /* Surfaces - warm dark, never #000 */
   --bg: #1a1917;
   --surface: #222120;
   --sidebar: #1f1e1c;
@@ -48,7 +48,7 @@
   --text: #eceae4;
   --text-muted: #a6a29a;
 
-  /* Accent — lifted for contrast on dark, hue preserved */
+  /* Accent - lifted for contrast on dark, hue preserved */
   --accent: #d98e73;
   --accent-hover: #c57a60;
   --accent-tint: rgba(217, 142, 115, 0.14);

@@ -5,7 +5,7 @@ import type { SessionEvent } from '@claudepad/schema';
  * Stable anchor id for an event. Prefers the source/event id; falls back to a
  * kind+index synthesized id so deep links work even when ids are absent. Kept
  * deterministic so a shared link survives a re-render (id stability across
- * re-parses is coordinated with PRD-02 — see PRD-03 §11.7).
+ * re-parses is coordinated with PRD-02 - see PRD-03 §11.7).
  */
 export function anchorIdFor(event: SessionEvent, index: number): string {
   if (event.id) return sanitizeAnchor(event.id);

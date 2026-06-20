@@ -1,4 +1,4 @@
-# PRD-01 — Design System & UI Foundation
+# PRD-01 - Design System & UI Foundation
 
 > **Phase:** P0 (Foundation) · **Status:** Draft · **Owner PRD for:** visual identity, design tokens, component primitives, app shell, motion, a11y baseline.
 > Canonical context: [`_context.md`](./_context.md) (tech stack §3, design tokens §4, template §7). This PRD implements §4; if it ever conflicts with §4, §4 wins.
@@ -7,7 +7,7 @@
 
 ## 1. Summary & problem
 
-claudepad needs one shared visual language before any user-facing surface is built. Without a token system, type scale, and component foundation, PRD-03 (viewer), PRD-04 (ingest), PRD-06 (secret review), and PRD-08 (playback) would each invent their own spacing, colors, and primitives — producing drift, accessibility gaps, and rework. This PRD establishes claudepad's **warm-minimal identity** (paige/white canvas, clay-orange spark, serif display + clean sans + mono), a CSS-variable token architecture with light as default and dark as a token swap, the shadcn/ui-on-Base-UI + Tailwind wiring, motion and accessibility baselines, the app-shell layout, and a **living component gallery** that doubles as the visual contract. The result is a recognizably-claudepad identity in the same family as the Anthropic reference, without reusing Anthropic's mark, asterisk, or proprietary fonts.
+claudepad needs one shared visual language before any user-facing surface is built. Without a token system, type scale, and component foundation, PRD-03 (viewer), PRD-04 (ingest), PRD-06 (secret review), and PRD-08 (playback) would each invent their own spacing, colors, and primitives - producing drift, accessibility gaps, and rework. This PRD establishes claudepad's **warm-minimal identity** (paige/white canvas, clay-orange spark, serif display + clean sans + mono), a CSS-variable token architecture with light as default and dark as a token swap, the shadcn/ui-on-Base-UI + Tailwind wiring, motion and accessibility baselines, the app-shell layout, and a **living component gallery** that doubles as the visual contract. The result is a recognizably-claudepad identity in the same family as the Anthropic reference, without reusing Anthropic's mark, asterisk, or proprietary fonts.
 
 ## 2. Goals / Non-goals
 
@@ -25,7 +25,7 @@ claudepad needs one shared visual language before any user-facing surface is bui
 - Building the actual viewer, ingest, secret-review, or playback **screens** (PRD-03/04/06/08 own those; this PRD provides their parts).
 - Final copywriting, marketing site, or illustration system.
 - Animations beyond foundational motion tokens (rich playback transitions are PRD-08).
-- A fully theme-able multi-brand system — claudepad ships **one brand**, two color modes.
+- A fully theme-able multi-brand system - claudepad ships **one brand**, two color modes.
 - Internationalization / RTL (acknowledged as future; tokens must not preclude it).
 
 ## 3. Personas & user stories
@@ -84,7 +84,7 @@ Inspired by the reference (left sidebar, generous canvas, serif greeting) but di
 ```
 
 ### 4.2 Theme-switch flow
-1. User clicks the theme toggle (topbar). 2. `data-theme` flips on `<html>` between `light`/`dark` (or `system`). 3. All surfaces re-render purely from swapped CSS variables — **no component logic runs**. 4. Choice persists to `localStorage` (`claudepad.theme`); default = `system`, resolving to light when undetectable.
+1. User clicks the theme toggle (topbar). 2. `data-theme` flips on `<html>` between `light`/`dark` (or `system`). 3. All surfaces re-render purely from swapped CSS variables - **no component logic runs**. 4. Choice persists to `localStorage` (`claudepad.theme`); default = `system`, resolving to light when undetectable.
 
 ### 4.3 Gallery flow
 A developer opens `/gallery` and sees every token swatch, type specimen, icon set, and primitive (in default + interaction states) rendered live, with a light/dark switch at the top. This is the visual acceptance surface for this PRD and the reference for all downstream PRDs.
@@ -102,7 +102,7 @@ Numbered, testable.
 - **FR-6** No component or screen in this or downstream PRDs may hardcode a color hex; a lint/CI check MUST flag raw hex in `src/**/*.{tsx,css}` outside `tokens.css`.
 
 ### Typography
-- **FR-7** Three font roles MUST be defined as tokens — `--font-serif` (display), `--font-sans` (UI/body), `--font-mono` (code) — using self-hosted, OFL/open-licensed fonts (see §6.4), with no runtime fetch from third-party font CDNs (zero-knowledge / no-phone-home posture).
+- **FR-7** Three font roles MUST be defined as tokens - `--font-serif` (display), `--font-sans` (UI/body), `--font-mono` (code) - using self-hosted, OFL/open-licensed fonts (see §6.4), with no runtime fetch from third-party font CDNs (zero-knowledge / no-phone-home posture).
 - **FR-8** A type scale (§7.2) MUST be implemented as Tailwind text utilities; the serif role MUST be restricted to display/heading usage and MUST NOT be applied to transcript body or UI controls.
 - **FR-9** Body and mono text MUST meet AA contrast (≥ 4.5:1) against their default surface in both themes; large display text MUST meet ≥ 3:1.
 
@@ -122,23 +122,23 @@ Numbered, testable.
 - **FR-18** The mark MUST render legibly at 16px (favicon) through 64px and adopt the accent only as an optional single-color spark variant.
 
 ### Motion & accessibility
-- **FR-19** Motion tokens (durations, easing — §7.4) MUST be defined; default UI transitions MUST be ≤ 150ms with the standard ease; no essential information may depend on animation.
+- **FR-19** Motion tokens (durations, easing - §7.4) MUST be defined; default UI transitions MUST be ≤ 150ms with the standard ease; no essential information may depend on animation.
 - **FR-20** All animation MUST respect `prefers-reduced-motion: reduce` by disabling non-essential transitions/transforms.
 - **FR-21** Every token color pairing used for text/icon-on-surface MUST pass the §7.1 contrast table in both themes; CI MUST include an automated contrast check over the documented pairings.
 - **FR-22** Every interactive element MUST be keyboard-reachable and show a visible focus ring (§7.5) with ≥ 3:1 contrast against adjacent colors.
 
 ### Gallery deliverable
-- **FR-23** A `/gallery` route/page MUST render: every color token (swatch + name + hex + computed contrast vs. its surface), the full type scale specimen, the Lucide icon set in use, the wordmark variants, and every adopted primitive in all interaction states — all with a light/dark toggle.
+- **FR-23** A `/gallery` route/page MUST render: every color token (swatch + name + hex + computed contrast vs. its surface), the full type scale specimen, the Lucide icon set in use, the wordmark variants, and every adopted primitive in all interaction states - all with a light/dark toggle.
 - **FR-24** The gallery MUST be buildable and viewable **offline** with no network requests (consistent with the single-bundle posture, §6.1).
 
 ## 6. Technical design
 
-### 6.1 Q-1 resolution (single static bundle vs. SPA) — design-foundation angle
+### 6.1 Q-1 resolution (single static bundle vs. SPA) - design-foundation angle
 
-**Decision (this PRD's scope):** Build the client as a **single static bundle** — a Vite app that emits a small set of hashed JS/CSS assets plus one (or few) HTML entry points, **self-contained with no third-party runtime fetches** (fonts self-hosted per FR-7, icons tree-shaken from Lucide, no font/analytics CDNs). This honors D-11 and `_context.md` §3 ("buildable as a single static bundle … so self-hosting and auditing are trivial") and ROADMAP P1 ("Shippable as a single static page").
+**Decision (this PRD's scope):** Build the client as a **single static bundle** - a Vite app that emits a small set of hashed JS/CSS assets plus one (or few) HTML entry points, **self-contained with no third-party runtime fetches** (fonts self-hosted per FR-7, icons tree-shaken from Lucide, no font/analytics CDNs). This honors D-11 and `_context.md` §3 ("buildable as a single static bundle … so self-hosting and auditing are trivial") and ROADMAP P1 ("Shippable as a single static page").
 
 Design-foundation implications that constrain downstream PRDs:
-- **Routing stays lightweight.** Prefer hash-based or a minimal file-router; the shell must function from a single `index.html` so a viewer link works when served as one static asset. Avoid SSR-only patterns. (Revisit only if PRD-08 playback or deep-linking genuinely requires a richer router — matches the D-11/Q-1 "revisit if routing/playback needs grow" leaning.)
+- **Routing stays lightweight.** Prefer hash-based or a minimal file-router; the shell must function from a single `index.html` so a viewer link works when served as one static asset. Avoid SSR-only patterns. (Revisit only if PRD-08 playback or deep-linking genuinely requires a richer router - matches the D-11/Q-1 "revisit if routing/playback needs grow" leaning.)
 - **No design-time dependency forces an SPA framework** (Next/Remix). React + Vite + the token/primitive layer here is framework-internal; the shell is mountable into either a single page or a few routes without re-theming.
 - **Net:** the design system is **router-agnostic and SSR-agnostic**; tokens and primitives carry no assumption that defeats the single-bundle goal. Q-1 is therefore **resolved as "single static bundle"** for the foundation; any future SPA-ness is additive, not a re-architecture.
 
@@ -160,26 +160,26 @@ src/lib/theme.ts    # get/set/resolve theme; applies data-theme; persists; honor
 
 - Configure shadcn to target **Base UI** primitives (unstyled) and the token-mapped Tailwind theme; generated components live in `src/components/ui/` and are owned/editable in-repo.
 - **Adopted v1 primitives (FR-11):** Button, Input, Textarea, Tooltip, Dialog, Drawer, Popover, DropdownMenu, Tabs, Switch, Checkbox, ScrollArea, Separator, Toast, Badge, Skeleton, Collapsible, Avatar.
-- **Deferred (named here so downstream PRDs request, not invent):** Command/Combobox (search), Slider (PRD-08 timeline), Progress, Sheet, Resizable panels — themed when their owning PRD lands, but their tokens already exist.
+- **Deferred (named here so downstream PRDs request, not invent):** Command/Combobox (search), Slider (PRD-08 timeline), Progress, Sheet, Resizable panels - themed when their owning PRD lands, but their tokens already exist.
 - **Composition rule:** downstream PRDs compose these primitives; if a needed primitive is missing, the request routes back to this PRD to keep the foundation single-sourced.
 
 ### 6.4 Typography implementation
 
 - **Serif (display):** `Newsreader` (OFL) as the canonical open choice for the "Afternoon, Toby" energy; `Source Serif 4` / `Lora` acceptable fallbacks. Self-hosted woff2, `font-display: swap`.
-- **Sans (UI/body):** `Inter` (or `Geist Sans`) — clean grotesque, the default for all UI and transcript body.
+- **Sans (UI/body):** `Inter` (or `Geist Sans`) - clean grotesque, the default for all UI and transcript body.
 - **Mono:** `JetBrains Mono` (or `Geist Mono`) for code blocks and secret placeholders (e.g. `[AWS_KEY ••••••••(20)]`, rendered by PRD-03/PRD-06).
 - All self-hosted; **no Google Fonts / third-party CDN at runtime** (FR-7) to preserve the no-phone-home / auditable posture.
 
 ### 6.5 Identity / wordmark direction (FR-17/18)
 
-- **Concept:** a "pad" of stacked conversation lines that resolves into a spark — e.g. a rounded-square **notepad/page glyph with a single clay spark/cursor mark** in the corner, or three descending hairline "transcript lines" with the top line tipped by an accent dot. The mark reads as *a place where sessions become clean pages*.
+- **Concept:** a "pad" of stacked conversation lines that resolves into a spark - e.g. a rounded-square **notepad/page glyph with a single clay spark/cursor mark** in the corner, or three descending hairline "transcript lines" with the top line tipped by an accent dot. The mark reads as *a place where sessions become clean pages*.
 - **Wordmark:** `claudepad` set in the sans (or a lightly customized sans), lowercase, tight tracking; **not** a serif logotype and **not** using Anthropic's typefaces.
 - **Hard constraints:** no asterisk/sunburst mark, no Anthropic logo, no Tiempos/Styrene. Single-color, `currentColor`-driven SVG so it inherits text or accent. Square mark variant for favicon/avatar at 16–64px.
 - Final mark is a **design exploration deliverable** (≥ 2 candidate directions in the gallery); selection is an open question (Q-A below).
 
 ### 6.6 Trade-offs
 - **Single bundle vs. routing richness:** chosen single-bundle simplicity now; deep-link/playback routing revisited later (Q-1).
-- **shadcn ownership:** generated-in-repo components mean we own upkeep but gain full token control and auditability — aligned with the auditable-bundle goal.
+- **shadcn ownership:** generated-in-repo components mean we own upkeep but gain full token control and auditability - aligned with the auditable-bundle goal.
 - **Self-hosted fonts:** larger bundle vs. CDN, but required for no-phone-home; mitigated by subsetting woff2.
 - **One brand, two modes:** simpler than a theming engine; sufficient for v1.
 
@@ -198,15 +198,15 @@ Light is canonical (§4). Dark is a warm-dark swap. Contrast ratios are the AA t
 | `--text` | `#1F1E1D` | `#ECEAE4` | Primary text | ≥ 4.5:1 on `--bg`/`--surface` |
 | `--text-muted` | `#6B6862` | `#A6A29A` | Secondary text | ≥ 4.5:1 on `--bg` |
 | `--accent` | `#CC785C` | `#D98E73` | Primary accent / spark | ≥ 3:1 (UI), text-on-accent ≥ 4.5:1 |
-| `--accent-hover` | `#B5634A` | `#C57A60` | Hover state | — |
-| `--accent-tint` | `rgba(204,120,92,.10)` | `rgba(217,142,115,.14)` | Active rows / soft hover bg | — |
+| `--accent-hover` | `#B5634A` | `#C57A60` | Hover state | - |
+| `--accent-tint` | `rgba(204,120,92,.10)` | `rgba(217,142,115,.14)` | Active rows / soft hover bg | - |
 | `--accent-fg` | `#FFFFFF` | `#1A1917` | Text/icon on accent fill | ≥ 4.5:1 on accent |
 | `--success` | `#5E8C6A` | `#7FA98A` | Status: ok (low-sat warm green) | ≥ 3:1 |
 | `--warn` | `#C28A3A` | `#D8A85A` | Status: caution (amber) | ≥ 3:1 |
 | `--danger` | `#C25B4E` | `#DB776A` | Status: error / unredacted-secret warning | ≥ 3:1 |
 | `--ring` | `#CC785C` | `#D98E73` | Focus ring (accent-derived) | ≥ 3:1 vs adjacent |
 
-> Exact dark values are starting points; FR-21's automated check is the gate — values are tuned until every pairing passes, with the warm hue preserved.
+> Exact dark values are starting points; FR-21's automated check is the gate - values are tuned until every pairing passes, with the warm hue preserved.
 
 ### 7.2 Type scale
 
@@ -262,33 +262,33 @@ applyResolvedTheme(): void;        // resolves system→light/dark, sets <html d
 // system resolution via matchMedia("(prefers-color-scheme: dark)"); fallback → light
 ```
 
-No backend/API surface — this PRD is purely client-side.
+No backend/API surface - this PRD is purely client-side.
 
 ## 8. Security & privacy
 
 This PRD conforms to `_context.md` §5 / `SECURITY-MODEL.md` posture:
-- **No-phone-home foundation:** self-hosted fonts and tree-shaken icons (FR-7, FR-13) mean the UI layer issues **no third-party runtime requests**, keeping the single auditable static bundle clean — directly supporting the zero-knowledge / auditability story (§5.1, D-11).
+- **No-phone-home foundation:** self-hosted fonts and tree-shaken icons (FR-7, FR-13) mean the UI layer issues **no third-party runtime requests**, keeping the single auditable static bundle clean - directly supporting the zero-knowledge / auditability story (§5.1, D-11).
 - **No data handled here:** the design system processes no session content, keys, or secrets; it introduces no new data flows or storage beyond a single non-sensitive `localStorage` theme preference.
-- **Secret-affordance hooks:** this PRD defines the **visual primitives** (mono placeholder style, `--danger`/`--warn` status colors, Badge) that PRD-06 uses to render opaque `[TYPE ••••••••(n)]` placeholders and the mandatory review-before-share warnings — but it neither detects nor renders real secrets.
+- **Secret-affordance hooks:** this PRD defines the **visual primitives** (mono placeholder style, `--danger`/`--warn` status colors, Badge) that PRD-06 uses to render opaque `[TYPE ••••••••(n)]` placeholders and the mandatory review-before-share warnings - but it neither detects nor renders real secrets.
 - **Risks introduced:** minimal. Theme preference in `localStorage` is non-sensitive. The only caution is ensuring no token/font/icon pipeline silently adds a CDN dependency; FR-6/FR-7 and CI guard this.
 
 ## 9. Dependencies
 
 **Upstream (this PRD depends on):**
-- `_context.md` §3 (tech stack) and §4 (design tokens) — canonical inputs.
+- `_context.md` §3 (tech stack) and §4 (design tokens) - canonical inputs.
 - Project repo scaffold (Vite + React + TS + Tailwind), shared per P0 with PRD-02.
 
 **Downstream (these depend on this PRD):**
-- **PRD-03 (Viewer)** — consumes tokens, type scale, the `max-w-3xl` reading column, Collapsible/Badge/Tabs, and the mono placeholder style.
-- **PRD-04 (Ingest & Onboarding)** — consumes AppShell, empty-state patterns, Button/Dialog/Drawer, drag-drop surface styling.
-- **PRD-06 (Secret Detection & Tiered Reveal)** — consumes Badge, `--danger`/`--warn`, mono placeholder style, Dialog/Checkbox/Input for the review UI.
-- **PRD-08 (Playback)** — consumes motion tokens and the (deferred-but-tokenized) Slider/Progress primitives, plus presentation-mode surface styling.
-- **PRD-05/07/09** — consume the shell and primitives for share dialogs, status/toasts, and self-host/branding surfaces.
+- **PRD-03 (Viewer)** - consumes tokens, type scale, the `max-w-3xl` reading column, Collapsible/Badge/Tabs, and the mono placeholder style.
+- **PRD-04 (Ingest & Onboarding)** - consumes AppShell, empty-state patterns, Button/Dialog/Drawer, drag-drop surface styling.
+- **PRD-06 (Secret Detection & Tiered Reveal)** - consumes Badge, `--danger`/`--warn`, mono placeholder style, Dialog/Checkbox/Input for the review UI.
+- **PRD-08 (Playback)** - consumes motion tokens and the (deferred-but-tokenized) Slider/Progress primitives, plus presentation-mode surface styling.
+- **PRD-05/07/09** - consume the shell and primitives for share dialogs, status/toasts, and self-host/branding surfaces.
 
 ## 10. Acceptance criteria / DoD
 
 - [ ] `tokens.css` defines all §7.1 color tokens for `:root` (light) and `[data-theme="dark"]`; Tailwind maps semantic names (FR-1, FR-2).
-- [ ] Flipping `data-theme` re-themes the entire app with no component code change and no DOM-structure diff (FR-3) — verified on the gallery.
+- [ ] Flipping `data-theme` re-themes the entire app with no component code change and no DOM-structure diff (FR-3) - verified on the gallery.
 - [ ] Default theme is light; `system` supported and persisted; unknown value → light (FR-4).
 - [ ] Dark theme is warm (`--bg` ≈ `#1A1917`), accent recognizable, all pairings pass contrast (FR-5, FR-21).
 - [ ] CI fails on raw hex outside `tokens.css` (FR-6) and on any failing documented contrast pairing (FR-21).
@@ -304,11 +304,11 @@ This PRD conforms to `_context.md` §5 / `SECURITY-MODEL.md` posture:
 
 ## 11. Open questions
 
-- **Q-A (new, owned here):** Which wordmark/mark direction wins (notepad-glyph-with-spark vs. transcript-lines-with-accent-dot)? Needs a design pick before launch (PRD-09); gallery hosts the candidates. *Leaning: the page/notepad glyph with a single clay spark — most literally "claude" + "pad," scales to a favicon.*
-- **Q-B (new, owned here):** Exact open-font choices — `Newsreader` vs `Source Serif 4` for serif; `Inter` vs `Geist` for sans; `JetBrains Mono` vs `Geist Mono`. *Leaning: Newsreader + Inter + JetBrains Mono for licensing safety and the warm-serif energy.* Final pick pending bundle-size/subsetting check.
-- **Q-1 (from `_context.md` / DECISIONS):** Single static bundle vs. SPA — **resolved for the design foundation as single static bundle** (§6.1); routing richness revisitable if PRD-08 playback/deep-linking demands it. Flagged here only to record the resolution; final routing mechanics are confirmed in PRD-03.
+- **Q-A (new, owned here):** Which wordmark/mark direction wins (notepad-glyph-with-spark vs. transcript-lines-with-accent-dot)? Needs a design pick before launch (PRD-09); gallery hosts the candidates. *Leaning: the page/notepad glyph with a single clay spark - most literally "claude" + "pad," scales to a favicon.*
+- **Q-B (new, owned here):** Exact open-font choices - `Newsreader` vs `Source Serif 4` for serif; `Inter` vs `Geist` for sans; `JetBrains Mono` vs `Geist Mono`. *Leaning: Newsreader + Inter + JetBrains Mono for licensing safety and the warm-serif energy.* Final pick pending bundle-size/subsetting check.
+- **Q-1 (from `_context.md` / DECISIONS):** Single static bundle vs. SPA - **resolved for the design foundation as single static bundle** (§6.1); routing richness revisitable if PRD-08 playback/deep-linking demands it. Flagged here only to record the resolution; final routing mechanics are confirmed in PRD-03.
 - **Q-C (new):** Do we adopt a dedicated brand display weight/optical-size for the serif greeting, or rely on the chosen serif's defaults? *Leaning: defaults for v1; revisit if the hero feels generic.*
 
 ## 12. Phase / milestone
 
-**Phase P0 — Foundation** (ROADMAP §3). Alongside PRD-02 (Parser & Normalized Schema). Nothing user-visible ships in P0, but this PRD is a hard prerequisite for the P1 MVP-0 (PRD-03/04) and every later UI surface. On the critical path: **PRD-01 → PRD-02 → PRD-03 → PRD-04 → …**
+**Phase P0 - Foundation** (ROADMAP §3). Alongside PRD-02 (Parser & Normalized Schema). Nothing user-visible ships in P0, but this PRD is a hard prerequisite for the P1 MVP-0 (PRD-03/04) and every later UI surface. On the critical path: **PRD-01 → PRD-02 → PRD-03 → PRD-04 → …**

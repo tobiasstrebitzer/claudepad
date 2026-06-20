@@ -1,4 +1,4 @@
-// parse.ts — parseSession() orchestration (FR-24, FR-30).
+// parse.ts - parseSession() orchestration (FR-24, FR-30).
 //
 // detect → tokenize → per-line JSON.parse (with diagnostics) → adapter map per
 // record (each wrapped in try/catch so one bad record can't crash) → order +
@@ -44,7 +44,7 @@ export async function parseSession(
   try {
     text = await toText(input, opts.maxBytes ?? DEFAULT_MAX_BYTES);
   } catch {
-    // Even a decode failure must not throw — return an empty session.
+    // Even a decode failure must not throw - return an empty session.
     text = '';
   }
 

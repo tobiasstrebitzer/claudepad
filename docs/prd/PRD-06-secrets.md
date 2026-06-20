@@ -1,10 +1,10 @@
-# PRD-06 — Secret Detection & Tiered Reveal
+# PRD-06 - Secret Detection & Tiered Reveal
 
-**Phase:** P3 (Secrets — *the moat*) · **Status:** Draft
+**Phase:** P3 (Secrets - *the moat*) · **Status:** Draft
 **Owners:** Secrets/redaction track
 **Depends on:** PRD-02 (normalized model), PRD-05 (content keys + recipient wrap) · **Consumed by:** PRD-11 (fills the blob's secret layer) · **Rendered by:** PRD-03 (placeholders)
 
-> **Serverless-v1 note (DECISIONS D-23):** unchanged in substance. The scanner + mandatory review produce `{ redactedSession, secretMap }`; the **secret map now fills the recipient-wrapped blob's `secret` layer (PRD-11 §7)**, encrypted under `K_secret`. **Tiering is per-recipient via key wrapping** (body-only omits the secret layer; body+secrets includes it) — not via two URL fragments. Placeholder rules (opaque IDs, not hashes) and best-effort honesty are exactly as before.
+> **Serverless-v1 note (DECISIONS D-23):** unchanged in substance. The scanner + mandatory review produce `{ redactedSession, secretMap }`; the **secret map now fills the recipient-wrapped blob's `secret` layer (PRD-11 §7)**, encrypted under `K_secret`. **Tiering is per-recipient via key wrapping** (body-only omits the secret layer; body+secrets includes it) - not via two URL fragments. Placeholder rules (opaque IDs, not hashes) and best-effort honesty are exactly as before.
 >
 > Read [`_context.md`](./_context.md), [`../TRUSTLESS-MODEL.md`](../TRUSTLESS-MODEL.md), and [`../SECURITY-MODEL.md`](../SECURITY-MODEL.md) first. This PRD conforms to them; if a conflict exists, those files win.
 
@@ -12,9 +12,9 @@
 
 ## 1. Summary & problem
 
-A Claude Code session is dense with credentials: `.env` dumps echoed into the terminal, `AKIA…` keys in AWS CLI output, `ghp_…` tokens in `git` calls, `Bearer …` headers in `curl`, JWTs, connection strings, PEM private keys pasted for debugging. Sharing such a session naively leaks them. PRD-05 makes the host blind to content, but it does **not** decide *what is a secret* or split the body from the secret map — that is this PRD's job.
+A Claude Code session is dense with credentials: `.env` dumps echoed into the terminal, `AKIA…` keys in AWS CLI output, `ghp_…` tokens in `git` calls, `Bearer …` headers in `curl`, JWTs, connection strings, PEM private keys pasted for debugging. Sharing such a session naively leaks them. PRD-05 makes the host blind to content, but it does **not** decide *what is a secret* or split the body from the secret map - that is this PRD's job.
 
-PRD-06 delivers the **moat**: a fully client-side scanner that finds candidate secrets in the normalized session, a **mandatory** review-before-share UI where the human confirms or corrects every detection, and the construction of the **redacted body** (secrets → opaque IDs `S1, S2, …`) plus the **encrypted secret map** that fills PRD-05's `K_secret` envelope. The result is two trust tiers from one upload: low-priv links render `[AWS_KEY ••••••••(20)]` placeholders; high-priv links substitute real values back in. Detection is honest best-effort — a missed secret stays in plaintext in the all-tiers body — so the review step is load-bearing and never skipped.
+PRD-06 delivers the **moat**: a fully client-side scanner that finds candidate secrets in the normalized session, a **mandatory** review-before-share UI where the human confirms or corrects every detection, and the construction of the **redacted body** (secrets → opaque IDs `S1, S2, …`) plus the **encrypted secret map** that fills PRD-05's `K_secret` envelope. The result is two trust tiers from one upload: low-priv links render `[AWS_KEY ••••••••(20)]` placeholders; high-priv links substitute real values back in. Detection is honest best-effort - a missed secret stays in plaintext in the all-tiers body - so the review step is load-bearing and never skipped.
 
 ## 2. Goals / Non-goals
 
@@ -23,15 +23,15 @@ PRD-06 delivers the **moat**: a fully client-side scanner that finds candidate s
 - **G2.** Present a **mandatory** review UI listing every detection in context; let the user add, remove, edit, merge, and re-classify detections, with type + length labels and bulk actions. **Never auto-publish.**
 - **G3.** Construct a **redacted body** (each confirmed secret occurrence → an opaque random ID `S1, S2, …`) and a **secret map** `{ S1: value, … }` that PRD-05 encrypts under `K_secret`.
 - **G4.** Conform exactly to the **placeholder rules** (SECURITY-MODEL §"Placeholder design"): opaque ID + type+length label, **never a hash**.
-- **G5.** Bias toward **recall** (catch more, miss fewer) with **easy one-click dismissal** of false positives — resolving open question **Q-4**.
+- **G5.** Bias toward **recall** (catch more, miss fewer) with **easy one-click dismissal** of false positives - resolving open question **Q-4**.
 - **G6.** Surface **honest best-effort messaging** so users understand detection is imperfect and the review is their responsibility.
 - **G7.** Ship a **labeled test corpus** with documented **recall/precision targets** and a regression harness.
 
 ### Non-goals
 - **N1.** Server-side or networked scanning of any kind (breaks zero-knowledge; SECURITY-MODEL §5.5 Strict-only). The scanner runs offline.
-- **N2.** Defining the crypto primitives, key derivation, recipient wrapping, or blob/tier mechanics — **owned by PRD-05/PRD-11**. This PRD only *fills* the `K_secret` slot and *consumes* tier semantics.
-- **N3.** Inline rendering of placeholders and substituted reveal in the transcript — **owned by PRD-03**. This PRD specifies the contract (the placeholder string format and substitution map) PRD-03 renders.
-- **N4.** Per-recipient / named secret access (X25519 wrapping) — vNext (SECURITY-MODEL §vNext); this PRD must not preclude it (see §8).
+- **N2.** Defining the crypto primitives, key derivation, recipient wrapping, or blob/tier mechanics - **owned by PRD-05/PRD-11**. This PRD only *fills* the `K_secret` slot and *consumes* tier semantics.
+- **N3.** Inline rendering of placeholders and substituted reveal in the transcript - **owned by PRD-03**. This PRD specifies the contract (the placeholder string format and substitution map) PRD-03 renders.
+- **N4.** Per-recipient / named secret access (X25519 wrapping) - vNext (SECURITY-MODEL §vNext); this PRD must not preclude it (see §8).
 - **N5.** Guaranteeing zero leakage. Detection is best-effort; we surface limits, we do not promise completeness.
 - **N6.** Secret *rotation* advice or integration with vaults/secret managers.
 
@@ -78,7 +78,7 @@ PRD-04 ingest ─▶ PRD-02 parse ─▶ PRD-03 view
 ┌────────────────────────────────────────────────────────────────────────────┐
 │  Review before sharing                                          [ Cancel ]   │
 │  ⚠  Detection is best-effort. Anything left UN-redacted is visible to        │
-│     EVERYONE you share with — including low-privilege links. Review every     │
+│     EVERYONE you share with - including low-privilege links. Review every     │
 │     item. Add anything we missed.                                            │
 ├────────────────────────────────────────────────────────────────────────────┤
 │  Paste a .env / .dev.vars to match exact values  [ Paste… ]   0 matched      │
@@ -94,11 +94,11 @@ PRD-04 ingest ─▶ PRD-02 parse ─▶ PRD-03 view
 │      │               │           │ https://ghp_••••••••@github…  ↩ event#51│        │
 ├──────┼───────────────┼───────────┼───────────────────────────────┼──────────┤
 │ ☐ S3 │ HIGH_ENTROPY  │ entropy   │ build hash: a9f3c1••••••(32)  ↩ event#63│       │
-│  (dismissed — looks like a content hash)                          [restore]  │
+│  (dismissed - looks like a content hash)                          [restore]  │
 ├──────┼───────────────┼───────────┼───────────────────────────────┼──────────┤
 │ ☑ S4 │ ENV: DB_PASS  │ .env exact│ DATABASE_URL=postgres://u:••• ↩ event#70│ [edit]│
 ├──────┴───────────────┴───────────┴───────────────────────────────┴──────────┤
-│  + Add detection — select text in the transcript, or [ Paste literal… ]       │
+│  + Add detection - select text in the transcript, or [ Paste literal… ]       │
 ├────────────────────────────────────────────────────────────────────────────┤
 │  When you publish, low-priv viewers see  [DB_PASS ••••••••(18)] ;             │
 │  high-priv viewers see the real value.                                       │
@@ -107,7 +107,7 @@ PRD-04 ingest ─▶ PRD-02 parse ─▶ PRD-03 view
 ```
 
 Notes on the wireframe:
-- Every row shows: opaque ID, **type + length** label, the **signal(s)** that fired (prefix / entropy / .env exact — a detection may be backed by more than one), an **in-context snippet** with the candidate masked, and a jump-link to the event/line.
+- Every row shows: opaque ID, **type + length** label, the **signal(s)** that fired (prefix / entropy / .env exact - a detection may be backed by more than one), an **in-context snippet** with the candidate masked, and a jump-link to the event/line.
 - The masked snippet shows only enough characters to locate the match (first few of a known prefix), never enough to reconstruct or fingerprint the value.
 - Checkbox = "redact this." Unchecking dismisses it (leaves it in plaintext in the body). Dismissed rows are visually distinct and restorable.
 - **Bulk actions:** redact-all, dismiss-all, merge selected (treat several rows as one logical secret sharing one `S#`), filter by type/signal, change type via the `Type ▾` menu.
@@ -128,9 +128,9 @@ Numbered, testable. Unless noted, "the scanner/redactor" runs **client-side only
 - **FR-2.** The scanner SHALL detect secrets via **three independent signals**, each attributable per detection: (a) **prefix/shape** regexes (taxonomy §7.3), (b) **Shannon-entropy** over candidate tokens, (c) **exact match** against user-supplied `.env`/`.dev.vars` values.
 - **FR-3.** Each detection SHALL record: a stable location (`eventIndex`, content-block index, character `start`/`end`), the matched **value**, a **type** label, the **signal(s)** that fired, and a **confidence** ordering signal (used only for sort/UI; never shown to viewers).
 - **FR-4.** **Entropy heuristic:** for token-like substrings (length ≥ configurable min, default 20; charset base64/hex/url-safe), compute normalized Shannon entropy; flag those above a threshold tied to the **sensitivity** control. The default position SHALL be **recall-biased** (Q-4): a lower threshold that over-flags, paired with easy dismissal. The threshold SHALL be a single user-facing "sensitivity" control, not a raw number.
-- **FR-5.** Entropy SHALL apply documented **suppressors** to cut obvious false positives without hiding real secrets: known content-hash shapes (git SHA-1/40-hex, sha256/64-hex when adjacent to hash-y context words), UUIDs, ISO timestamps, file paths, and base64 of recognizably non-secret data are *down-ranked* (still shown, pre-dismissed-suggested) — never silently dropped (conforms to SECURITY-MODEL §Limits "never hidden").
+- **FR-5.** Entropy SHALL apply documented **suppressors** to cut obvious false positives without hiding real secrets: known content-hash shapes (git SHA-1/40-hex, sha256/64-hex when adjacent to hash-y context words), UUIDs, ISO timestamps, file paths, and base64 of recognizably non-secret data are *down-ranked* (still shown, pre-dismissed-suggested) - never silently dropped (conforms to SECURITY-MODEL §Limits "never hidden").
 - **FR-6.** **`.env` exact match:** the user MAY paste one or more `.env`/`.dev.vars` blobs. The scanner SHALL parse `KEY=VALUE` lines (handling quotes, `export `, comments, blank lines) and flag **every occurrence** of each non-trivial VALUE anywhere in the session, labeled with its KEY (e.g. `ENV: DB_PASS`). Pasted `.env` content SHALL live only in memory and SHALL NOT be uploaded, logged, or persisted.
-- **FR-7.** The scanner SHALL ignore trivially-short or low-value `.env` values (configurable min length, default 8; skip pure booleans/integers/`localhost`/common ports) to avoid redacting half the transcript — but SHALL list what it skipped so the user can force-include.
+- **FR-7.** The scanner SHALL ignore trivially-short or low-value `.env` values (configurable min length, default 8; skip pure booleans/integers/`localhost`/common ports) to avoid redacting half the transcript - but SHALL list what it skipped so the user can force-include.
 - **FR-8.** Overlapping/duplicate detections of the same value SHALL be coalesced so one logical secret maps to one `S#` while still substituting **all** of its occurrences.
 - **FR-9.** Scanning SHALL be deterministic and idempotent for a given session + settings, and SHALL run incrementally on **Rescan** when sensitivity or `.env` input changes, preserving the user's manual add/dismiss/edit decisions across rescans.
 - **FR-10.** Scanning of a large session SHALL not block the UI: it SHALL run in a Web Worker (or yield cooperatively) and report progress; target < 1s for a typical session and a bounded, cancellable run for pathological inputs (§6 perf budget).
@@ -143,12 +143,12 @@ Numbered, testable. Unless noted, "the scanner/redactor" runs **client-side only
 - **FR-15.** The user SHALL be able to **edit** a detection's span, **override its type** label, and **correct its value**.
 - **FR-16.** The user SHALL be able to **merge** selected detections into a single `S#` (shared label), and the redactor SHALL substitute all merged spans.
 - **FR-17.** The UI SHALL provide **bulk actions**: redact-all, dismiss-all, merge-selected, filter by type/signal, and select-by-type.
-- **FR-18.** The UI SHALL display, for each detection, exactly what a **low-priv** viewer will see (the placeholder) and confirm that a **high-priv** viewer sees the real value — so the user understands the tier consequence before publishing.
+- **FR-18.** The UI SHALL display, for each detection, exactly what a **low-priv** viewer will see (the placeholder) and confirm that a **high-priv** viewer sees the real value - so the user understands the tier consequence before publishing.
 - **FR-19.** The UI SHALL require an explicit acknowledgement of best-effort limits (e.g. the user must have scrolled the full list / checked an "I've reviewed these" affordance) before **Publish** is enabled. Honest messaging (SECURITY-MODEL §Limits) SHALL be visible, not buried in a tooltip.
 
 ### Redaction output
 - **FR-20.** On confirm, the redactor SHALL produce a **redacted body**: a structurally-identical copy of the normalized `Session` in which each confirmed secret span is replaced by an **opaque placeholder token** carrying its `S#` ID and type+length label (format §7.1). The placeholder is the *only* representation of the secret in the body.
-- **FR-21.** The placeholder SHALL be an **opaque random ID + type + length** — **NEVER** a hash, prefix, or any function of the plaintext value (SECURITY-MODEL §Placeholder design; D-4). Length shown is the character count of the original value; type is the (possibly user-overridden) label.
+- **FR-21.** The placeholder SHALL be an **opaque random ID + type + length** - **NEVER** a hash, prefix, or any function of the plaintext value (SECURITY-MODEL §Placeholder design; D-4). Length shown is the character count of the original value; type is the (possibly user-overridden) label.
 - **FR-22.** `S#` IDs SHALL be assigned from a **per-session random** namespace (not sequential global, not derived from the value) so they leak nothing and don't collide across sessions; ordering in the map SHALL NOT reveal document order in a way that aids correlation (IDs randomized, not positional).
 - **FR-23.** The redactor SHALL produce a **secret map** `{ S#: { value, type, len } }` containing the plaintext values, handed to **PRD-05** to encrypt under `K_secret`. The map SHALL NOT be written to disk, logged, or included in the body ciphertext.
 - **FR-24.** Any detection the user **dismissed** SHALL remain as **plaintext** in the redacted body. This is by design and disclosed (SECURITY-MODEL §Limits): the body is the all-tiers layer.
@@ -197,7 +197,7 @@ The scanner consumes PRD-02's `Session`; the redactor emits a `Session` + `secre
 
 ### 6.3 Key trade-offs
 - **Recall vs. precision (Q-4):** we deliberately bias recall. Cost is false positives; mitigated by (a) trivially easy dismissal, (b) suppressors that *down-rank* (not drop) hashes/UUIDs/paths, (c) a sensitivity slider. We accept a noisier list over a missed credential, because a miss leaks to all tiers and a false positive costs one click. This is the documented answer to Q-4.
-- **Entropy is dumb on its own:** high entropy ≠ secret (minified JS, base64 images, hashes). We never rely on entropy alone for silent action — entropy findings always surface for human review and are the most aggressively suppressed class.
+- **Entropy is dumb on its own:** high entropy ≠ secret (minified JS, base64 images, hashes). We never rely on entropy alone for silent action - entropy findings always surface for human review and are the most aggressively suppressed class.
 - **`.env` paste is the highest-precision signal** but requires user effort; we make it prominent because it catches shapeless secrets nothing else can. It is memory-only.
 - **Worker isolation** keeps the UI responsive on huge sessions and keeps secret-bearing strings off the main thread's long-lived closures where feasible.
 - **No regex on ciphertext, ever:** scanning happens pre-encryption on plaintext in memory; nothing leaves the client.
@@ -223,7 +223,7 @@ Rendered label (PRD-03), low-priv and inside high-priv before/while revealing:
 ```
 
 - `S<id>` is a per-session random identifier (FR-22).
-- The **type** and **length** needed to render the low-priv label travel in the **body** (they leak nothing: type is a class name, length is a count — neither reconstructs the value and neither is a crackable fingerprint). The **value** travels only in the `K_secret`-encrypted map.
+- The **type** and **length** needed to render the low-priv label travel in the **body** (they leak nothing: type is a class name, length is a count - neither reconstructs the value and neither is a crackable fingerprint). The **value** travels only in the `K_secret`-encrypted map.
 - Rationale (SECURITY-MODEL §Placeholder design, D-4): a hash would be one-way (defeating high-priv reveal) and, for low-entropy secrets, offline-brute-forceable from the public placeholder. Opaque ID + type/length leaks neither value nor fingerprint.
 
 ### 7.2 Core types (indicative)
@@ -292,7 +292,7 @@ PRD-06 → RedactionResult { body, secretMap }
             ciphertext_body      ciphertext_secretMap
               (K_body)              (K_secret)
                     └──────┬──────────┘
-              PRD-11 cp-blob — content keys WRAPPED to recipient
+              PRD-11 cp-blob - content keys WRAPPED to recipient
    Body-only grant     wrap{ kb }          → body only (no secret ciphertext)
    Body+secrets grant  wrap{ kb, ks }      → body + map (reveal)
 ```
@@ -319,7 +319,7 @@ This PRD defines **what** fills the `secretMap` slot and the **body** placeholde
 
 Conforms to `_context.md` §5 and `SECURITY-MODEL.md`:
 
-- **Zero-knowledge (§5.1):** all scanning/redaction is client-side; only PRD-05's ciphertext is uploaded. Pasted `.env` content, detection values, and the secret map are **memory-only** (FR-6, FR-23) — never logged, persisted, or sent.
+- **Zero-knowledge (§5.1):** all scanning/redaction is client-side; only PRD-05's ciphertext is uploaded. Pasted `.env` content, detection values, and the secret map are **memory-only** (FR-6, FR-23) - never logged, persisted, or sent.
 - **Two-key tiered reveal (§5.2, D-3):** the body (placeholders) and the secret map are separated *before* PRD-05 encrypts them under independent keys. Low-priv literally lacks `K_secret`, so "low-priv can't see secrets" is a math fact, not a UI gate.
 - **Placeholder rules (§5.3, D-4):** opaque random `S#` + type+length label only; **never a hash/prefix/value-derived fingerprint** (FR-21/FR-22). Rationale carried verbatim from SECURITY-MODEL.
 - **Best-effort, surfaced (§5.4, D-5):** review-before-share is mandatory and unskippable (FR-11, FR-19); dismissed/missed secrets remain plaintext in the all-tiers body and this is disclosed (FR-24, FR-31). Suppressors down-rank, never silently drop (FR-5).
@@ -329,31 +329,31 @@ Conforms to `_context.md` §5 and `SECURITY-MODEL.md`:
   - *`.env` paste itself is sensitive* → memory-only, never uploaded; cleared on flow exit; warned in UI.
   - *Placeholder forgery* (a value in source that looks like `⟦SECRET:S#⟧`) → sentinel grammar is chosen to be improbable and the redactor escapes/neutralizes any literal sentinel occurring in source before redaction so it can't be confused with a real token (FR-29/FR-30).
   - *Length leak:* showing length is an accepted, documented minor leak (a count, not a value); SECURITY-MODEL explicitly endorses type+length labels.
-- **vNext non-preclusion (§5.8):** the secret map is a flat `{ S#: entry }` keyed by opaque IDs; wrapping it (or per-`S#` subsets) to X25519 recipient keys later requires no change to detection/redaction — only to how PRD-05 encrypts the already-separated map.
+- **vNext non-preclusion (§5.8):** the secret map is a flat `{ S#: entry }` keyed by opaque IDs; wrapping it (or per-`S#` subsets) to X25519 recipient keys later requires no change to detection/redaction - only to how PRD-05 encrypts the already-separated map.
 
 ## 9. Dependencies
 
-- **Upstream — PRD-02 (parser/model):** scanner input is the normalized `Session`; spans reference its indices; "preserve unknown, never crash" is inherited.
-- **Upstream — PRD-05/PRD-11 (crypto + sharing):** PRD-05 owns `K_body`/`K_secret`, GCM encryption, and the recipient wrap; PRD-11 assembles the `cp-blob` and consumes this PRD's `RedactionResult`. The `secretMap` shape and body placeholder grammar are the agreed contract.
-- **Downstream — PRD-03 (viewer):** renders placeholders as type+length labels (low-priv) and substitutes real values (high-priv). This PRD owns the token grammar; PRD-03 owns visual styling and substitution-at-render.
-- **Adjacent — PRD-04 (ingest):** the "Share" entrypoint funnels into this PRD's scan→review.
-- **Adjacent — PRD-07 (backend):** stores the two ciphertexts; never sees plaintext.
-- **Adjacent — PRD-01 (design system):** the review UI uses its tokens/components.
+- **Upstream - PRD-02 (parser/model):** scanner input is the normalized `Session`; spans reference its indices; "preserve unknown, never crash" is inherited.
+- **Upstream - PRD-05/PRD-11 (crypto + sharing):** PRD-05 owns `K_body`/`K_secret`, GCM encryption, and the recipient wrap; PRD-11 assembles the `cp-blob` and consumes this PRD's `RedactionResult`. The `secretMap` shape and body placeholder grammar are the agreed contract.
+- **Downstream - PRD-03 (viewer):** renders placeholders as type+length labels (low-priv) and substitutes real values (high-priv). This PRD owns the token grammar; PRD-03 owns visual styling and substitution-at-render.
+- **Adjacent - PRD-04 (ingest):** the "Share" entrypoint funnels into this PRD's scan→review.
+- **Adjacent - PRD-07 (backend):** stores the two ciphertexts; never sees plaintext.
+- **Adjacent - PRD-01 (design system):** the review UI uses its tokens/components.
 
 ## 10. Acceptance criteria / DoD
 
 - [ ] **AC-1.** Scanner detects all three signal classes (prefix, entropy, env-exact) over the normalized model, attributing the firing signal per detection (FR-1–FR-3).
-- [ ] **AC-2.** Entropy detection is recall-biased by default with a working sensitivity control and documented suppressors that down-rank (never drop) hashes/UUIDs/paths (FR-4, FR-5). — *resolves Q-4.*
+- [ ] **AC-2.** Entropy detection is recall-biased by default with a working sensitivity control and documented suppressors that down-rank (never drop) hashes/UUIDs/paths (FR-4, FR-5). - *resolves Q-4.*
 - [ ] **AC-3.** `.env`/`.dev.vars` paste matches all occurrences of non-trivial values, labeled by KEY, memory-only (FR-6, FR-7).
 - [ ] **AC-4.** Review UI lists every detection in context with type+length labels and supports add / remove / edit / merge / restore / bulk actions (FR-11–FR-18).
-- [ ] **AC-5.** Publishing is impossible without passing through review and acknowledging best-effort limits; **no auto-publish path exists** (FR-11, FR-19) — covered by a Playwright test asserting the share flow blocks on review.
-- [ ] **AC-6.** Redacted body uses opaque `S#` + type+length placeholders, **never hashes** (FR-20–FR-22) — unit test asserts no placeholder is a function of the value.
+- [ ] **AC-5.** Publishing is impossible without passing through review and acknowledging best-effort limits; **no auto-publish path exists** (FR-11, FR-19) - covered by a Playwright test asserting the share flow blocks on review.
+- [ ] **AC-6.** Redacted body uses opaque `S#` + type+length placeholders, **never hashes** (FR-20–FR-22) - unit test asserts no placeholder is a function of the value.
 - [ ] **AC-7.** **Hard gate:** for every published artifact, no confirmed secret value appears as a substring of the serialized redacted body (FR-25). Automated test over the corpus.
 - [ ] **AC-8.** Dismissed detections remain plaintext in the body and the UI discloses this (FR-24, FR-31).
 - [ ] **AC-9.** `RedactionResult` hands PRD-05 a `{ body, secretMap }` matching the agreed contract; round-trip test: low-priv render shows labels, high-priv render restores values (FR-27–FR-30).
 - [ ] **AC-10.** **Labeled test corpus** exists (synthetic sessions with ground-truth secret spans across every taxonomy type + decoys: git SHAs, UUIDs, base64 images, minified JS, lorem) and the scanner meets documented targets:
   - **Recall ≥ 0.95** on labeled true secrets (miss-averse, per Q-4).
-  - **Precision reported, not gated below a floor** — target ≥ 0.5 *after suppressors*, with the explicit understanding that false positives are one-click-dismissable and recall is prioritized. The exact published numbers come from the corpus run and are documented (FR-32).
+  - **Precision reported, not gated below a floor** - target ≥ 0.5 *after suppressors*, with the explicit understanding that false positives are one-click-dismissable and recall is prioritized. The exact published numbers come from the corpus run and are documented (FR-32).
   - Zero **known-shape** misses (prefix-matchable secrets: 100% recall on `sk-`/`ghp_`/`AKIA`/PEM/JWT, etc.).
 - [ ] **AC-11.** Scan runs off the main thread, reports progress, stays cancellable, and meets the < 1s typical-session budget (FR-10).
 - [ ] **AC-12.** Honest best-effort messaging is visible in the UI and a recall/precision statement is published and linked (FR-31, FR-32).
@@ -361,13 +361,13 @@ Conforms to `_context.md` §5 and `SECURITY-MODEL.md`:
 
 ## 11. Open questions
 
-- **Q-4 (assigned to this PRD) — resolved here:** bias toward **recall** with easy dismissal. Default entropy threshold is recall-biased; suppressors down-rank rather than drop; the sensitivity slider lets power users trade off. Final published recall/precision numbers come from the §10 corpus run.
+- **Q-4 (assigned to this PRD) - resolved here:** bias toward **recall** with easy dismissal. Default entropy threshold is recall-biased; suppressors down-rank rather than drop; the sensitivity slider lets power users trade off. Final published recall/precision numbers come from the §10 corpus run.
 - **OQ-A.** Should `CONNECTION_STRING` redact only the password field or the entire URI by default? *Leaning:* default to password-only (preserves readable host/db), with a one-click "redact whole URI." Decide on corpus + UX testing.
 - **OQ-B.** Should the sensitivity control be a discrete 3-step (Off / Balanced / Aggressive) or a continuous slider? *Leaning:* discrete presets backed by a continuous internal threshold; revisit after dogfooding.
 - **OQ-C.** Do we ship any **bundled** common-`.env`-key heuristics (treat lines literally named `*_SECRET`, `*_TOKEN`, `*_PASSWORD` in echoed `.env` output as secrets even without a pasted `.env`)? *Leaning:* yes, low-risk recall win; verify on corpus.
 - **OQ-D.** How should **merge** present its single label when merged spans have differing detected types? *Leaning:* user picks the canonical type on merge; default to the highest-confidence one.
-- **OQ-E.** Should suppressed (down-ranked) detections default to **dismissed** or **redact-with-suggestion-to-dismiss**? Recall-bias argues for defaulting to redact; UX noise argues for pre-dismiss. *Leaning:* pre-suggest dismiss but keep them in the redact set unless the user acts — confirm via dogfooding (interacts with Q-4).
+- **OQ-E.** Should suppressed (down-ranked) detections default to **dismissed** or **redact-with-suggestion-to-dismiss**? Recall-bias argues for defaulting to redact; UX noise argues for pre-dismiss. *Leaning:* pre-suggest dismiss but keep them in the redact set unless the user acts - confirm via dogfooding (interacts with Q-4).
 
 ## 12. Phase / milestone
 
-**Phase P3 — Secrets (the moat).** PRD-06 is the sole PRD of P3 and the product's core differentiator. Build order (ROADMAP §3): after PRD-02 (model), PRD-07 (backend), and PRD-05 (crypto envelope) — this PRD fills PRD-05's `K_secret` slot and feeds PRD-03's placeholder rendering. Gating for v1 launch (PRD-09): the labeled-corpus results and an independent security review of secret handling are pre-v1 requirements (SECURITY-MODEL §Pre-v1).
+**Phase P3 - Secrets (the moat).** PRD-06 is the sole PRD of P3 and the product's core differentiator. Build order (ROADMAP §3): after PRD-02 (model), PRD-07 (backend), and PRD-05 (crypto envelope) - this PRD fills PRD-05's `K_secret` slot and feeds PRD-03's placeholder rendering. Gating for v1 launch (PRD-09): the labeled-corpus results and an independent security review of secret handling are pre-v1 requirements (SECURITY-MODEL §Pre-v1).

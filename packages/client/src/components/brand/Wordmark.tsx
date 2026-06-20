@@ -2,7 +2,7 @@ import { cn } from '../../lib/cn';
 
 /**
  * claudepad mark (PRD-01 FR-17/FR-18, Q-A leaning): a notepad/page glyph whose
- * top transcript line is tipped by a single clay spark — "a place where sessions
+ * top transcript line is tipped by a single clay spark - "a place where sessions
  * become clean pages." Single-color, currentColor-driven SVG; the spark uses the
  * accent only in the `spark` variant. NOT Anthropic's asterisk/logo/typefaces.
  */
@@ -69,7 +69,7 @@ export function Mark({
         strokeWidth="1.6"
         strokeLinecap="round"
       />
-      {/* the spark — tip of the top line */}
+      {/* the spark - tip of the top line */}
       <circle
         cx="16.5"
         cy="9"
@@ -82,7 +82,7 @@ export function Mark({
 
 /**
  * Candidate B (Q-A alternative): three descending transcript lines, the top one
- * tipped by an accent dot — "a session resolving into clean lines." Shown in the
+ * tipped by an accent dot - "a session resolving into clean lines." Shown in the
  * gallery alongside the page-glyph mark so a final direction can be picked (PRD-09).
  */
 export function MarkLines({

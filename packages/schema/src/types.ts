@@ -1,4 +1,4 @@
-// @claudepad/schema — types.ts
+// @claudepad/schema - types.ts
 //
 // Authoritative TypeScript types for the normalized, source-agnostic Session
 // model (PRD-02 §7). Where this differs from `_context.md` §6, this file wins.
@@ -46,7 +46,7 @@ export interface EventBase {
   parentId?: string | null;
   /** ISO-8601 UTC, or undefined when source had no/invalid timestamp (FR-26). */
   ts?: string;
-  /** 'main' | 'sidechain:<id>' — sub-agent laning (FR-28). */
+  /** 'main' | 'sidechain:<id>' - sub-agent laning (FR-28). */
   lane?: string;
   /** True when source flagged isMeta (de-emphasize in UI) (FR-19). */
   meta?: boolean;
@@ -120,7 +120,7 @@ export type DiagnosticKind =
 
 export interface DiagnosticRecord {
   kind: DiagnosticKind;
-  /** 'info' | 'warn' — never 'error' that blocks rendering. */
+  /** 'info' | 'warn' - never 'error' that blocks rendering. */
   level: 'info' | 'warn';
   message: string;
   line?: number; // 1-based source line, when applicable

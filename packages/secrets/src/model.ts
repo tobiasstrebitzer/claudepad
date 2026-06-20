@@ -19,7 +19,7 @@ export interface Detection {
   id: string;
   /** Label class shown to viewers, e.g. 'AWS_KEY', 'ENV:DB_PASS' (FR-3). */
   type: string;
-  /** Plaintext value — memory only, never logged/persisted (FR-23). */
+  /** Plaintext value - memory only, never logged/persisted (FR-23). */
   value: string;
   /** Character count of the value, shown in the low-priv label (never the value). */
   length: number;
@@ -27,7 +27,7 @@ export interface Detection {
   occurrences: number;
   /** A masked, value-free snippet for the review list (FR-12). */
   snippet: string;
-  /** Why it fired — at least one (FR-3). */
+  /** Why it fired - at least one (FR-3). */
   signals: SignalKind[];
   /** Ordering hint for the review list; never shown to viewers (FR-3). */
   confidence: number;
@@ -51,7 +51,7 @@ export type SecretMap = Record<string, SecretEntry>;
 export interface ScanSettings {
   /** 0..1; higher = more aggressive entropy flagging. Default 0.5 (recall-biased). */
   entropySensitivity: number;
-  /** Pasted .env / .dev.vars blobs — memory only, never persisted (FR-6). */
+  /** Pasted .env / .dev.vars blobs - memory only, never persisted (FR-6). */
   envBlobs: string[];
   /** Skip trivially short .env values (FR-7). */
   envMinValueLength: number;

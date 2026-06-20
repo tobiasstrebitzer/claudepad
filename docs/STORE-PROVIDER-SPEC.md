@@ -1,7 +1,7 @@
-# claudepad — Store Provider Spec (design note)
+# claudepad - Store Provider Spec (design note)
 
 > **Status:** design note for v1; full spec + reference implementation are **vNext** (PRD-07). **v1 ships the seam, not the store.**
-> **Principle:** the store is an **open contract, not a proprietary service** (DECISIONS D-30…D-33). Like Bitwarden (point your client at any server URL) or Tailscale↔Headscale (open protocol, reference control server), `claudepad.io/store` is *one* free, open-source reference implementation — anyone can run their own.
+> **Principle:** the store is an **open contract, not a proprietary service** (DECISIONS D-30…D-33). Like Bitwarden (point your client at any server URL) or Tailscale↔Headscale (open protocol, reference control server), `claudepad.io/store` is *one* free, open-source reference implementation - anyone can run their own.
 
 ## Why this note exists
 
@@ -10,7 +10,7 @@ v1 is **entirely client-side** and launches with **zero store dependency**. But 
 ## The principle
 
 1. **Spec, not service.** What we publish is an HTTP contract for a **zero-knowledge blob store**: it accepts opaque ciphertext (the PRD-11 `cp-blob`) and serves it back by id. It never sees plaintext or keys.
-2. **Opt-in, pluggable.** Default is **no store** — sharing is carry-the-blob (clipboard/file). A user may *optionally* configure a store by URL: their self-host, their org's, or `claudepad.io/store`. The benefit a store adds is **convenience** (a short URL instead of a big blob) and, later, optional lifecycle — never a change to the trust model (blobs are already encrypted client-side).
+2. **Opt-in, pluggable.** Default is **no store** - sharing is carry-the-blob (clipboard/file). A user may *optionally* configure a store by URL: their self-host, their org's, or `claudepad.io/store`. The benefit a store adds is **convenience** (a short URL instead of a big blob) and, later, optional lifecycle - never a change to the trust model (blobs are already encrypted client-side).
 3. **No lock-in, no special-casing.** The v1 client contains **no store implementation and no `claudepad.io/store` URL or store-specific code**. The store URL is plain config with an empty default.
 
 ## The seam (what v1 actually ships)
@@ -37,9 +37,9 @@ export type StoreCapabilities = { expiry: boolean; burnAfterRead: boolean; delet
 export const NoStoreProvider: StoreProvider | null = null;
 ```
 
-- The share flow (PRD-11) checks: **if a `StoreProvider` is configured**, offer "also get a short link"; **otherwise** (the v1 default) just produce the blob. The crypto is identical either way — a store only *transports* the ciphertext.
+- The share flow (PRD-11) checks: **if a `StoreProvider` is configured**, offer "also get a short link"; **otherwise** (the v1 default) just produce the blob. The crypto is identical either way - a store only *transports* the ciphertext.
 - Provider selection is **runtime/build config** (`STORE_URL`, default empty). The core imports the *interface*, never a concrete provider.
-- Because the blob is encrypted before it ever reaches a provider, a store is **zero-knowledge by construction** — exactly the property that lets any third party (or `claudepad.io/store`) host it without being trusted.
+- Because the blob is encrypted before it ever reaches a provider, a store is **zero-knowledge by construction** - exactly the property that lets any third party (or `claudepad.io/store`) host it without being trusted.
 
 ## What's deferred to the full spec (vNext, PRD-07)
 

@@ -1,7 +1,7 @@
 // Lightweight session metadata extraction (PRD-04).
 //
 // Claude Code appends small trailing records to each session's JSONL on every turn
-// — `ai-title` (the generated short summary shown in `/resume`), `last-prompt`,
+// - `ai-title` (the generated short summary shown in `/resume`), `last-prompt`,
 // and `cwd`/`gitBranch` on message lines. They live in the last ~1KB of the file,
 // so a caller can feed us just the tail (see the client's vault) and avoid parsing
 // a multi-MB session. This module is pure and isomorphic; it never throws.
@@ -13,7 +13,7 @@ export type SessionFileMeta = {
   aiTitle?: string;
   /** Most recent git branch seen. */
   gitBranch?: string;
-  /** Working directory (the real project path — authoritative over the dir name). */
+  /** Working directory (the real project path - authoritative over the dir name). */
   cwd?: string;
 };
 

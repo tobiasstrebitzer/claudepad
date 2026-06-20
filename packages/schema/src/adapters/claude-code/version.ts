@@ -1,4 +1,4 @@
-// version.ts — known Claude Code version range + capability comparison.
+// version.ts - known Claude Code version range + capability comparison.
 //
 // The adapter was authored against the observed corpus spanning 2.1.140 …
 // 2.1.183. When a session reports a NEWER version, the parser still maps it and

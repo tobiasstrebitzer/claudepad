@@ -1,5 +1,5 @@
 // The identity lifecycle as a small state machine (PRD-10 §4.1, FR-7). Three
-// real states — none / locked / unlocked — plus a transient `loading` while the
+// real states - none / locked / unlocked - plus a transient `loading` while the
 // stored identity is read from IndexedDB. Everything is local: minting, import,
 // export, device-protect/unlock. The private key only exists in memory while
 // `unlocked` and is never logged or sent anywhere (FR-20).
@@ -130,7 +130,7 @@ export function useIdentity(storage: IdentityStorage = indexedDbStorage): Identi
       );
       return;
     }
-    // Unprotected: nothing to lock to — remove it (the UI confirms + reminds to
+    // Unprotected: nothing to lock to - remove it (the UI confirms + reminds to
     // export first, FR-8/FR-9).
     await forget();
   }, [state, storage, forget]);

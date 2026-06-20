@@ -1,11 +1,11 @@
 // The placeholder token grammar (PRD-06 FR-20…FR-22, FR-30). This PRD OWNS the
 // grammar; the viewer (packages/client/src/viewer/secret-token.ts) RENDERS it and
-// MUST stay byte-compatible — `placeholder.test.ts` pins the exact form so the two
+// MUST stay byte-compatible - `placeholder.test.ts` pins the exact form so the two
 // can't drift.
 //
 //     ⟦cp-secret:<id>:<TYPE>:<len>⟧      e.g. ⟦cp-secret:s7f3:AWS_KEY:20⟧
 //
-// The token carries only an opaque id, a type label, and the value's length —
+// The token carries only an opaque id, a type label, and the value's length -
 // NEVER any substring/prefix/hash of the value (SECURITY-MODEL §Placeholder).
 
 const OPEN = '⟦';

@@ -7,7 +7,7 @@ import { ab } from './primitives';
 
 const subtle = globalThis.crypto.subtle;
 
-// 64-emoji palette — copied verbatim from poc/verify.mjs (must stay in sync).
+// 64-emoji palette - copied verbatim from poc/verify.mjs (must stay in sync).
 const FP_EMOJI = [
   '😀',
   '😁',

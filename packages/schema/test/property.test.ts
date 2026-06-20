@@ -20,7 +20,7 @@ function assertWellFormed(res: ParseResult): void {
   expect(res.stats.mappedRecords + res.stats.droppedToDiagnostics).toBe(
     res.stats.parsedRecords,
   );
-  // Every ts is valid ISO-8601 UTC or undefined — never "Invalid Date" (FR-26).
+  // Every ts is valid ISO-8601 UTC or undefined - never "Invalid Date" (FR-26).
   for (const e of res.session.events) {
     if (e.ts !== undefined) {
       expect(Number.isNaN(Date.parse(e.ts))).toBe(false);

@@ -1,4 +1,4 @@
-// events.ts — Claude Code record → SessionEvent(s) mappers (FR-10..FR-21).
+// events.ts - Claude Code record → SessionEvent(s) mappers (FR-10..FR-21).
 
 import type {
   AssistantEvent,
@@ -424,7 +424,7 @@ function mapUnknown(rec: RawRecord, ctx: MapContext, type: string): MapOutput {
   out.unknownEventType = type;
   const ev: MetaEvent = { kind: 'meta', note: type };
   // Always preserve the original record for an unknown type, even if
-  // preserveRaw is false — it's the only place the unmodeled data survives.
+  // preserveRaw is false - it's the only place the unmodeled data survives.
   applyBase(ev, base);
   ev.raw = rec;
   out.events.push(ev);

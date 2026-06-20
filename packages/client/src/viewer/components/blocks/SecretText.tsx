@@ -4,7 +4,7 @@ import { cn } from '../../../lib/cn';
 import { splitSecretTokens, type SecretPlaceholder } from '../../secret-token';
 import { useReveal } from '../../hooks/useReveal';
 
-const FIXED_DOTS = '••••••••'; // cosmetic, always 8 — never reflects real length.
+const FIXED_DOTS = '••••••••'; // cosmetic, always 8 - never reflects real length.
 
 /**
  * Renders a string, turning any embedded secret placeholder tokens into inline

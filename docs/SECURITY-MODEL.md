@@ -1,8 +1,8 @@
-# claudepad — Security & Crypto Model
+# claudepad - Security & Crypto Model
 
-> **v1 status (serverless pivot, 2026-06-20):** v1 is **entirely client-side and trustless** — the canonical v1 design now lives in **[`TRUSTLESS-MODEL.md`](./TRUSTLESS-MODEL.md)** (identity, encrypt-to-recipient, fingerprints, device keys), proven by `poc/`. **This document's "Layer 1 (link/fragment)" and "Lifecycle" sections describe the deferred *server* model (vNext, DECISIONS D-29)** and are retained for that future. The threat-model *framing* and the **two-key tiering / placeholder rules** below still hold — in v1 the two content keys are *wrapped to a recipient's public key* instead of placed in a URL fragment. PRD-05/06/10/11 conform to `TRUSTLESS-MODEL.md`; PRD-07 (backend) is vNext.
+> **v1 status (serverless pivot, 2026-06-20):** v1 is **entirely client-side and trustless** - the canonical v1 design now lives in **[`TRUSTLESS-MODEL.md`](./TRUSTLESS-MODEL.md)** (identity, encrypt-to-recipient, fingerprints, device keys), proven by `poc/`. **This document's "Layer 1 (link/fragment)" and "Lifecycle" sections describe the deferred *server* model (vNext, DECISIONS D-29)** and are retained for that future. The threat-model *framing* and the **two-key tiering / placeholder rules** below still hold - in v1 the two content keys are *wrapped to a recipient's public key* instead of placed in a URL fragment. PRD-05/06/10/11 conform to `TRUSTLESS-MODEL.md`; PRD-07 (backend) is vNext.
 
-> The spine of the product. This is the canonical, plain-language write-up of how claudepad protects sessions and secrets, and — honestly — what it does *not* protect. A condensed version lives in `prd/_context.md` §5.
+> The spine of the product. This is the canonical, plain-language write-up of how claudepad protects sessions and secrets, and - honestly - what it does *not* protect. A condensed version lives in `prd/_context.md` §5.
 
 ## Goals
 
@@ -24,14 +24,14 @@
 - Traffic-analysis metadata: the server still learns blob size, timing, access counts, and IP.
 - Best-effort redaction gaps (see "Limits").
 
-## Layer 1 — Zero-knowledge baseline (PrivateBin model)
+## Layer 1 - Zero-knowledge baseline (PrivateBin model)
 
 1. The browser/CLI generates a random **AES-256-GCM** content key.
 2. Content is encrypted **client-side**; only ciphertext is uploaded.
 3. The key is placed in the **URL fragment** (`https://claudepad.io/s/<id>#<key>`). Browsers never send the fragment to the server, so a fully cooperative or compromised server cannot decrypt.
 4. The server stores `{ id → ciphertext + metadata }` and nothing else sensitive.
 
-## Layer 2 — Two-key tiered reveal (the differentiator)
+## Layer 2 - Two-key tiered reveal (the differentiator)
 
 Split the artifact into two independently-encrypted layers:
 
@@ -61,14 +61,14 @@ Hiding must be cryptographic, not UI-level. If the secret values were inside the
 
 The original idea was to replace a secret with `secret is [SHA512:…]`. We **do not** do this:
 
-- A hash is **one-way** — a high-privilege viewer could never recover the plaintext, defeating tiered *reveal*.
+- A hash is **one-way** - a high-privilege viewer could never recover the plaintext, defeating tiered *reveal*.
 - For **low-entropy** secrets (passwords, short tokens), a published hash is **brute-forceable offline**, leaking the secret to everyone.
 
 Instead:
 - Each detected secret is replaced by an **opaque random ID** (`S1`, `S2`, …) that indexes the encrypted secret map.
-- The rendered placeholder shows only a **type + length** hint, e.g. `[AWS_KEY ••••••••(20)]` — enough to disambiguate, leaking neither the value nor a crackable fingerprint.
+- The rendered placeholder shows only a **type + length** hint, e.g. `[AWS_KEY ••••••••(20)]` - enough to disambiguate, leaking neither the value nor a crackable fingerprint.
 
-## Limits — best-effort redaction (must be surfaced, never hidden)
+## Limits - best-effort redaction (must be surfaced, never hidden)
 
 - Secret **detection** = known token prefixes (`sk-`, `ghp_`, `AKIA…`, JWT shape, PEM blocks, …) + Shannon-entropy heuristics + any user-supplied `.env`/`.dev.vars` values to match exactly.
 - A **missed** secret remains in plaintext inside the `K_body` layer. It is still protected from the host, but it is visible to **every tier**, including low-privilege.
@@ -85,7 +85,7 @@ Instead:
 - Guard against fragment leakage: avoid `Referer` exposure, consider stripping the fragment from the visible address bar after load, warn users that the link *is* the credential.
 - Use authenticated encryption (GCM) so tampering is detectable.
 
-## vNext — named-recipient / PGP-style sharing (not in v1, not precluded)
+## vNext - named-recipient / PGP-style sharing (not in v1, not precluded)
 
 - Each user holds an **X25519** keypair (passkey- or password-derived).
 - `K_body` / `K_secret` are **wrapped to each recipient's public key**; the server stores only wrapped keys.

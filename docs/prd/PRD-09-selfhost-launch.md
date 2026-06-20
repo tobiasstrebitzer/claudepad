@@ -1,4 +1,4 @@
-# PRD-09 — Self-Hosting (Static) & Launch
+# PRD-09 - Self-Hosting (Static) & Launch
 
 > **Phase:** P5 (Launch → v1.0) · **Status:** Draft · **Re-scoped by the serverless-v1 pivot (DECISIONS D-20…D-33).**
 > **v1 self-host = serve a static bundle.** No API, no DB, no blob store, no services. "Self-host == hosted" is now trivially true: `claudepad.io` *is* the same static files. The earlier `docker compose` + Postgres + MinIO + Cloudflare-Workers deployment below is the **vNext** path for the **optional Store Provider addon** (open spec, `../STORE-PROVIDER-SPEC.md`; reference impl = PRD-07), **not** part of the v1 launch. The v1 client must contain **no `claudepad.io/store` URL or store-specific code** (D-33).
@@ -17,7 +17,7 @@ claudepad's trust story is now the strongest possible: **there is nothing to hos
 **Goals**
 - Ship a **single `docker compose up`** path that brings up client + API + Postgres + S3-compatible (MinIO) store and is usable in **< 5 min** from a clean machine (ROADMAP §6).
 - Deliver the **Cloudflare deploy path** (Workers + R2 + D1/KV per PRD-07) used by hosted `claudepad.io`, from the same source tree.
-- Provide a **complete, single-source configuration/env-var reference** covering storage backend, size/rate limits, TTL defaults, base URL, and abuse controls — identical semantics across both backends.
+- Provide a **complete, single-source configuration/env-var reference** covering storage backend, size/rate limits, TTL defaults, base URL, and abuse controls - identical semantics across both backends.
 - Publish a **public THREAT-MODEL document** (plain language, derived from `SECURITY-MODEL.md`) and make it a launch-blocking deliverable.
 - Make an **independent security review** of the crypto core (PRD-05) and secret handling (PRD-06) a hard gate on v1.0 (per `SECURITY-MODEL.md` "Pre-v1 requirement").
 - Recommend an **open-source license** with rationale and apply it across the repo.
@@ -26,10 +26,10 @@ claudepad's trust story is now the strongest possible: **there is nothing to hos
 
 **Non-goals**
 - New product features. PRD-09 packages and launches; it does not add user-facing capabilities beyond config surface.
-- Multi-tenant hosting, billing, orgs/teams, SSO — explicitly vNext (ROADMAP §5).
-- Convenience / non-ZK mode, server-side search — out of scope for v1 (`_context.md` §5.5).
+- Multi-tenant hosting, billing, orgs/teams, SSO - explicitly vNext (ROADMAP §5).
+- Convenience / non-ZK mode, server-side search - out of scope for v1 (`_context.md` §5.5).
 - Kubernetes/Helm charts, Terraform modules, or managed-cloud one-click marketplace images (post-v1 nice-to-haves; compose + Cloudflare are the v1 commitments).
-- Implementing PRD-05/06/07 logic — those are owned upstream; here we deploy and gate on them.
+- Implementing PRD-05/06/07 logic - those are owned upstream; here we deploy and gate on them.
 
 ## 3. Personas & user stories
 
@@ -99,9 +99,9 @@ Numbered, testable. "MUST" = launch-blocking unless marked.
 
 ### Self-host (Docker Compose)
 
-- **FR-1** The repo MUST include a `docker-compose.yml` that, from a clean checkout with the unedited `.env.example` copied to `.env`, brings up four logical services — `web` (static client bundle), `api` (Node/Hono server), `postgres`, `minio` (S3-compatible) — plus a one-shot `createbuckets` init, and reaches a fully usable state (share + view round-trip) with a single `docker compose up`.
+- **FR-1** The repo MUST include a `docker-compose.yml` that, from a clean checkout with the unedited `.env.example` copied to `.env`, brings up four logical services - `web` (static client bundle), `api` (Node/Hono server), `postgres`, `minio` (S3-compatible) - plus a one-shot `createbuckets` init, and reaches a fully usable state (share + view round-trip) with a single `docker compose up`.
 - **FR-2** Bringing the stack up MUST complete in **< 5 minutes** on a reference machine (documented: 4 vCPU / 8 GB, warm Docker image cache or pre-built published images), measured from `docker compose up` to a successful share→view round-trip. *(ROADMAP §6.)*
-- **FR-3** The default compose configuration MUST require **no third-party accounts or external services** — Postgres and MinIO run locally as containers. *(`_context.md` §2 self-hoster.)*
+- **FR-3** The default compose configuration MUST require **no third-party accounts or external services** - Postgres and MinIO run locally as containers. *(`_context.md` §2 self-hoster.)*
 - **FR-4** The `api` service MUST run idempotent database **migrations automatically on startup** (or via a documented one-shot `migrate` command) and expose `GET /healthz` (liveness) and `GET /readyz` (DB + blob store reachable) endpoints; compose `depends_on` MUST gate `web`/`api` on healthchecks.
 - **FR-5** Published, versioned **Docker images** (`ghcr.io/claudepad/web`, `ghcr.io/claudepad/api`) MUST be available per release so operators can run without a local build; image tags MUST match the release version and `latest` MUST track the newest stable tag.
 - **FR-6** The `web` service MUST serve the **single static client bundle** (PRD-01/03 build output) and a runtime `config.js` (or `/config` endpoint) so that base URL and limits are injected at deploy time **without rebuilding** the bundle. *(`_context.md` §3 "single static bundle".)*
@@ -159,7 +159,7 @@ The crux of "self-host == hosted" is that PRD-07's server is written once agains
    docker compose (self-host)                     wrangler deploy (claudepad.io)
 ```
 
-- **Handlers never touch a concrete store** — they call `storage.put/get/delete(...)` and `meta.create/get/incrementViews/delete(...)` interfaces owned by PRD-07.
+- **Handlers never touch a concrete store** - they call `storage.put/get/delete(...)` and `meta.create/get/incrementViews/delete(...)` interfaces owned by PRD-07.
 - Drivers are selected at startup from config (`CLAUDEPAD_STORAGE_DRIVER`, `CLAUDEPAD_META_DRIVER`). Trade-off: a thin adapter layer + a small matrix of integration tests (driver × handler) in exchange for genuine parity. We accept the test-matrix cost because parity *is* the product promise.
 - The client bundle is identical in both; only runtime `config.js` differs (base URL, limits). This keeps the auditable surface a single artifact (`_context.md` §3 packaging goal).
 
@@ -261,7 +261,7 @@ volumes:
 **Recommendation: MIT** (with an alternative note for Apache-2.0).
 
 Rationale:
-- The ROADMAP §2 strategy is *maximize trust and adoption* — the value is the auditable zero-knowledge architecture and the hosted instance, not license-enforced exclusivity. A permissive license maximizes self-host, forks, and audit.
+- The ROADMAP §2 strategy is *maximize trust and adoption* - the value is the auditable zero-knowledge architecture and the hosted instance, not license-enforced exclusivity. A permissive license maximizes self-host, forks, and audit.
 - MIT is the lowest-friction, most-recognized permissive license; it imposes no patent or copyleft obligations that would deter contributors or corporate self-hosters.
 - **Apache-2.0** is the documented alternative if explicit **patent-grant** protection is desired (relevant given the crypto/secret-handling subject matter); it is still permissive and self-host-friendly. If chosen, add `NOTICE` handling to CI.
 - We explicitly do **not** choose a copyleft (GPL/AGPL) license: AGPL's network-use clause would burden the very self-hosters we are courting and conflicts with "no penalty to self-host," and offers little benefit when the codebase is already fully open.
@@ -270,7 +270,7 @@ Rationale:
 
 ## 7. Data model / API, references, tables & trees
 
-PRD-09 introduces **no new API endpoints or data model** — it consumes PRD-07's API and PRD-05's envelope. It adds the operational `GET /healthz` and `GET /readyz` endpoints (FR-4) and a non-secret `GET /config` (or generated `config.js`) for the client (FR-6). The substantive deliverables are the env reference, repo layout, and launch checklist below.
+PRD-09 introduces **no new API endpoints or data model** - it consumes PRD-07's API and PRD-05's envelope. It adds the operational `GET /healthz` and `GET /readyz` endpoints (FR-4) and a non-secret `GET /config` (or generated `config.js`) for the client (FR-6). The substantive deliverables are the env reference, repo layout, and launch checklist below.
 
 ### 7.1 Operational endpoints
 
@@ -290,14 +290,14 @@ PRD-09 introduces **no new API endpoints or data model** — it consumes PRD-07'
 | `LOG_LEVEL` | api | `info` | no | `error\|warn\|info\|debug`; never logs blob bodies/keys (FR-14). |
 | `CLAUDEPAD_STORAGE_DRIVER` | api | `s3` | no | Blob backend: `s3` (self-host) or `r2` (Cloudflare). |
 | `CLAUDEPAD_META_DRIVER` | api | `postgres` | no | Metadata backend: `postgres`, `d1`, or `kv`. |
-| `DATABASE_URL` | api (postgres) | — | yes (if postgres) | Postgres connection string. |
-| `S3_ENDPOINT` | api (s3) | — | yes (if s3) | S3-compatible endpoint (e.g. `http://minio:9000`). |
+| `DATABASE_URL` | api (postgres) | - | yes (if postgres) | Postgres connection string. |
+| `S3_ENDPOINT` | api (s3) | - | yes (if s3) | S3-compatible endpoint (e.g. `http://minio:9000`). |
 | `S3_REGION` | api (s3) | `us-east-1` | no | Region (MinIO ignores; required by some SDKs). |
 | `S3_BUCKET` | api (s3), init | `claudepad` | no | Blob bucket name. |
-| `S3_ACCESS_KEY_ID` | api (s3), minio, init | — | yes (if s3) | S3/MinIO access key. **No default.** |
-| `S3_SECRET_ACCESS_KEY` | api (s3), minio, init | — | yes (if s3) | S3/MinIO secret key. **No default.** |
+| `S3_ACCESS_KEY_ID` | api (s3), minio, init | - | yes (if s3) | S3/MinIO access key. **No default.** |
+| `S3_SECRET_ACCESS_KEY` | api (s3), minio, init | - | yes (if s3) | S3/MinIO secret key. **No default.** |
 | `S3_FORCE_PATH_STYLE` | api (s3) | `true` | no | Path-style addressing (needed for MinIO). |
-| `POSTGRES_PASSWORD` | postgres, api | — | yes (self-host) | DB password. **No default.** |
+| `POSTGRES_PASSWORD` | postgres, api | - | yes (self-host) | DB password. **No default.** |
 | `CLAUDEPAD_MAX_BLOB_BYTES` | api | `10485760` (10 MiB) | no | Max accepted ciphertext blob size; reject larger (per PRD-07 limits). |
 | `CLAUDEPAD_TTL_DEFAULT_SEC` | api | `604800` (7 d) | no | Default expiry when sharer doesn't pick one. |
 | `CLAUDEPAD_TTL_MAX_SEC` | api | `2592000` (30 d) | no | Max allowed TTL; `0` ⇒ no expiry permitted as default unless overridden. |
@@ -314,7 +314,7 @@ PRD-09 introduces **no new API endpoints or data model** — it consumes PRD-07'
 ```
 claudepad/
 ├─ README.md                  # product + two quick-starts + verify-ZK
-├─ LICENSE                    # MIT (or Apache-2.0) — §6.5
+├─ LICENSE                    # MIT (or Apache-2.0) - §6.5
 ├─ SECURITY.md                # disclosure policy, supported versions (FR-17)
 ├─ CONTRIBUTING.md            # setup, build, test, PR & release process (FR-21)
 ├─ CHANGELOG.md               # generated (Changesets) (FR-26)
@@ -332,7 +332,7 @@ claudepad/
 │  ├─ self-hosting.md  configuration.md  deploy-cloudflare.md
 │  └─ prd/  (this folder)
 └─ packages/
-   ├─ shared/                 # normalized Session types + envelope format (PRD-02/05) — single source
+   ├─ shared/                 # normalized Session types + envelope format (PRD-02/05) - single source
    ├─ web/                    # Vite + React client → single static bundle (PRD-01/03/04/08)
    │  └─ Dockerfile
    ├─ server/                 # Hono app + storage/meta drivers (PRD-07)
@@ -380,21 +380,21 @@ How this PRD conforms to `_context.md` §5 / `SECURITY-MODEL.md`:
 - **Honest threat model surfaced, not buried (§5.7):** FR-15 makes `THREAT-MODEL.md` a launch deliverable, explicitly documenting metadata leakage (size/timing/IP/access counts), URL-fragment leakage, best-effort redaction limits, and recipient-re-leak/endpoint-compromise being out of scope.
 - **Gating review (SECURITY-MODEL "Pre-v1 requirement"):** FR-16 hard-gates v1.0 on the independent review of PRD-05/06. No tag without it.
 - **Operational hygiene:** FR-14 forbids logging secrets/keys/blob bodies even at debug; required secrets have no defaults (FR-12) to prevent insecure-default deployments; rate limits and CORS (FR-12) are first-class config to curb abuse without inspecting content.
-- **Risks introduced by this PRD:** (a) a misconfigured `CLAUDEPAD_BASE_URL` could mint unreachable/leaky links — mitigated by the first-run banner (§4.1) and prod-required validation (FR-11). (b) Publishing pre-built images creates a supply-chain surface — mitigated by pinned digests, checksums, and multi-arch reproducible builds (FR-25). (c) Adding a third storage driver could diverge behavior — mitigated by the driver×handler integration matrix (§6.1).
+- **Risks introduced by this PRD:** (a) a misconfigured `CLAUDEPAD_BASE_URL` could mint unreachable/leaky links - mitigated by the first-run banner (§4.1) and prod-required validation (FR-11). (b) Publishing pre-built images creates a supply-chain surface - mitigated by pinned digests, checksums, and multi-arch reproducible builds (FR-25). (c) Adding a third storage driver could diverge behavior - mitigated by the driver×handler integration matrix (§6.1).
 
 ## 9. Dependencies
 
 **Upstream (must be complete/usable before P5 ships):**
-- **PRD-01** Design System & **PRD-03** Viewer — produce the single static client bundle this PRD packages.
-- **PRD-02** Parser & shared types — the `shared` package consumed monorepo-wide.
-- **PRD-04** Ingest/CLI — the `cli` package included in the repo/release.
-- **PRD-05** Crypto core & **PRD-06** Secrets — **gating**: this PRD's launch is blocked on their independent security review (FR-16).
-- **PRD-07** Backend Blob Store & API — this PRD *deploys* it via both the Node/Postgres/S3 and Cloudflare/R2/D1-KV adapters; depends on its storage interface and wire format.
-- **PRD-08** Playback — part of the bundled client; not a hard blocker but expected in the v1.0 feature set.
+- **PRD-01** Design System & **PRD-03** Viewer - produce the single static client bundle this PRD packages.
+- **PRD-02** Parser & shared types - the `shared` package consumed monorepo-wide.
+- **PRD-04** Ingest/CLI - the `cli` package included in the repo/release.
+- **PRD-05** Crypto core & **PRD-06** Secrets - **gating**: this PRD's launch is blocked on their independent security review (FR-16).
+- **PRD-07** Backend Blob Store & API - this PRD *deploys* it via both the Node/Postgres/S3 and Cloudflare/R2/D1-KV adapters; depends on its storage interface and wire format.
+- **PRD-08** Playback - part of the bundled client; not a hard blocker but expected in the v1.0 feature set.
 
-**Downstream:** none — PRD-09 is the terminal launch PRD (ROADMAP P5 → v1.0).
+**Downstream:** none - PRD-09 is the terminal launch PRD (ROADMAP P5 → v1.0).
 
-**External:** Docker/Compose, Postgres, MinIO, Cloudflare (Workers/R2/D1/KV), `wrangler`, GitHub Actions/GHCR, an independent security reviewer (vendor TBD — §11).
+**External:** Docker/Compose, Postgres, MinIO, Cloudflare (Workers/R2/D1/KV), `wrangler`, GitHub Actions/GHCR, an independent security reviewer (vendor TBD - §11).
 
 ## 10. Acceptance criteria / DoD
 
@@ -415,13 +415,13 @@ How this PRD conforms to `_context.md` §5 / `SECURITY-MODEL.md`:
 
 1. **License sign-off (§6.5):** MIT (recommended) vs. Apache-2.0 (explicit patent grant). Given the crypto/secret-handling subject matter, does the maintainer want the Apache-2.0 patent protection at the cost of slightly more ceremony (NOTICE handling)? *Needs maintainer decision.*
 2. **Security reviewer selection & scope:** which independent firm/auditor reviews PRD-05/06, what is the exact scope (crypto core + secret scanner + envelope construction), budget, and timeline? This is on the critical path to v1.0 (FR-16).
-3. **Web container packaging:** ship `web` as a separate static server (4-service compose) or fold static assets into the `api` container (3-service, simpler) — which is the reference? Trade-off: minimal stack vs. clean separation/scaling.
-4. **TTL/limit defaults:** §7.2 defaults (10 MiB blob, 7 d default / 30 d max TTL, rate limits) must be reconciled with PRD-07's authoritative numbers — confirm or override.
-5. **Cloudflare metadata store:** D1 vs. KV for hosted metadata (PRD-07 leaves both open). Burn-after-read and view-count semantics differ in atomicity guarantees between them — which does hosted commit to, and does self-host's Postgres need to match those exact semantics for true parity (FR-9)?
-6. **Reference machine for the < 5 min metric:** confirm the spec (4 vCPU / 8 GB) and whether the timer assumes pre-pulled published images or a cold local build — this materially changes whether FR-2 passes.
+3. **Web container packaging:** ship `web` as a separate static server (4-service compose) or fold static assets into the `api` container (3-service, simpler) - which is the reference? Trade-off: minimal stack vs. clean separation/scaling.
+4. **TTL/limit defaults:** §7.2 defaults (10 MiB blob, 7 d default / 30 d max TTL, rate limits) must be reconciled with PRD-07's authoritative numbers - confirm or override.
+5. **Cloudflare metadata store:** D1 vs. KV for hosted metadata (PRD-07 leaves both open). Burn-after-read and view-count semantics differ in atomicity guarantees between them - which does hosted commit to, and does self-host's Postgres need to match those exact semantics for true parity (FR-9)?
+6. **Reference machine for the < 5 min metric:** confirm the spec (4 vCPU / 8 GB) and whether the timer assumes pre-pulled published images or a cold local build - this materially changes whether FR-2 passes.
 7. **Multi-arch image scope:** are `linux/arm64` images (Apple Silicon / ARM servers) in-scope for v1.0 CD, or amd64-only at launch with arm64 fast-follow?
-8. **Hosted abuse/DMCA path:** `claudepad.io` operators may receive takedown requests for content they cannot read — confirm the metadata-only removal process (delete by `id`) and document it, since it touches the zero-knowledge story.
+8. **Hosted abuse/DMCA path:** `claudepad.io` operators may receive takedown requests for content they cannot read - confirm the metadata-only removal process (delete by `id`) and document it, since it touches the zero-knowledge story.
 
 ## 12. Phase / milestone
 
-**Phase P5 — Launch**, the terminal milestone delivering **v1.0** (ROADMAP §3). Build order: last on the critical path (`… → PRD-08 → PRD-09`), gated on the PRD-05/06 security review. Shipping this PRD's acceptance criteria *is* the v1.0 release.
+**Phase P5 - Launch**, the terminal milestone delivering **v1.0** (ROADMAP §3). Build order: last on the critical path (`… → PRD-08 → PRD-09`), gated on the PRD-05/06 security review. Shipping this PRD's acceptance criteria *is* the v1.0 release.

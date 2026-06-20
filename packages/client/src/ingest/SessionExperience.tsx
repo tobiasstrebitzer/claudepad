@@ -31,7 +31,7 @@ export function SessionExperience({
   usePasteCapture(pasteEnabled, (text) => void api.loadText(text, 'paste'));
 
   const onMultiple = (count: number) =>
-    setNote(`Loaded the first of ${count} files — one session is shown at a time.`);
+    setNote(`Loaded the first of ${count} files - one session is shown at a time.`);
 
   switch (api.state.status) {
     case 'idle':

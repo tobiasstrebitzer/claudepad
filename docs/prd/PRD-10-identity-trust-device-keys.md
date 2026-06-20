@@ -1,13 +1,13 @@
-# PRD-10 — Identity, Trust & Device Keys
+# PRD-10 - Identity, Trust & Device Keys
 
 > **Phase:** P2 (Identity & Trust) · **Status:** Draft · **New in the serverless-v1 pivot**
-> **Canonical refs:** `../TRUSTLESS-MODEL.md` (§2 identity, §5 fingerprints, §6 device keys — conform exactly), `_context.md` §3/§5, §7 (template). **Reference implementation:** `poc/` (identity, fingerprints, WebAuthn-PRF all working).
+> **Canonical refs:** `../TRUSTLESS-MODEL.md` (§2 identity, §5 fingerprints, §6 device keys - conform exactly), `_context.md` §3/§5, §7 (template). **Reference implementation:** `poc/` (identity, fingerprints, WebAuthn-PRF all working).
 
 ---
 
 ## 1. Summary & problem
 
-To share trustlessly (PRD-11), a user needs a cryptographic **identity** and a way to know that a public key really belongs to who it claims. This PRD owns the identity lifecycle — **mint, import/export, store, display, and optionally lock behind a device passkey** — and the **fingerprint** mechanism that makes a self-claimed name verifiable. It is entirely client-side: no accounts, no server. The crypto is already proven in `poc/`; this PRD specifies the productized version.
+To share trustlessly (PRD-11), a user needs a cryptographic **identity** and a way to know that a public key really belongs to who it claims. This PRD owns the identity lifecycle - **mint, import/export, store, display, and optionally lock behind a device passkey** - and the **fingerprint** mechanism that makes a self-claimed name verifiable. It is entirely client-side: no accounts, no server. The crypto is already proven in `poc/`; this PRD specifies the productized version.
 
 ## 2. Goals / Non-goals
 
@@ -16,13 +16,13 @@ To share trustlessly (PRD-11), a user needs a cryptographic **identity** and a w
 - **G2.** Produce two shareable artifacts: a **public key card** (`cp-pub-…`, safe to post) and an **identity secret** (`cp-id-…`, the backup).
 - **G3.** Persist the identity locally (IndexedDB), export/import for backup and device migration.
 - **G4.** Show a **fingerprint** (SHA-256 over the public key → emoji + hex) wherever trust is established (D-25).
-- **G5.** Optional **device protection** via WebAuthn PRF (pattern A default; pattern B documented) — no server (D-26).
-- **G6.** Three identity states — **none / locked / unlocked** — with clear transitions.
+- **G5.** Optional **device protection** via WebAuthn PRF (pattern A default; pattern B documented) - no server (D-26).
+- **G6.** Three identity states - **none / locked / unlocked** - with clear transitions.
 - **G7.** Honest UX about loss, backup, and the limits of name-trust.
 
 ### Non-goals
-- **NG1.** The share/receive flow and recipient wrapping — **PRD-11**.
-- **NG2.** The AES-GCM / ECDH / HKDF primitives themselves — **PRD-05** (this PRD consumes them).
+- **NG1.** The share/receive flow and recipient wrapping - **PRD-11**.
+- **NG2.** The AES-GCM / ECDH / HKDF primitives themselves - **PRD-05** (this PRD consumes them).
 - **NG3.** Any server, key directory, or PKI. Names are self-claimed; there is no registry (vNext: social proofs).
 - **NG4.** Group identities / org accounts (vNext).
 - **NG5.** Sender signatures (PRD-11 / vNext).
@@ -57,7 +57,7 @@ To share trustlessly (PRD-11), a user needs a cryptographic **identity** and a w
 ┌─ Your identity ─────────────────────────────────────────────┐
 │  ● Signed in as Toby                            [ Sign out ] │
 │                                                              │
-│  Your public key (give to friends — safe to post):          │
+│  Your public key (give to friends - safe to post):          │
 │   cp-pub-eyJ2IjoxLCJuYW1lIjoiVG9ieSIsInB1Yi…   [Copy]        │
 │  Your fingerprint (read aloud to verify):                   │
 │   🥕 🥑 🙃 🍎 😂 🎹   4A2B-6D99                              │
@@ -98,12 +98,12 @@ Numbered, testable. **MUST** unless noted.
 
 ### Fingerprints (trust)
 - **FR-10.** A fingerprint MUST be computed as `SHA-256(rawPublicKeyBytes)` rendered as **6 emoji (from a fixed 64-entry palette, indexed by `byte & 63`) + an 8-hex code** (next 4 bytes, `XXXX-XXXX`). It MUST be deterministic for a given key and differ for different keys (`poc/verify.mjs` [5]).
-- **FR-11.** The fingerprint MUST be displayed in **three** places: your own identity (with "read aloud to verify"); when a recipient public key is pasted in the share flow (PRD-11) — "confirm it matches"; and when a blob is decrypted — the **sender's** fingerprint (PRD-11).
+- **FR-11.** The fingerprint MUST be displayed in **three** places: your own identity (with "read aloud to verify"); when a recipient public key is pasted in the share flow (PRD-11) - "confirm it matches"; and when a blob is decrypted - the **sender's** fingerprint (PRD-11).
 - **FR-12.** The hex code MUST always be shown alongside the emoji (accessibility for color/emoji-blind users; Q-17). The UI MUST state that the name is self-claimed and trust requires fingerprint confirmation.
 
-### Device protection (WebAuthn PRF — no server)
+### Device protection (WebAuthn PRF - no server)
 - **FR-13.** When `window.PublicKeyCredential` is present **and** the origin is not `file://`, the app MUST offer "Protect with this device." Otherwise it MUST show a clear "needs a real origin / unsupported" note (degrade gracefully).
-- **FR-14.** "Protect" (pattern A) MUST: create a passkey with the **PRF extension evaluated at registration** (`extensions.prf.eval.first = salt`) to obtain the PRF output in one ceremony; derive **KEK = HKDF-SHA256(PRF output)**; AES-256-GCM-encrypt the identity secret under the KEK; store `{ protected:true, name, pub, credentialId, wrapped }`. It MUST fall back to a single `get()` only when the authenticator can't return PRF at creation. (Avoids the double prompt — proven in `poc/`.)
+- **FR-14.** "Protect" (pattern A) MUST: create a passkey with the **PRF extension evaluated at registration** (`extensions.prf.eval.first = salt`) to obtain the PRF output in one ceremony; derive **KEK = HKDF-SHA256(PRF output)**; AES-256-GCM-encrypt the identity secret under the KEK; store `{ protected:true, name, pub, credentialId, wrapped }`. It MUST fall back to a single `get()` only when the authenticator can't return PRF at creation. (Avoids the double prompt - proven in `poc/`.)
 - **FR-15.** "Unlock with device" MUST `get()` with `prf.eval` for the stored `credentialId`, re-derive the KEK, decrypt the identity into memory, and transition to unlocked. A wrong/absent device MUST fail closed with a clear message and never partially reveal the key.
 - **FR-16.** The wrapped identity at rest MUST NOT contain the private scalar in any readable form (`poc/verify.mjs` [6] asserts this). A different PRF secret MUST NOT unwrap it.
 - **FR-17.** "Remove device protection" MUST require the identity to be unlocked, then re-store it unprotected (with confirmation).
@@ -169,10 +169,10 @@ type Fingerprint = { emoji: string; code: string /* "XXXX-XXXX" */ };
 ## 8. Security & privacy
 
 Conforms to `TRUSTLESS-MODEL.md` §2/§5/§6 and `_context.md` §5:
-- **No server, no account** — identity is local; nothing is registered anywhere (FR-1…FR-9).
-- **Name ≠ identity** — self-claimed; fingerprints provide verifiable trust (FR-10…FR-12). Honest "good for friends" framing.
-- **Device protection is client-only** — WebAuthn used purely as a local PRF oracle; no attestation leaves the device (FR-13…FR-16).
-- **Key at rest** — encrypted under the device KEK when protected (FR-16); exported secret is the user's responsibility (FR-18).
+- **No server, no account** - identity is local; nothing is registered anywhere (FR-1…FR-9).
+- **Name ≠ identity** - self-claimed; fingerprints provide verifiable trust (FR-10…FR-12). Honest "good for friends" framing.
+- **Device protection is client-only** - WebAuthn used purely as a local PRF oracle; no attestation leaves the device (FR-13…FR-16).
+- **Key at rest** - encrypted under the device KEK when protected (FR-16); exported secret is the user's responsibility (FR-18).
 - **Risks:** identity loss on storage clear (mitigated by export + pattern-B sync); unlocked key in JS memory (XSS hygiene); PRF support variance (graceful fallback). All documented, not buried.
 
 ## 9. Dependencies
@@ -197,8 +197,8 @@ Conforms to `TRUSTLESS-MODEL.md` §2/§5/§6 and `_context.md` §5:
 - **Q-17 (fingerprint encoding):** lock the 64-emoji palette and confirm accessibility (hex always shown). Consider a word-list option.
 - **New OQ-A:** multiple identities per browser (personas) in v1, or single-identity for simplicity? Lean single in v1.
 - **New OQ-B:** should "Protect with device" *require* a prior export (force the backup) before enabling? Lean yes (footgun guard).
-- **New OQ-C:** recipient address book — store known contacts' public cards + local aliases locally? Useful for PRD-11; lean minimal in v1 (paste each time), address book as a fast follow.
+- **New OQ-C:** recipient address book - store known contacts' public cards + local aliases locally? Useful for PRD-11; lean minimal in v1 (paste each time), address book as a fast follow.
 
 ## 12. Phase / milestone
 
-**Phase P2 — Identity & Trust.** Build order: after the crypto core (PRD-05) and the offline prettifier (PRD-01–04), before trustless sharing (PRD-11). Gating for v1: covered by the independent security review (PRD-09).
+**Phase P2 - Identity & Trust.** Build order: after the crypto core (PRD-05) and the offline prettifier (PRD-01–04), before trustless sharing (PRD-11). Gating for v1: covered by the independent security review (PRD-09).

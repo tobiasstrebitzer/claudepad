@@ -73,4 +73,4 @@ export function contrastRatio(fg: string, bg: string): number {
   return (hi + 0.05) / (lo + 0.05);
 }
 
-export const ratioLabel = (r: number): string => (Number.isNaN(r) ? '—' : r.toFixed(2));
+export const ratioLabel = (r: number): string => (Number.isNaN(r) ? '-' : r.toFixed(2));

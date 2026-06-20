@@ -2,7 +2,7 @@
  * Theme module (PRD-01 §7.6, FR-3/FR-4). Light is default; `system` resolves via
  * matchMedia and falls back to light. The only persisted, non-sensitive state is
  * the preference in localStorage["claudepad.theme"]. Switching theme toggles a
- * single `data-theme` attribute on <html> — no component style recomputation.
+ * single `data-theme` attribute on <html> - no component style recomputation.
  */
 
 export type Theme = 'light' | 'dark' | 'system';

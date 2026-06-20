@@ -1,4 +1,4 @@
-// The identity panel (PRD-10 §4.2/§4.3) — renders the right surface for each of
+// The identity panel (PRD-10 §4.2/§4.3) - renders the right surface for each of
 // the three states. Honest throughout: names are self-claimed (FR-5/FR-12), the
 // secret is the only copy (no server recovery, FR-3/FR-18), and device protection
 // degrades with a clear note where WebAuthn can't run (FR-13).
@@ -98,7 +98,7 @@ function NonePanel() {
       <header className="space-y-1">
         <h2 className="font-serif text-heading-3 text-text">Set up your identity</h2>
         <p className="text-body-sm text-muted">
-          A keypair minted in your browser — no account, nothing uploaded. You’ll
+          A keypair minted in your browser - no account, nothing uploaded. You’ll
           need it to share sessions and to receive them back.
         </p>
       </header>
@@ -254,10 +254,10 @@ function UnlockedPanel() {
         </Button>
       </header>
 
-      {/* Public key card — safe to post */}
+      {/* Public key card - safe to post */}
       <section className="space-y-1.5">
         <p className="text-label text-muted">
-          Your public key — give to friends, safe to post
+          Your public key - give to friends, safe to post
         </p>
         <div className="flex items-stretch gap-2">
           <code className="min-w-0 flex-1 truncate rounded-sm border border-border bg-bg px-2 py-1.5 font-mono text-body-sm text-text">
@@ -274,10 +274,10 @@ function UnlockedPanel() {
         </div>
       </section>
 
-      {/* Fingerprint — read aloud to verify */}
+      {/* Fingerprint - read aloud to verify */}
       <section className="space-y-1.5">
         <p className="flex items-center gap-1.5 text-label text-muted">
-          <FingerprintIcon className="size-3.5" /> Your fingerprint — read aloud to verify
+          <FingerprintIcon className="size-3.5" /> Your fingerprint - read aloud to verify
         </p>
         <Fingerprint pub={identity.pub} />
         <p className="text-label text-muted">
@@ -304,7 +304,7 @@ function UnlockedPanel() {
         </Button>
         <p className="flex items-start gap-1.5 text-label text-muted">
           <TriangleAlert className="mt-0.5 size-3.5 shrink-0 text-warn" />
-          This is your only key. No server can recover it — back it up.
+          This is your only key. No server can recover it - back it up.
         </p>
       </section>
 
@@ -346,7 +346,7 @@ function UnlockedPanel() {
             </Button>
             {!backedUp && (
               <p className="text-label text-muted">
-                Download your secret first — if a device unlock ever fails, the
+                Download your secret first - if a device unlock ever fails, the
                 backup is the only way back in.
               </p>
             )}

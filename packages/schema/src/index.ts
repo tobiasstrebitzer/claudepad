@@ -1,4 +1,4 @@
-// @claudepad/schema — public surface.
+// @claudepad/schema - public surface.
 
 export { parseSession } from './parse';
 export * from './types';

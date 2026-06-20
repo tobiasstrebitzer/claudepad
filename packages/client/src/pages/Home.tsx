@@ -11,7 +11,7 @@ export function Home() {
       <p className="text-body-sm text-muted">Afternoon</p>
       <h1 className="mt-1 font-serif text-display-xl text-text">Welcome back, Toby</h1>
       <p className="mt-4 max-w-prose text-body text-muted">
-        Drop a Claude Code session to see it beautifully — then share it encrypted to one
+        Drop a Claude Code session to see it beautifully - then share it encrypted to one
         person, with no server in the middle.
       </p>
 
@@ -48,7 +48,7 @@ export function Home() {
           </p>
           <p className="mt-1 text-body-sm text-muted">
             Parsing, identity, and encryption all happen in your browser. Sharing encrypts
-            to a recipient&rsquo;s public key — the blob is inert to everyone else.
+            to a recipient&rsquo;s public key - the blob is inert to everyone else.
           </p>
         </div>
       </div>

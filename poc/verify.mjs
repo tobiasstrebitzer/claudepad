@@ -1,4 +1,4 @@
-// Trustless serverless share — crypto verification.
+// Trustless serverless share - crypto verification.
 // Mirrors the exact WebCrypto calls used in trustless-share.html.
 // Run: node poc/verify.mjs
 import { webcrypto } from 'node:crypto';
@@ -142,7 +142,7 @@ for (const [label, blob] of [['body-only', lowBlob], ['high-tier', hiBlob]]) {
 }
 ok(eveBlocked === 2, 'Eve cannot decrypt either blob (AES-GCM auth fails on wrong key)');
 
-console.log('\n[4] The blob is just text — droppable anywhere (Slack, a file, a gist):');
+console.log('\n[4] The blob is just text - droppable anywhere (Slack, a file, a gist):');
 const wire = JSON.stringify(hiBlob);
 ok(!wire.includes('sk-live'), 'serialized blob contains NO plaintext secret');
 ok(!wire.includes('deploy'), 'serialized blob contains NO plaintext body');

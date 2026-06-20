@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test';
 // PRD-01 FR-14/FR-15/FR-3: the app-shell layout, responsive sidebar collapse,
 // and theme switching, verified in a real browser.
 
-test.describe('app shell — desktop (1280px)', () => {
+test.describe('app shell - desktop (1280px)', () => {
   test.use({ viewport: { width: 1280, height: 800 } });
 
   test('shows the persistent sidebar, hides the menu button', async ({ page }) => {
@@ -27,7 +27,7 @@ test.describe('app shell — desktop (1280px)', () => {
   });
 });
 
-test.describe('app shell — mobile (375px)', () => {
+test.describe('app shell - mobile (375px)', () => {
   test.use({ viewport: { width: 375, height: 780 } });
 
   test('collapses the sidebar into an off-canvas drawer', async ({ page }) => {

@@ -15,7 +15,7 @@ const noStorage: IdentityStorage = {
 };
 
 // FR-3: switching theme is a single data-theme flip on <html> with NO component
-// code change and NO DOM-structure diff — only computed styles differ (and CSS
+// code change and NO DOM-structure diff - only computed styles differ (and CSS
 // cascade isn't exercised in jsdom, so structural equality is the assertion).
 describe('theme swap (FR-3)', () => {
   it('flipping data-theme does not change the rendered DOM structure', () => {

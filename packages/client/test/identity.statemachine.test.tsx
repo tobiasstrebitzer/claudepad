@@ -5,7 +5,7 @@ import { useIdentity } from '../src/identity/useIdentity';
 import type { IdentityStorage, StoredIdentity } from '../src/identity/storage';
 
 // In-memory storage so the none/locked/unlocked machine is exercised without a
-// real IndexedDB (jsdom has none) — this is exactly why the storage is injectable.
+// real IndexedDB (jsdom has none) - this is exactly why the storage is injectable.
 function memoryStorage(seed?: StoredIdentity): IdentityStorage & { current?: StoredIdentity } {
   const box: { current?: StoredIdentity } = { current: seed };
   return {

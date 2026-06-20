@@ -1,7 +1,7 @@
-// content.ts — Claude Code content-block mappers (FR-11..FR-15, FR-22).
+// content.ts - Claude Code content-block mappers (FR-11..FR-15, FR-22).
 //
 // Maps Anthropic message-content blocks to normalized ContentBlocks. Thinking
-// and tool_use blocks are NOT ContentBlocks — they become their own events and
+// and tool_use blocks are NOT ContentBlocks - they become their own events and
 // are handled in events.ts; this module models text/image/raw.
 
 import type { ContentBlock } from '../../types';

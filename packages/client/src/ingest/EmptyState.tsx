@@ -32,7 +32,7 @@ export function EmptyState({
         Drop a session to begin
       </h1>
       <p className="mt-4 max-w-prose text-body text-muted">
-        See your Claude Code session beautifully — then, later, share it encrypted to one
+        See your Claude Code session beautifully - then, later, share it encrypted to one
         person. Everything stays on your device.
       </p>
 
@@ -88,7 +88,7 @@ export function EmptyState({
 
       <p className="mt-6 inline-flex items-center gap-2 text-body-sm text-muted">
         <Lock className="size-4 text-success" />
-        Nothing is uploaded — parsing happens entirely in your browser.
+        Nothing is uploaded - parsing happens entirely in your browser.
       </p>
     </ReadingColumn>
   );

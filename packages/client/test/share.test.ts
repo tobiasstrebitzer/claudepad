@@ -64,7 +64,7 @@ describe('trustless share round-trip (PRD-11)', () => {
     expect(blob).not.toContain(AWS);
   });
 
-  it('fails closed for a non-recipient — no partial render (FR-11)', async () => {
+  it('fails closed for a non-recipient - no partial render (FR-11)', async () => {
     const toby = await mintIdentity('Toby');
     const steve = await mintIdentity('Steve');
     const eve = await mintIdentity('Eve');

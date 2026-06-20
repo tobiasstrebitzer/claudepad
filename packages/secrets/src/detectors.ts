@@ -45,7 +45,7 @@ const PREFIX_DETECTORS: PrefixDetector[] = [
 const PEM_RE =
   /-----BEGIN (?:[A-Z ]+ )?PRIVATE KEY-----[\s\S]*?-----END (?:[A-Z ]+ )?PRIVATE KEY-----/g;
 
-// scheme://user:password@host — capture the password (OQ-A: password-only default).
+// scheme://user:password@host - capture the password (OQ-A: password-only default).
 const CONNECTION_STRING_RE =
   /\b(?:postgres(?:ql)?|mysql|mongodb(?:\+srv)?|redis|amqp|rediss):\/\/[^:\s/]+:([^@\s/]+)@/g;
 

@@ -24,7 +24,7 @@ const realFixtures = readdirSync(fixturesDir).filter(
   (f) => f.startsWith('real-') && f.endsWith('.jsonl'),
 );
 
-describe('golden snapshots — redacted real sessions (FR-7, FR-8, FR-10..FR-20)', () => {
+describe('golden snapshots - redacted real sessions (FR-7, FR-8, FR-10..FR-20)', () => {
   it('has at least three real fixtures spanning multiple versions', () => {
     expect(realFixtures.length).toBeGreaterThanOrEqual(3);
   });

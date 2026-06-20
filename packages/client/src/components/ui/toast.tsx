@@ -3,7 +3,7 @@ import { X } from 'lucide-react';
 import { cn } from '../../lib/cn';
 
 // Toast (FR-11) on Base UI. A module-level manager lets `toast(...)` be called
-// from anywhere (outside React) — the ToastProvider is wired to the same manager.
+// from anywhere (outside React) - the ToastProvider is wired to the same manager.
 const manager = BaseToast.createToastManager();
 
 export function toast(options: Parameters<typeof manager.add>[0]) {

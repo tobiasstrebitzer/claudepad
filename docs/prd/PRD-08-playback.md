@@ -1,15 +1,15 @@
-# PRD-08 — Session Playback & Presentation Mode
+# PRD-08 - Session Playback & Presentation Mode
 
-**Phase:** P4 (Playback — the delight layer) · **Status:** Draft
+**Phase:** P4 (Playback - the delight layer) · **Status:** Draft
 
-> **Serverless-v1 note:** unchanged — playback is pure client-side over a `Session` that is either locally parsed or client-side-decrypted (PRD-11). No server, no new keys.
+> **Serverless-v1 note:** unchanged - playback is pure client-side over a `Session` that is either locally parsed or client-side-decrypted (PRD-11). No server, no new keys.
 > Read [`_context.md`](./_context.md) first. This PRD conforms to the normalized model (§6), design tokens (§4), and security model (§5) defined there. It builds on the renderer in [PRD-03](./PRD-03-viewer.md) and the timestamped/ordered events produced by [PRD-02](./PRD-02-parser-schema.md).
 
 ---
 
 ## 1. Summary & problem
 
-A static transcript shows *what* happened in a Claude Code session; it does not convey the *rhythm* — the pause while a tool ran, the burst of a long assistant turn, the back-and-forth tempo. PRD-08 adds **client-side playback**: replay a normalized `Session` over time with familiar transport controls (play/pause, scrubber, jump-to-event, variable speed), plus a **presentation mode** that auto-paces the replay for an audience (talk, demo, screen recording) by allotting dwell time proportional to rendered content length, collapsing dead idle gaps, and folding repetitive tool-spam. Playback is **pure client-side** over the already-decrypted in-memory model, so it works identically for a local drop-in session and a shared (decrypted) session, and introduces no new server surface and no new plaintext exposure.
+A static transcript shows *what* happened in a Claude Code session; it does not convey the *rhythm* - the pause while a tool ran, the burst of a long assistant turn, the back-and-forth tempo. PRD-08 adds **client-side playback**: replay a normalized `Session` over time with familiar transport controls (play/pause, scrubber, jump-to-event, variable speed), plus a **presentation mode** that auto-paces the replay for an audience (talk, demo, screen recording) by allotting dwell time proportional to rendered content length, collapsing dead idle gaps, and folding repetitive tool-spam. Playback is **pure client-side** over the already-decrypted in-memory model, so it works identically for a local drop-in session and a shared (decrypted) session, and introduces no new server surface and no new plaintext exposure.
 
 ## 2. Goals / Non-goals
 
@@ -25,22 +25,22 @@ A static transcript shows *what* happened in a Claude Code session; it does not 
 - No real-time / live session streaming (explicitly vNext per ROADMAP §5).
 - No server-side rendering, recording, or export of a video file (a "record to MP4/GIF" export is a vNext idea, noted in §11, not built here).
 - No editing/annotating the transcript during playback (read-only replay).
-- No new crypto, key, or network behavior — PRD-05/06/07 own all of that; playback consumes the decrypted model only.
+- No new crypto, key, or network behavior - PRD-05/06/07 own all of that; playback consumes the decrypted model only.
 - No changes to the parser or normalized schema (PRD-02 owns it); playback is a pure consumer.
 
 ## 3. Personas & user stories
 
-- **Sharer / presenter (primary)** — *As a developer giving a demo, I want to play a session back at a comfortable, auto-paced tempo so that my audience can follow the conversation without me scrolling and narrating mechanically.*
-- **Sharer** — *As someone publishing a write-up, I want a shareable link that opens directly in presentation mode at a chosen speed so that recipients see a guided replay, not a wall of text.*
-- **Low/high-priv viewer** — *As a recipient of a shared link, I want to scrub and replay the decrypted session client-side so that I can study the flow at my own pace — with secrets still redacted/revealed exactly as my tier allows.*
-- **Local user** — *As someone reviewing my own `~/.claude/projects/*.jsonl` offline, I want to replay it to relive the session, with no network and no upload.*
-- **Accessibility-sensitive viewer** — *As a user with `prefers-reduced-motion` set, I want playback to skip animations and remain fully pausable/scrubbable so that motion does not make the experience unusable.*
+- **Sharer / presenter (primary)** - *As a developer giving a demo, I want to play a session back at a comfortable, auto-paced tempo so that my audience can follow the conversation without me scrolling and narrating mechanically.*
+- **Sharer** - *As someone publishing a write-up, I want a shareable link that opens directly in presentation mode at a chosen speed so that recipients see a guided replay, not a wall of text.*
+- **Low/high-priv viewer** - *As a recipient of a shared link, I want to scrub and replay the decrypted session client-side so that I can study the flow at my own pace - with secrets still redacted/revealed exactly as my tier allows.*
+- **Local user** - *As someone reviewing my own `~/.claude/projects/*.jsonl` offline, I want to replay it to relive the session, with no network and no upload.*
+- **Accessibility-sensitive viewer** - *As a user with `prefers-reduced-motion` set, I want playback to skip animations and remain fully pausable/scrubbable so that motion does not make the experience unusable.*
 
 ## 4. UX & flows
 
 ### 4.1 Entry points
 - **Toggle from the viewer.** PRD-03's viewer gains a "Play" affordance in its toolbar. Activating it mounts the **transport bar** (fixed to the bottom of the viewport) and switches the render surface into *playback presentation*: the timeline starts at `t=0` with only events up to the playhead revealed.
-- **Deep link.** A URL hint (query/fragment param, e.g. `&play=1&mode=present&speed=1.5`) opens straight into playback at a given mode/speed. For shared sessions this combines with the existing `#<K_body>[.<K_secret>]` fragment — playback params live in the query string, never carry keys, and never alter the fragment (see §8).
+- **Deep link.** A URL hint (query/fragment param, e.g. `&play=1&mode=present&speed=1.5`) opens straight into playback at a given mode/speed. For shared sessions this combines with the existing `#<K_body>[.<K_secret>]` fragment - playback params live in the query string, never carry keys, and never alter the fragment (see §8).
 - **Exit.** "Stop" (or `Esc`) returns to the normal static viewer at full reveal, scrolled to the last-active message.
 
 ### 4.2 Transport bar (ASCII)
@@ -55,19 +55,19 @@ A static transcript shows *what* happened in a Claude Code session; it does not 
 ```
 
 - **Left cluster:** play/pause toggle, prev-event (`⏮`), next-event (`⏭`).
-- **Center:** elapsed / total time (virtual playback time, *after* pacing transforms — not wall-clock of the original session), and the **scrubber**. The scrubber renders per-event tick marks colored by kind (user / assistant / thinking / tool / meta). Collapsed idle gaps render as a compressed `·····` segment with a hover tooltip ("idle 4m 12s → 0.8s").
+- **Center:** elapsed / total time (virtual playback time, *after* pacing transforms - not wall-clock of the original session), and the **scrubber**. The scrubber renders per-event tick marks colored by kind (user / assistant / thinking / tool / meta). Collapsed idle gaps render as a compressed `·····` segment with a hover tooltip ("idle 4m 12s → 0.8s").
 - **Right cluster:** speed selector (`0.5× 0.75× 1× 1.5× 2× 4× 8×`), and a **mode** menu (`Real-time` vs `Presentation`, with a gear for pacing params).
 - The bar uses design tokens (§4 of context): `--surface` background, `--border` hairline top, `--accent` (clay) for the playhead and the elapsed portion of the scrubber, `--text-muted` for tick marks. Restrained motion; the playhead moves with a linear transform, not a bouncy spring.
 
 ### 4.3 Render surface during playback
 - **Progressive reveal:** events at or before the playhead are mounted; future events are not yet shown (or shown ghosted at very low opacity in presentation mode is a *non-default* option). Reaching an event reveals it.
 - **Active-message highlight:** the event currently being "spoken" (the one whose dwell window contains the playhead) gets an accent left-border / subtle background lift, reusing PRD-03's message component states (no new component, a `data-active` style hook).
-- **Smooth scroll-to-active:** the surface auto-scrolls so the active event is comfortably in view (anchored ~30% from the top), using `scrollIntoView({ behavior: 'smooth', block: 'center' })` — downgraded to `'auto'` (instant) under `prefers-reduced-motion` or at speed ≥ 4×.
-- **Typing/streaming effect (optional, off by default):** assistant/thinking text can reveal token-by-token within its dwell window. This is a presentation flourish; it is **opt-in**, capped (never slower than the dwell budget allows), and fully disabled under reduced-motion. Code blocks, tool I/O, and images never "type" — they appear atomically (typing them is noisy and slow).
+- **Smooth scroll-to-active:** the surface auto-scrolls so the active event is comfortably in view (anchored ~30% from the top), using `scrollIntoView({ behavior: 'smooth', block: 'center' })` - downgraded to `'auto'` (instant) under `prefers-reduced-motion` or at speed ≥ 4×.
+- **Typing/streaming effect (optional, off by default):** assistant/thinking text can reveal token-by-token within its dwell window. This is a presentation flourish; it is **opt-in**, capped (never slower than the dwell budget allows), and fully disabled under reduced-motion. Code blocks, tool I/O, and images never "type" - they appear atomically (typing them is noisy and slow).
 - **Scrubbing** jumps the model state to the target event instantly (no replay of intermediate animation); the surface snaps to that event.
 
 ### 4.4 Mode behaviors
-- **Real-time mode:** dwell between events derives from the *actual* inter-event timestamp deltas (`tsᵢ₊₁ − tsᵢ`), scaled by the inverse of speed, clamped so a single gap never exceeds `MAX_REALTIME_GAP` (default 10s of virtual time) — otherwise a long human "thinking" pause stalls playback. Tool-run durations are preserved (they are the interesting rhythm) but also clamped.
+- **Real-time mode:** dwell between events derives from the *actual* inter-event timestamp deltas (`tsᵢ₊₁ − tsᵢ`), scaled by the inverse of speed, clamped so a single gap never exceeds `MAX_REALTIME_GAP` (default 10s of virtual time) - otherwise a long human "thinking" pause stalls playback. Tool-run durations are preserved (they are the interesting rhythm) but also clamped.
 - **Presentation mode:** dwell is *computed from content* via the §6 heuristic, idle gaps are collapsed, tool-spam is folded, and reading speed is the tunable knob. This is the default for the "Present" deep link and the recommended sharing tempo.
 
 ## 5. Functional requirements
@@ -75,7 +75,7 @@ A static transcript shows *what* happened in a Claude Code session; it does not 
 Numbered, testable.
 
 **Engine & timeline**
-- **FR-1** The playback engine SHALL build, from a normalized `Session`, an ordered **timeline** of segments — one per visible event — each with a virtual start time and `dwell` (duration), such that `segment[i+1].start = segment[i].start + segment[i].dwell`.
+- **FR-1** The playback engine SHALL build, from a normalized `Session`, an ordered **timeline** of segments - one per visible event - each with a virtual start time and `dwell` (duration), such that `segment[i+1].start = segment[i].start + segment[i].dwell`.
 - **FR-2** The engine SHALL compute dwell in **real-time mode** from event timestamp deltas when both adjacent events carry a parseable `ts`, clamped to `[MIN_DWELL, MAX_REALTIME_GAP]`, and SHALL fall back to the synthetic content-based dwell (FR-9 heuristic, neutral params) for any event whose `ts` is missing, unparseable, equal to its neighbor (coarse/identical timestamps), or out of order.
 - **FR-3** The engine SHALL expose a single monotonic **playhead** (virtual ms). On each animation frame while playing, the playhead SHALL advance by `Δframe × speed`. The engine SHALL NOT use the original wall-clock; total duration is the sum of segment dwells.
 - **FR-4** Given a playhead time, the engine SHALL deterministically resolve (a) the set of revealed events (start ≤ playhead) and (b) the single **active** event (the segment whose `[start, start+dwell)` contains the playhead).
@@ -107,7 +107,7 @@ Numbered, testable.
 - **FR-20** Timeline construction SHALL be O(n) in event count and computed once per (session, mode, params) tuple, memoized; changing only the playhead SHALL NOT rebuild the timeline. Playback SHALL remain smooth (≥ ~50 fps on a mid-range laptop) on sessions of ≥ 5,000 events by reusing PRD-03's virtualization (only mounting near-playhead events).
 
 **Accessibility**
-- **FR-21** Playback SHALL honor `prefers-reduced-motion`: no typing effect, instant (non-smooth) scrolling, no playhead easing/animation flourishes — while keeping the timeline, reveal logic, and all controls fully functional.
+- **FR-21** Playback SHALL honor `prefers-reduced-motion`: no typing effect, instant (non-smooth) scrolling, no playhead easing/animation flourishes - while keeping the timeline, reveal logic, and all controls fully functional.
 - **FR-22** Playback SHALL always be **pausable and scrubbable**; there SHALL be no un-interruptible auto-advance. All transport controls SHALL be keyboard-operable and screen-reader labeled (the scrubber as an ARIA slider with value text "event X of N, mm:ss").
 
 **Keyboard controls**
@@ -129,7 +129,7 @@ packages/client/src/playback/
   keymap.ts            // keyboard bindings                                  (FR-23)
 ```
 
-- **`buildTimeline` is a pure function** (`Session × Mode × PacingConfig → Timeline`) — the high-value unit-test target (Vitest, per context §3). Same input ⇒ same timeline; trivially fixture-testable against the parser's golden sessions.
+- **`buildTimeline` is a pure function** (`Session × Mode × PacingConfig → Timeline`) - the high-value unit-test target (Vitest, per context §3). Same input ⇒ same timeline; trivially fixture-testable against the parser's golden sessions.
 - **`usePlayback`** owns the clock: a `requestAnimationFrame` loop that advances `playhead += (now − last) × speed` while playing, and the `play/pause/seek/seekToEvent/setSpeed` API. It derives `{revealedCount, activeIndex}` from `playhead` via binary search over segment starts (O(log n)).
 - **State store:** a tiny Zustand slice (context §3 sanctions Zustand) for `{ mode, speed, isPlaying, playheadMs, pacingConfig }`; the timeline itself is memoized derived data, not stored.
 - **Render integration:** the existing viewer reads `revealedCount`/`activeIndex` from context and applies `data-active` / reveal classes. The virtualizer already only mounts visible rows; playback simply scrolls to the active row, so virtualization (FR-20) is inherited from PRD-03 rather than re-built.
@@ -160,7 +160,7 @@ Invariants: 0 ≤ playheadMs ≤ totalMs ; exactly one activeIndex while not Idl
             that hit totalMs (auto-pauses, no loop).
 ```
 
-### 6.3 Pacing heuristic (Q-5) — concrete algorithm & defaults
+### 6.3 Pacing heuristic (Q-5) - concrete algorithm & defaults
 
 ```
 PacingConfig (defaults; all overridable via UI + deep link):
@@ -218,12 +218,12 @@ buildTimeline(session, mode, cfg):
   return { segs, totalMs: t*1000 }
 ```
 
-**Design rationale (for Q-5):** dwell-∝-length with a `BASE` floor keeps short turns visible and long turns proportionate; type weights make code/tool output skim faster than prose because audiences scan them; `MAX_DWELL` caps any single beat; idle collapse turns minutes of human-thinking dead air into a marked 0.8s beat; sublinear `SPAM_DWELL(k)` keeps "ran Read ×30" from dragging while still signaling volume. Defaults are a *starting point to tune on real sessions* (a labeled set of recorded presentations) — see Open Questions. All knobs live in one config so tuning is a data change, not a code change.
+**Design rationale (for Q-5):** dwell-∝-length with a `BASE` floor keeps short turns visible and long turns proportionate; type weights make code/tool output skim faster than prose because audiences scan them; `MAX_DWELL` caps any single beat; idle collapse turns minutes of human-thinking dead air into a marked 0.8s beat; sublinear `SPAM_DWELL(k)` keeps "ran Read ×30" from dragging while still signaling volume. Defaults are a *starting point to tune on real sessions* (a labeled set of recorded presentations) - see Open Questions. All knobs live in one config so tuning is a data change, not a code change.
 
 ### 6.4 Trade-offs
 - **Virtual time vs. faithful time.** Presentation mode deliberately *distorts* real timing for watchability; real-time mode preserves it (clamped). The mode toggle and the "X min later" markers keep this honest/visible rather than silently lying about duration.
-- **Typing effect.** Pleasant but risky (motion, perceived slowness, reduced-motion conflicts) — hence off by default, text-only, dwell-bounded, reduced-motion-disabled.
-- **Memoization granularity.** Rebuild timeline only on (session, mode, pacingConfig) change; playhead moves are pure derivations — keeps scrubbing and speed changes allocation-free (FR-20).
+- **Typing effect.** Pleasant but risky (motion, perceived slowness, reduced-motion conflicts) - hence off by default, text-only, dwell-bounded, reduced-motion-disabled.
+- **Memoization granularity.** Rebuild timeline only on (session, mode, pacingConfig) change; playhead moves are pure derivations - keeps scrubbing and speed changes allocation-free (FR-20).
 
 ## 7. Data model / API
 
@@ -259,27 +259,27 @@ interface PlaybackApi {
 }
 ```
 
-**Deep-link params** (query string only, never the key fragment — §8): `play=1`, `mode=present|realtime`, `speed=1.5`, optional compact pacing overrides. Parsed defensively; unknown/invalid values fall back to defaults (never throw).
+**Deep-link params** (query string only, never the key fragment - §8): `play=1`, `mode=present|realtime`, `speed=1.5`, optional compact pacing overrides. Parsed defensively; unknown/invalid values fall back to defaults (never throw).
 
 ## 8. Security & privacy
 
 Conforms to context §5; **introduces no new attack surface**.
-- **No network during playback (FR-18).** Playback runs entirely on the already-decrypted in-memory model — no new fetches, no telemetry, nothing leaves the page. Verifiable in a network capture (mirrors ROADMAP success metric).
-- **No new plaintext or keys.** Playback never decrypts anything; it consumes whatever PRD-05/06 already decrypted for the viewer's tier. The pacing heuristic reads only *rendered, tier-appropriate* content (FR-19), so timing cannot leak a hidden secret's true length — only its already-public type+length placeholder contributes.
+- **No network during playback (FR-18).** Playback runs entirely on the already-decrypted in-memory model - no new fetches, no telemetry, nothing leaves the page. Verifiable in a network capture (mirrors ROADMAP success metric).
+- **No new plaintext or keys.** Playback never decrypts anything; it consumes whatever PRD-05/06 already decrypted for the viewer's tier. The pacing heuristic reads only *rendered, tier-appropriate* content (FR-19), so timing cannot leak a hidden secret's true length - only its already-public type+length placeholder contributes.
 - **Keys stay in the fragment.** Playback deep-link params live in the **query string**; they never read, write, or echo the `#<K_body>[.<K_secret>]` fragment, preserving §5.1 (keys never transmitted, never logged). The "strip-on-copy / warn" hygiene from PRD-05 is unaffected.
 - **No persistence.** Playback state (playhead/speed/mode) is in-memory; nothing about session content is written to history, storage, or URL beyond the non-sensitive playback params the user opts into.
-- **Risks introduced:** essentially none beyond UX (the "present" link distorting perceived timing — mitigated by visible mode + idle markers). Motion/animation accessibility risk is mitigated by FR-21/22.
+- **Risks introduced:** essentially none beyond UX (the "present" link distorting perceived timing - mitigated by visible mode + idle markers). Motion/animation accessibility risk is mitigated by FR-21/22.
 
 ## 9. Dependencies
 
 **Upstream (must exist first):**
-- [PRD-02](./PRD-02-parser-schema.md) — normalized `Session` with **ordered, timestamped** events (`ts` on `SessionEvent`); pacing's real-time mode and idle-gap detection consume these timestamps.
-- [PRD-03](./PRD-03-viewer.md) — the renderer, component states, virtualization, and inline secret-placeholder rendering that playback reuses (FR-14–17, FR-20).
-- [PRD-01](./PRD-01-design-system.md) — tokens (`--accent`, `--surface`, `--border`), motion guidelines, and Lucide icons for the transport bar.
+- [PRD-02](./PRD-02-parser-schema.md) - normalized `Session` with **ordered, timestamped** events (`ts` on `SessionEvent`); pacing's real-time mode and idle-gap detection consume these timestamps.
+- [PRD-03](./PRD-03-viewer.md) - the renderer, component states, virtualization, and inline secret-placeholder rendering that playback reuses (FR-14–17, FR-20).
+- [PRD-01](./PRD-01-design-system.md) - tokens (`--accent`, `--surface`, `--border`), motion guidelines, and Lucide icons for the transport bar.
 
 **Sibling/contextual:**
-- [PRD-05](./PRD-05-crypto-sharing.md) / [PRD-06](./PRD-06-secrets.md) — supply the *already-decrypted* model and tier-appropriate redaction that playback renders; playback adds nothing to their crypto.
-- [PRD-04](./PRD-04-ingest.md) — provides the loaded local session for offline playback.
+- [PRD-05](./PRD-05-crypto-sharing.md) / [PRD-06](./PRD-06-secrets.md) - supply the *already-decrypted* model and tier-appropriate redaction that playback renders; playback adds nothing to their crypto.
+- [PRD-04](./PRD-04-ingest.md) - provides the loaded local session for offline playback.
 
 **Downstream:** none required for v1 (playback is a leaf delight feature). A potential "record to video" export (vNext) would build on this.
 
@@ -298,13 +298,13 @@ Conforms to context §5; **introduces no new attack surface**.
 
 ## 11. Open questions
 
-- **Q-5 (this PRD's charge) — pacing-heuristic specifics.** §6.3 proposes a concrete formula and a full default `PacingConfig` (reading speed 28 ch/s, type weights, idle-collapse at 20s→0.8s, tool-spam fold ≥3 with sublinear dwell). **Resolution path:** ship these as defaults behind a single typed config, then tune `READING_SPEED`, `IDLE_THRESHOLD`, and the type weights against a small labeled set of real recorded presentations before locking v1 numbers. Treat the numbers as data, not contract.
-- **Q-5a — surface the param UI in v1, or ship sensible defaults only?** Leaning: ship a minimal "reading speed" slider + mode toggle in v1; expose the full pacing config via deep-link params for power users, keep the rest internal until validated.
-- **Q-5b — ghosted "future events" preview during presentation?** A faint preview of upcoming events can aid orientation but adds motion/clutter. Leaning: off by default, evaluate after dogfooding.
+- **Q-5 (this PRD's charge) - pacing-heuristic specifics.** §6.3 proposes a concrete formula and a full default `PacingConfig` (reading speed 28 ch/s, type weights, idle-collapse at 20s→0.8s, tool-spam fold ≥3 with sublinear dwell). **Resolution path:** ship these as defaults behind a single typed config, then tune `READING_SPEED`, `IDLE_THRESHOLD`, and the type weights against a small labeled set of real recorded presentations before locking v1 numbers. Treat the numbers as data, not contract.
+- **Q-5a - surface the param UI in v1, or ship sensible defaults only?** Leaning: ship a minimal "reading speed" slider + mode toggle in v1; expose the full pacing config via deep-link params for power users, keep the rest internal until validated.
+- **Q-5b - ghosted "future events" preview during presentation?** A faint preview of upcoming events can aid orientation but adds motion/clutter. Leaning: off by default, evaluate after dogfooding.
 - **Typing/streaming effect default.** Kept **off** for v1 (motion + perceived-slowness risk). Revisit if user testing finds it materially more engaging without hurting reduced-motion users.
 - **Per-share saved tempo.** Should a sharer be able to *persist* a chosen mode/speed into the shared link's playback params so recipients open at the presenter's tempo? Leaning yes (query-string params already support it); confirm it never touches the key fragment.
 - **(vNext) Record-to-video/GIF export.** Out of scope here; flagged so the timeline model is built export-friendly (deterministic `buildTimeline`) but no exporter ships in v1.
 
 ## 12. Phase / milestone
 
-**Phase P4 — Playback** (ROADMAP §3). The delight layer, after the MVP (P1), sharing (P2), and secrets (P3) are in place. Build-order position per ROADMAP §3.1: **PRD-08 follows PRD-06**, before the launch PRD (PRD-09). Pure client-side; ships with no backend changes.
+**Phase P4 - Playback** (ROADMAP §3). The delight layer, after the MVP (P1), sharing (P2), and secrets (P3) are in place. Build-order position per ROADMAP §3.1: **PRD-08 follows PRD-06**, before the launch PRD (PRD-09). Pure client-side; ships with no backend changes.

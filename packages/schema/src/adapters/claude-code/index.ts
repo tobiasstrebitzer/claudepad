@@ -1,4 +1,4 @@
-// adapters/claude-code/index.ts — the Claude Code source adapter.
+// adapters/claude-code/index.ts - the Claude Code source adapter.
 
 import type { SessionMeta, SessionSource } from '../../types';
 import type { RawRecord } from '../../detect';

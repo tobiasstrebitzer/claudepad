@@ -6,7 +6,7 @@ import { hasSecretToken } from '../../secret-token';
 import { SecretText } from './SecretText';
 
 interface CodeBlockProps {
-  /** Exact original source — what the copy button writes. */
+  /** Exact original source - what the copy button writes. */
   code: string;
   lang?: string;
   className?: string;

@@ -94,10 +94,10 @@ const TEXT_TOKENS = ['--text', '--text-muted', '--accent', '--accent-hover'];
 const STATUS_TOKENS = ['--success', '--warn', '--danger', '--ring'];
 const ALL_TOKENS = [...SURFACE_TOKENS, ...TEXT_TOKENS, ...STATUS_TOKENS, '--accent-fg'];
 
-// Documented contrast pairings (mirrors §7.1 targets) — also asserted by CI
+// Documented contrast pairings (mirrors §7.1 targets) - also asserted by CI
 // (scripts/check-contrast.mjs). NOTE: text-on-accent is held to AA-large (3:1):
 // the clay accent is preserved as approved, and accent fills only ever carry
-// large/bold button labels (DECISIONS — accent contrast).
+// large/bold button labels (DECISIONS - accent contrast).
 const PAIRINGS: { fg: string; bg: string; min: number; note: string }[] = [
   { fg: '--text', bg: '--bg', min: 4.5, note: 'body on canvas' },
   { fg: '--text', bg: '--surface', min: 4.5, note: 'body on surface' },
@@ -124,7 +124,7 @@ function Swatch({ name, value }: { name: string; value: string }) {
       />
       <span className="flex flex-col">
         <code className="font-mono text-code text-text">{name}</code>
-        <span className="text-label text-muted">{value || '—'}</span>
+        <span className="text-label text-muted">{value || '-'}</span>
       </span>
     </div>
   );
@@ -255,10 +255,10 @@ export function Gallery() {
               Heading 3 (sans semibold)
             </p>
             <p className="text-body text-text">
-              Body — the default for UI and transcript reading.
+              Body - the default for UI and transcript reading.
             </p>
             <p className="text-body-sm text-muted">
-              Body small — secondary text and captions.
+              Body small - secondary text and captions.
             </p>
             <p className="text-label uppercase tracking-[0.02em] text-muted">
               Label · sidebar sections
@@ -483,7 +483,7 @@ export function Gallery() {
               <div className="space-y-2 p-3 text-body-sm text-text">
                 {Array.from({ length: 24 }, (_, i) => (
                   <p key={i} className="font-mono text-code">
-                    line {i + 1} — overflowing transcript content to scroll through
+                    line {i + 1} - overflowing transcript content to scroll through
                   </p>
                 ))}
               </div>

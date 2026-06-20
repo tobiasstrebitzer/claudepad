@@ -2,7 +2,7 @@ import * as React from 'react';
 import { Dialog as BaseDialog } from '@base-ui-components/react/dialog';
 import { cn } from '../../lib/cn';
 
-// Drawer (FR-11) — an off-canvas Dialog variant that slides from the side.
+// Drawer (FR-11) - an off-canvas Dialog variant that slides from the side.
 // Reuses Base UI Dialog's modal + backdrop machinery.
 export function Drawer(props: React.ComponentProps<typeof BaseDialog.Root>) {
   return <BaseDialog.Root {...props} />;

@@ -1,14 +1,14 @@
 // Local-only persistence for the user's identity (PRD-10 FR-6). A *single*
-// identity lives in IndexedDB across reloads — either stored unprotected (the
+// identity lives in IndexedDB across reloads - either stored unprotected (the
 // full secret, incl. the private JWK) or, once device-protected, with the secret
 // AES-GCM-wrapped under a WebAuthn-PRF KEK so the private key is never readable
 // at rest (FR-16). Mirrors the fs/handleStore IDB pattern; nothing leaves the
-// browser (there is no network for identities — PRD-10 §8).
+// browser (there is no network for identities - PRD-10 §8).
 
 import type { Identity } from '@claudepad/shared';
 import type { AesLayer } from '@claudepad/shared';
 
-/** An identity stored unprotected — the secret, plus a discriminant. */
+/** An identity stored unprotected - the secret, plus a discriminant. */
 export type StoredUnprotected = Identity & { protected: false };
 
 /** A device-protected identity at rest: only public fields + the wrapped secret. */

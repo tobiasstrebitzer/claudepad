@@ -1,10 +1,10 @@
-// Device protection (PRD-10 §6.4, FR-13…FR-16) — pattern A, the default.
+// Device protection (PRD-10 §6.4, FR-13…FR-16) - pattern A, the default.
 //
 // WebAuthn is used purely as a *local PRF oracle*: a passkey deterministically
 // returns 32 bytes for a fixed app salt, we HKDF that into a KEK (shared
 // deriveDeviceKEK), and the KEK wraps the identity secret. No attestation, no
 // server, nothing registered anywhere. The PRF is evaluated *at registration*
-// (`prf.eval` on create) so protecting takes a single ceremony — only when an
+// (`prf.eval` on create) so protecting takes a single ceremony - only when an
 // authenticator can't return PRF at create do we fall back to a second get().
 // This mirrors the proven poc/ flow exactly.
 
@@ -20,7 +20,7 @@ import type { StoredProtected } from './storage';
 
 const subtle = globalThis.crypto.subtle;
 
-/** Fixed app constant — domain-separates our PRF output from any other use. */
+/** Fixed app constant - domain-separates our PRF output from any other use. */
 const PRF_SALT_SEED = 'claudepad-prf-salt-v1';
 
 /**
@@ -123,7 +123,7 @@ export async function protectWithDevice(id: Identity): Promise<StoredProtected> 
 /**
  * Replay the passkey to re-derive the PRF output and decrypt the stored
  * identity into memory (FR-15). A wrong/absent device yields a different KEK, so
- * the AES-GCM tag fails inside unwrapIdentity — it never partially reveals.
+ * the AES-GCM tag fails inside unwrapIdentity - it never partially reveals.
  */
 export async function unlockWithDevice(stored: StoredProtected): Promise<Identity> {
   const prfBytes = await evaluatePrf(b64urlToBytes(stored.credentialId));

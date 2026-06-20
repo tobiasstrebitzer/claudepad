@@ -1,4 +1,4 @@
-// diagnostics.ts — DiagnosticRecord builders + ParseStats accumulator.
+// diagnostics.ts - DiagnosticRecord builders + ParseStats accumulator.
 
 import type { DiagnosticKind, DiagnosticRecord, ParseStats } from './types';
 

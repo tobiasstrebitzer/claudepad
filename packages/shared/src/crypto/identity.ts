@@ -1,5 +1,5 @@
 // Identity types + (de)serialization helpers. An identity is an ECDH P-256 keypair
-// plus a self-claimed display name (the name asserts nothing — trust comes from the
+// plus a self-claimed display name (the name asserts nothing - trust comes from the
 // fingerprint, see fingerprint.ts). Mirrors poc/verify.mjs.
 
 import { bytesToB64url, b64urlToBytes, utf8ToBytes, bytesToUtf8 } from './base64url';
@@ -8,7 +8,7 @@ import { CryptoFormatError, CryptoVersionError } from './errors';
 
 const subtle = globalThis.crypto.subtle;
 
-/** The secret identity — includes the private key (JWK). Back this up; never share it. */
+/** The secret identity - includes the private key (JWK). Back this up; never share it. */
 export interface Identity {
   v: 1;
   name: string;
@@ -16,7 +16,7 @@ export interface Identity {
   priv: JsonWebKey;
 }
 
-/** The public card — safe to post; this is what someone pastes to share *with you*. */
+/** The public card - safe to post; this is what someone pastes to share *with you*. */
 export interface PublicCard {
   v: 1;
   name: string;

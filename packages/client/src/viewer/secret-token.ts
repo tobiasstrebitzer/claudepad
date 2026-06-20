@@ -1,4 +1,4 @@
-// Provisional secret placeholder token — the rendering contract with PRD-06.
+// Provisional secret placeholder token - the rendering contract with PRD-06.
 //
 // PRD-06 (secret detection) is NOT built yet. PRD-03 only RENDERS placeholders,
 // so we define a stable, self-describing token here and document it as the
@@ -17,7 +17,7 @@
 //   - len  : real length of the original value, shown as `(len)`
 //
 // Security: the token NEVER contains any substring/prefix/hash of the real
-// value — only its length. The dot count on the chip is cosmetic & fixed (8).
+// value - only its length. The dot count on the chip is cosmetic & fixed (8).
 
 /** A parsed placeholder. `len` is the real length of the redacted value. */
 export interface SecretPlaceholder {

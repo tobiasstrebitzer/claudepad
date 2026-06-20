@@ -55,7 +55,7 @@ export const demoSession: Session = {
         {
           type: 'text',
           text: [
-            "Sure — here's the plan:",
+            "Sure - here's the plan:",
             '',
             '1. Read the current `auth.ts`',
             '2. Swap the legacy flow for `mintToken()`',

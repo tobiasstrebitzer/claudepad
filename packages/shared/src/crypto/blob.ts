@@ -1,4 +1,4 @@
-// The v1 ShareBlob — an ephemeral sealed box, encrypted to one recipient's public key.
+// The v1 ShareBlob - an ephemeral sealed box, encrypted to one recipient's public key.
 // This is the live v1 artifact (TRUSTLESS-MODEL §3, PRD-05 §6.10), NOT the vNext
 // link-store ShareEnvelope. Mirrors poc/verify.mjs `createBlob` / `openBlob` exactly.
 
@@ -216,7 +216,7 @@ function parseWrapObj(bytes: Uint8Array): WrapObj {
   try {
     obj = JSON.parse(bytesToUtf8(bytes));
   } catch {
-    // Unwrap succeeded (auth passed) but payload is junk — treat as auth failure.
+    // Unwrap succeeded (auth passed) but payload is junk - treat as auth failure.
     throw new CryptoAuthError('unwrapped key material is malformed');
   }
   if (typeof obj !== 'object' || obj === null) {

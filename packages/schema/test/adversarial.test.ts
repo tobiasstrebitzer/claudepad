@@ -13,7 +13,7 @@ function diagKinds(diags: { kind: string }[]): string[] {
 const TS1 = '2026-06-13T11:00:35.997Z';
 const TS2 = '2026-06-13T11:00:38.100Z';
 
-describe('FR-1 / FR-2 — input forms, BOM, CRLF, truncated EOF', () => {
+describe('FR-1 / FR-2 - input forms, BOM, CRLF, truncated EOF', () => {
   it('FR-1: accepts string input', async () => {
     const res = await parseSession(
       `{"type":"user","uuid":"a","message":{"content":"hi"}}`,
@@ -66,7 +66,7 @@ describe('FR-1 / FR-2 — input forms, BOM, CRLF, truncated EOF', () => {
   });
 });
 
-describe('FR-3 — unparseable line mid-file', () => {
+describe('FR-3 - unparseable line mid-file', () => {
   it('emits unparseable-line and keeps going', async () => {
     const input =
       `{"type":"user","uuid":"a","message":{"content":"one"}}\n` +
@@ -88,7 +88,7 @@ describe('FR-3 — unparseable line mid-file', () => {
   });
 });
 
-describe('FR-4 / FR-5 — input-form detection + clipboard fragment', () => {
+describe('FR-4 / FR-5 - input-form detection + clipboard fragment', () => {
   it('FR-4: detects jsonl', async () => {
     const input =
       `{"type":"user","uuid":"a","message":{"content":"one"}}\n` +
@@ -113,7 +113,7 @@ describe('FR-4 / FR-5 — input-form detection + clipboard fragment', () => {
   });
 });
 
-describe('FR-6 — empty input', () => {
+describe('FR-6 - empty input', () => {
   it('returns an empty session + empty-input diagnostic, never throws', async () => {
     const res = await parseSession('   \n\n  ');
     expect(res.session.events.length).toBe(0);
@@ -122,7 +122,7 @@ describe('FR-6 — empty input', () => {
   });
 });
 
-describe('FR-8 / FR-9 — version detection', () => {
+describe('FR-8 / FR-9 - version detection', () => {
   it('FR-8: picks most-frequent version and flags mismatch', async () => {
     const input =
       `{"type":"user","uuid":"a","version":"2.1.177","message":{"content":"x"}}\n` +
@@ -149,7 +149,7 @@ describe('FR-8 / FR-9 — version detection', () => {
   });
 });
 
-describe('FR-10..FR-15 — event + content mapping', () => {
+describe('FR-10..FR-15 - event + content mapping', () => {
   it('FR-10/FR-12: user string content → user event with one text block', async () => {
     const res = await parseSession(
       `{"type":"user","uuid":"a","message":{"content":"hello"}}`,
@@ -232,7 +232,7 @@ describe('FR-10..FR-15 — event + content mapping', () => {
   });
 });
 
-describe('FR-16 / FR-17 — tool_result handling', () => {
+describe('FR-16 / FR-17 - tool_result handling', () => {
   it('FR-16: prefers richer toolUseResult as output, keeps inline in raw', async () => {
     const input = `{"type":"user","uuid":"u1","message":{"content":[{"type":"tool_result","tool_use_id":"toolu_1","is_error":false,"content":"flat string"}]},"toolUseResult":{"stdout":"rich","stderr":"","isError":false}}`;
     const res = await parseSession(input);
@@ -271,7 +271,7 @@ describe('FR-16 / FR-17 — tool_result handling', () => {
   });
 });
 
-describe('FR-18 / FR-19 / FR-20 — system, isMeta, session meta', () => {
+describe('FR-18 / FR-19 / FR-20 - system, isMeta, session meta', () => {
   it('FR-18: system turn_duration → meta event with subtype', async () => {
     const input = `{"type":"system","subtype":"turn_duration","uuid":"u1","durationMs":1000,"messageCount":3,"timestamp":"${TS1}"}`;
     const res = await parseSession(input);
@@ -309,7 +309,7 @@ describe('FR-18 / FR-19 / FR-20 — system, isMeta, session meta', () => {
   });
 });
 
-describe('FR-21 / FR-22 — unknown type/block preservation', () => {
+describe('FR-21 / FR-22 - unknown type/block preservation', () => {
   it('FR-21: unknown record type → meta event + raw + diagnostic', async () => {
     const input = `{"type":"brand-new-type","uuid":"u1","payload":{"x":1}}`;
     const res = await parseSession(input);
@@ -340,7 +340,7 @@ describe('FR-21 / FR-22 — unknown type/block preservation', () => {
   });
 });
 
-describe('FR-23 / FR-30 — id retention + preserveRaw option', () => {
+describe('FR-23 / FR-30 - id retention + preserveRaw option', () => {
   it('FR-23: event.id is the source uuid; raw kept by default', async () => {
     const res = await parseSession(
       `{"type":"user","uuid":"abc-123","message":{"content":"x"}}`,
@@ -368,7 +368,7 @@ describe('FR-23 / FR-30 — id retention + preserveRaw option', () => {
   });
 });
 
-describe('FR-24 — defensive execution / never crash', () => {
+describe('FR-24 - defensive execution / never crash', () => {
   it('a deeply nested + adversarial mixed file still returns a result', async () => {
     const input =
       `{"type":"assistant","uuid":"u1","message":{"content":[{"type":"tool_use","id":"t","name":"X","input":{"a":{"b":{"c":[1,2,3]}}}}]}}\n` +
@@ -383,7 +383,7 @@ describe('FR-24 — defensive execution / never crash', () => {
   });
 });
 
-describe('FR-25 / FR-28 — ordering + sidechain laning', () => {
+describe('FR-25 / FR-28 - ordering + sidechain laning', () => {
   it('FR-25: DAG order followed (child after parent) despite file order', async () => {
     // child appears BEFORE parent in the file; timestamps reversed too.
     const input =
@@ -435,7 +435,7 @@ describe('FR-25 / FR-28 — ordering + sidechain laning', () => {
   });
 });
 
-describe('FR-26 / FR-27 — timestamp normalization + bounds', () => {
+describe('FR-26 / FR-27 - timestamp normalization + bounds', () => {
   it('FR-26: invalid/missing timestamps → undefined, never Invalid Date', async () => {
     const input =
       `{"type":"user","uuid":"a","timestamp":"not-a-date","message":{"content":"x"}}\n` +
@@ -467,7 +467,7 @@ describe('FR-26 / FR-27 — timestamp normalization + bounds', () => {
   });
 });
 
-describe('FR-31 — schema version stamping', () => {
+describe('FR-31 - schema version stamping', () => {
   it('stamps schemaVersion on every result', async () => {
     const res = await parseSession('');
     expect(res.schemaVersion).toBe('1');
@@ -475,7 +475,7 @@ describe('FR-31 — schema version stamping', () => {
   });
 });
 
-describe('large input stress (FR-29/FR-30) — generated, not committed', () => {
+describe('large input stress (FR-29/FR-30) - generated, not committed', () => {
   it('parses a multi-MB synthetic session without throwing', async () => {
     const lines: string[] = [];
     let i = 0;

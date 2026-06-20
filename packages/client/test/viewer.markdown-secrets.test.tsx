@@ -10,7 +10,7 @@ afterEach(cleanup);
 const token = makeSecretToken({ id: 's1', type: 'AWS_KEY', len: 20 });
 
 describe('secret placeholder integration through Markdown (FR-19)', () => {
-  it('renders the masked chip — not the raw token — for prose text', () => {
+  it('renders the masked chip - not the raw token - for prose text', () => {
     render(
       <RevealProvider>
         <Markdown text={`Deploy uses key ${token} for staging.`} />

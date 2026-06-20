@@ -1,4 +1,4 @@
-// detect.ts — input-form detection (FR-4), source detection by structure
+// detect.ts - input-form detection (FR-4), source detection by structure
 // (FR-7), and best-effort version detection (FR-8/FR-9).
 
 import type { ParseStats, SessionSource } from './types';
@@ -80,7 +80,7 @@ export function isObject(value: unknown): value is RawRecord {
 
 /**
  * Structural source detection (FR-7). Returns a confidence 0..1 that the
- * records came from Claude Code, based on structural signals — never filename.
+ * records came from Claude Code, based on structural signals - never filename.
  */
 export function detectClaudeCodeConfidence(records: RawRecord[]): number {
   if (records.length === 0) return 0;

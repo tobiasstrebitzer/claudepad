@@ -1,6 +1,6 @@
 // The "vault": a read-only view over a connected ~/.claude/projects folder.
 //
-// Chromium-only (File System Access API). Everything is local — scanning reads
+// Chromium-only (File System Access API). Everything is local - scanning reads
 // only directory entries and per-file size/mtime (cheap stat-level metadata), not
 // session contents. Contents are read lazily, one session at a time, on click.
 
@@ -28,11 +28,11 @@ export type VaultSession = {
 };
 
 export type VaultProject = {
-  /** the on-disk (encoded) directory name — stable, used as a key */
+  /** the on-disk (encoded) directory name - stable, used as a key */
   id: string;
   /** short, human label (last path segments of the decoded cwd) */
   label: string;
-  /** best-effort decoded project path (lossy — see decodeProjectPath) */
+  /** best-effort decoded project path (lossy - see decodeProjectPath) */
   path: string;
   handle: FileSystemDirectoryHandle;
   sessions: VaultSession[];
@@ -182,7 +182,7 @@ export async function scanVault(
  * (e.g. `-Users-me-projects-app`). This is lossy for directory names that
  * themselves contain '-', so the result is a best-effort label, not a path we
  * can round-trip. The real cwd is available inside the session (meta.cwd) once
- * parsed — a possible future enrichment.
+ * parsed - a possible future enrichment.
  */
 function decodeProjectPath(encoded: string): string {
   return encoded.replace(/-/g, '/');

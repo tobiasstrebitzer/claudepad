@@ -1,4 +1,4 @@
-// tokenize.ts — tolerant NDJSON splitter (FR-1, FR-2).
+// tokenize.ts - tolerant NDJSON splitter (FR-1, FR-2).
 //
 // UTF-8 decode (strip BOM), split on `\n`, tolerate `\r\n`, blank lines,
 // leading/trailing whitespace, and a truncated final line. Never throws.

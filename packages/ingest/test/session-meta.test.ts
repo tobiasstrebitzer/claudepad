@@ -32,7 +32,7 @@ describe('extractSessionMeta (PRD-04)', () => {
 
   it('falls back to a slash command when there is no ai-title', () => {
     // The first user message is a local-command caveat (no signal); the real one
-    // carries a <command-name> tag — exactly the untitled /mcp session case.
+    // carries a <command-name> tag - exactly the untitled /mcp session case.
     const caveat = userLine('<local-command-caveat>Caveat: ...</local-command-caveat>');
     const cmd = userLine('<command-name>/mcp</command-name><command-message>mcp</command-message>');
     const meta = extractSessionMeta([caveat, cmd].join('\n'));
