@@ -25,17 +25,18 @@ Open-source and self-hostable, with `claudepad.io` as a free hosted instance run
 
 If a name describes plumbing, rename it after the user-facing intent — and if you can't, that's often a smell that the abstraction is at the wrong altitude.
 
-## Project status (2026-06-20)
+## Project status (2026-06-21)
 
-**P0 + P1 built.** The production monorepo is scaffolded and the first two ROADMAP phases are done and committed:
+**P0 + P1 + P2 built.** The production monorepo is scaffolded and the first three ROADMAP phases are done and committed:
 
 - **P0 (Foundation):** `@claudepad/schema` (tolerant parser, PRD-02), `@claudepad/shared` (zero-dep WebCrypto core mirroring `poc/`, PRD-05), and `@claudepad/client` design system (tokens, AppShell, primitives on Base UI, `/gallery`, PRD-01).
 - **P1 (MVP-0):** drop/paste a session → prettified `SessionViewer` (PRD-03, in `client/src/viewer/`) fed by `@claudepad/ingest` (PRD-04). Fully offline, local-only; sharing is surfaced-but-disabled until P3.
 - **Post-P1 (frictionless UX, D-46…D-48):** optional File System Access **folder-connect** — grant `~/.claude` once and the sidebar lists every project/session (titles/branch/size read from the file tail, read-only, Chromium-only) — plus a **unified top bar** (breadcrumbs + context + actions in one surface). `client/src/fs/**` + `@claudepad/ingest` `extractSessionMeta`.
+- **P2 (Identity & Trust, PRD-10):** mint/import a client-side ECDH P-256 identity, persisted in IndexedDB; a `none → locked → unlocked` state machine; public-key card (`cp-pub-…`) + identity secret (`cp-id-…`) export; human-verifiable **fingerprint** (emoji + hex); optional **WebAuthn-PRF device protection** (pattern A, wraps the identity at rest). Lives in `client/src/identity/**`; the trust UI is a one-click sidebar-footer popover (D-51). Consumes the already-proven `@claudepad/shared` crypto.
 
 **As-built stack** (deviations from the intended-stack sketch are recorded in `docs/DECISIONS.md` D-34…D-44): pnpm workspaces · TS strict · React 18 · **Vite 8 + Tailwind v4 (CSS-first)** · **Vitest 4** · Playwright · shadcn-style primitives hand-composed on Base UI · self-hosted fonts via `@fontsource` · Shiki fine-grained core (no wasm). Gate: `pnpm check` (typecheck + lint + no-raw-hex + WCAG contrast + tests + `poc/verify.mjs`).
 
-**Next:** P2 (Identity & Trust, PRD-10) → P3 (Trustless Sharing, PRD-11 + PRD-06).
+**Next:** P3 (Trustless Sharing, PRD-11 + PRD-06) → P4 (Playback, PRD-08).
 
 The repo also contains the finalized **PRD set** (`docs/`) and the **proof of concept** (`poc/`, the crypto reference; `poc/verify.mjs` stays green).
 

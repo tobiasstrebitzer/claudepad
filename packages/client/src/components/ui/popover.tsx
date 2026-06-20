@@ -14,11 +14,17 @@ export function PopoverContent({
   className,
   children,
   sideOffset = 6,
+  side,
+  align,
   ...props
-}: React.ComponentProps<typeof BasePopover.Popup> & { sideOffset?: number }) {
+}: React.ComponentProps<typeof BasePopover.Popup> & {
+  sideOffset?: number;
+  side?: React.ComponentProps<typeof BasePopover.Positioner>['side'];
+  align?: React.ComponentProps<typeof BasePopover.Positioner>['align'];
+}) {
   return (
     <BasePopover.Portal>
-      <BasePopover.Positioner sideOffset={sideOffset}>
+      <BasePopover.Positioner sideOffset={sideOffset} side={side} align={align}>
         <BasePopover.Popup
           data-slot="popover-content"
           className={cn(

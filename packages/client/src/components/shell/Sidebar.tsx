@@ -14,6 +14,7 @@ import { formatBytes } from '@claudepad/ingest';
 import { cn } from '../../lib/cn';
 import { Wordmark } from '../brand/Wordmark';
 import { Button } from '../ui/button';
+import { IdentityControl } from '../../identity';
 import {
   formatRelativeTime,
   type Vault,
@@ -361,15 +362,7 @@ function SidebarFooter({ route }: { route: string }) {
         <Palette className="size-4" />
         Gallery
       </a>
-      <div className="flex items-center gap-2 rounded-md px-3 py-2">
-        <span className="grid size-7 place-items-center rounded-full bg-accent text-accent-fg text-label font-semibold">
-          TS
-        </span>
-        <span className="flex flex-col leading-tight">
-          <span className="text-body-sm text-text">Tobias</span>
-          <span className="text-label text-muted">self-host</span>
-        </span>
-      </div>
+      <IdentityControl />
     </div>
   );
 }

@@ -6,6 +6,7 @@ import type { ViewMode } from './components/shell/ViewSwitch';
 import { Gallery } from './pages/Gallery';
 import { SessionExperience, useSession, sessionTopBar } from './ingest';
 import { RevealProvider, ExpandProvider, demoSecretMap } from './viewer';
+import { IdentityProvider } from './identity';
 import { useVault, readSessionFile, type VaultSession } from './fs';
 import type { RecentItem } from './components/shell/Sidebar';
 
@@ -105,28 +106,32 @@ export function App() {
 
   return (
     <TooltipProvider>
-      <RevealProvider secretMap={secretMap}>
-        <ExpandProvider>
-          <AppShell
-            route={route}
-            recent={RECENT}
-            activeId={activeSessionId}
-            onOpen={onHome}
-            vault={vault.supported ? { ...vault, activeSessionId, onSelectSession } : undefined}
-            topbar={topbar}
-          >
-            {isGallery ? (
-              <Gallery />
-            ) : (
-              <SessionExperience
-                api={session}
-                viewMode={viewMode}
-                onAnchorChange={onAnchorChange}
-              />
-            )}
-          </AppShell>
-        </ExpandProvider>
-      </RevealProvider>
+      <IdentityProvider>
+        <RevealProvider secretMap={secretMap}>
+          <ExpandProvider>
+            <AppShell
+              route={route}
+              recent={RECENT}
+              activeId={activeSessionId}
+              onOpen={onHome}
+              vault={
+                vault.supported ? { ...vault, activeSessionId, onSelectSession } : undefined
+              }
+              topbar={topbar}
+            >
+              {isGallery ? (
+                <Gallery />
+              ) : (
+                <SessionExperience
+                  api={session}
+                  viewMode={viewMode}
+                  onAnchorChange={onAnchorChange}
+                />
+              )}
+            </AppShell>
+          </ExpandProvider>
+        </RevealProvider>
+      </IdentityProvider>
     </TooltipProvider>
   );
 }
