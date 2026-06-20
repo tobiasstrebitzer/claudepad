@@ -10,7 +10,16 @@ Open-source and self-hostable, with `claudepad.io` as a free hosted instance run
 
 ## Project status (2026-06-20)
 
-**Pre-development.** The repo currently contains **docs (the finalized PRD set)** and a **working proof of concept** (`poc/`). The production monorepo has not been scaffolded yet (that's the next session).
+**P0 + P1 built.** The production monorepo is scaffolded and the first two ROADMAP phases are done and committed:
+
+- **P0 (Foundation):** `@claudepad/schema` (tolerant parser, PRD-02), `@claudepad/shared` (zero-dep WebCrypto core mirroring `poc/`, PRD-05), and `@claudepad/client` design system (tokens, AppShell, primitives on Base UI, `/gallery`, PRD-01).
+- **P1 (MVP-0):** drop/paste a session → prettified `SessionViewer` (PRD-03, in `client/src/viewer/`) fed by `@claudepad/ingest` (PRD-04). Fully offline, local-only; sharing is surfaced-but-disabled until P3.
+
+**As-built stack** (deviations from the intended-stack sketch are recorded in `docs/DECISIONS.md` D-34…D-44): pnpm workspaces · TS strict · React 18 · **Vite 8 + Tailwind v4 (CSS-first)** · **Vitest 4** · Playwright · shadcn-style primitives hand-composed on Base UI · self-hosted fonts via `@fontsource` · Shiki fine-grained core (no wasm). Gate: `pnpm check` (typecheck + lint + no-raw-hex + WCAG contrast + tests + `poc/verify.mjs`).
+
+**Next:** P2 (Identity & Trust, PRD-10) → P3 (Trustless Sharing, PRD-11 + PRD-06).
+
+The repo also contains the finalized **PRD set** (`docs/`) and the **proof of concept** (`poc/`, the crypto reference; `poc/verify.mjs` stays green).
 
 ## The one decision that shapes everything: v1 is serverless & trustless
 
@@ -70,3 +79,13 @@ TypeScript (strict) · Vite + React 18 · shadcn/ui on base-ui + Tailwind · Web
 - **Honesty over polish in security claims.** Surface trade-offs (no recall/expiry, self-claimed names, best-effort redaction) — see `TRUSTLESS-MODEL.md` §7.
 - **Design language:** warm-minimal (paige/white canvas, clay-orange accent), serif display + clean sans, per `_context.md` §4 — Anthropic-inspired but a distinct claudepad identity.
 - Some PRD sections (PRD-05 §4/§7.3/§7.4/§6.6, PRD-07 entirely, parts of PRD-09) describe the **vNext** link/store path and are explicitly banner-tagged — don't implement them for v1.
+
+## Wrapup Config
+
+- check: `pnpm check` (typecheck + lint + no-raw-hex + WCAG contrast + tests + `poc/verify.mjs`)
+- test: `pnpm test` (covered by `check`)
+- frontend_smoke: yes — `pnpm --filter @claudepad/client run test:e2e` (Playwright)
+- push: yes — remote `origin` = `https://github.com/tobiasstrebitzer/claudepad`
+- version_bump: yes (aligned across all packages; pre-1.0 — infer patch/minor)
+- publish: no (packages are private, pre-launch)
+- docs: `docs/` folder (PRDs, ROADMAP, DECISIONS) + this CLAUDE.md as index; record as-built deviations in `DECISIONS.md`
