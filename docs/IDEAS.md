@@ -51,3 +51,25 @@ moment is a strong, screenshot-able hook that no other tool has.
 - A Viewer Theme is defined as JSON, and provides deep style customization.
 - Ability to customize theme-global design tokens (e.g. base colors).
 - Ability to customize individual Turn components.
+
+## P3 hardening follow-ups · _logged 2026-06-21_
+
+Deferred from the P3 (Trustless Sharing + Secrets) build — the end-to-end flow
+ships and is tested; these are quality/scale hardening for the pre-launch
+security pass (PRD-09). See `DECISIONS.md` D-58.
+
+- **Web-Worker scan (PRD-06 FR-10).** The scanner runs on the main thread today
+  (deferred behind a `setTimeout` so the dialog paints first). Move to a worker
+  with progress + cancellation for very large sessions.
+- **Labeled corpus + published recall/precision (PRD-06 AC-10).** Build the
+  ground-truth fixture corpus (taxonomy types + decoys: git SHAs, UUIDs, base64
+  images, minified JS) and document the recall ≥ 0.95 / precision numbers; link
+  from the review UI ("how good is detection?", FR-32).
+- **Advanced review UI (PRD-06 FR-15–17).** Edit a detection's span, merge rows
+  into one `S#`, override the type label, a sensitivity slider, and bulk
+  filters. Today: redact/dismiss toggle + add-literal + acknowledge.
+- **Multi-recipient single blob (PRD-11 Q-14).** Today = one blob per recipient
+  (leaks nothing). A single blob with per-recipient wrapped entries saves
+  re-encryption at the cost of exposing the recipient count.
+- **Address book (PRD-11 OQ-A / PRD-10 OQ-C).** Remember recent recipients'
+  public cards + local aliases so keys aren't re-pasted each share.

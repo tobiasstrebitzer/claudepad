@@ -7,8 +7,12 @@ import { Gallery } from './pages/Gallery';
 import { SessionExperience, useSession, sessionTopBar } from './ingest';
 import { RevealProvider, ExpandProvider, demoSecretMap } from './viewer';
 import { IdentityProvider } from './identity';
+import { ReceiveDialog, type OpenShareResult } from './share';
 import { useVault, readSessionFile, type VaultSession } from './fs';
+import type { SecretMap } from './viewer';
 import type { RecentItem } from './components/shell/Sidebar';
+import { Button } from './components/ui/button';
+import { Inbox } from 'lucide-react';
 
 // Minimal hash router (PRD-01 §6.1: lightweight, single static bundle — works when
 // served as one static asset). Full routing mechanics are confirmed in PRD-03.
@@ -39,6 +43,9 @@ export function App() {
   const vault = useVault();
   const [activeSessionId, setActiveSessionId] = React.useState<string>();
   const [viewMode, setViewMode] = React.useState<ViewMode>('pretty');
+  const [receiveOpen, setReceiveOpen] = React.useState(false);
+  // Secret map from a decrypted body+secrets blob — drives high-priv reveal.
+  const [receivedSecretMap, setReceivedSecretMap] = React.useState<SecretMap>();
 
   // Open a session straight from the connected folder (lazy read — contents are
   // only touched here, on click). Navigate home so the viewer is visible.
@@ -55,15 +62,30 @@ export function App() {
   // "Overview" / "New / Open" returns to the empty drop/paste surface.
   const onHome = React.useCallback(() => {
     setActiveSessionId(undefined);
+    setReceivedSecretMap(undefined);
     session.clear();
     if (window.location.hash.startsWith('#/gallery')) window.location.hash = '#/';
   }, [session]);
+
+  // A decrypted blob → show its session in the viewer, with any granted secrets
+  // feeding the high-priv reveal (body-only leaves the map undefined).
+  const onReceived = React.useCallback(
+    (result: OpenShareResult) => {
+      setActiveSessionId(undefined);
+      setReceivedSecretMap(result.secretMap ?? undefined);
+      session.showSession(result.session, `share from ${result.from.name}`);
+      setReceiveOpen(false);
+      if (window.location.hash.startsWith('#/gallery')) window.location.hash = '#/';
+    },
+    [session],
+  );
 
   // Keep the sidebar highlight + view mode in sync when the session is cleared.
   React.useEffect(() => {
     if (session.state.status === 'idle') {
       setActiveSessionId(undefined);
       setViewMode('pretty');
+      setReceivedSecretMap(undefined);
     }
   }, [session.state.status]);
 
@@ -88,7 +110,7 @@ export function App() {
 
   const loaded = session.state.status === 'loaded' ? session.state : null;
   const isDemo = loaded?.fileName === 'sample-session.jsonl';
-  const secretMap = isDemo ? demoSecretMap : undefined;
+  const secretMap = isDemo ? demoSecretMap : receivedSecretMap;
 
   const topbar: TopBarContent = isGallery
     ? { crumbs: [{ label: 'Overview', onClick: onHome }, { label: 'Gallery' }] }
@@ -102,7 +124,15 @@ export function App() {
           onClear: session.clear,
           onHome,
         })
-      : { crumbs: [{ label: 'Overview' }] };
+      : {
+          crumbs: [{ label: 'Overview' }],
+          actions: (
+            <Button size="sm" variant="secondary" onClick={() => setReceiveOpen(true)}>
+              <Inbox />
+              Open encrypted…
+            </Button>
+          ),
+        };
 
   return (
     <TooltipProvider>
@@ -129,6 +159,11 @@ export function App() {
                 />
               )}
             </AppShell>
+            <ReceiveDialog
+              open={receiveOpen}
+              onOpenChange={setReceiveOpen}
+              onReceived={onReceived}
+            />
           </ExpandProvider>
         </RevealProvider>
       </IdentityProvider>

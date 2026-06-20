@@ -9,6 +9,7 @@ import {
 } from '../../../components/ui/collapsible';
 import { useCollapsibleState } from '../../hooks/useExpand';
 import { sizeIndicator, stringifyValue } from '../../format';
+import { SecretText } from '../blocks/SecretText';
 import { ToolResult } from './ToolResult';
 
 /**
@@ -70,7 +71,7 @@ export const ToolCall = React.memo(function ToolCall({
               input
             </p>
             <pre className="max-h-80 overflow-auto rounded-md border border-border bg-sidebar px-3 py-2 font-mono text-code text-text">
-              <code>{open ? inputText : null}</code>
+              <code>{open ? <SecretText>{inputText}</SecretText> : null}</code>
             </pre>
           </div>
         </CollapsiblePanel>

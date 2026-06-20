@@ -2,6 +2,8 @@ import * as React from 'react';
 import { Check, Copy } from 'lucide-react';
 import { cn } from '../../../lib/cn';
 import { highlightToHtml, resolveLang } from '../../highlighter';
+import { hasSecretToken } from '../../secret-token';
+import { SecretText } from './SecretText';
 
 interface CodeBlockProps {
   /** Exact original source — what the copy button writes. */
@@ -27,6 +29,9 @@ export const CodeBlock = React.memo(function CodeBlock({
   const [visible, setVisible] = React.useState(false);
   const containerRef = React.useRef<HTMLDivElement>(null);
   const label = lang && resolveLang(lang) ? lang : lang ? lang : 'text';
+  // Redacted code carries placeholder tokens; skip Shiki (it would render the
+  // sentinel as plain text) and split into secret chips instead.
+  const redacted = React.useMemo(() => hasSecretToken(code), [code]);
 
   // Highlight only once the block is near the viewport (lazy, on-visible).
   React.useEffect(() => {
@@ -49,7 +54,7 @@ export const CodeBlock = React.memo(function CodeBlock({
   }, []);
 
   React.useEffect(() => {
-    if (!visible) return;
+    if (!visible || redacted) return;
     let cancelled = false;
     highlightToHtml(code, lang).then((result) => {
       if (!cancelled) setHtml(result);
@@ -57,7 +62,7 @@ export const CodeBlock = React.memo(function CodeBlock({
     return () => {
       cancelled = true;
     };
-  }, [visible, code, lang]);
+  }, [visible, code, lang, redacted]);
 
   return (
     <div
@@ -74,7 +79,7 @@ export const CodeBlock = React.memo(function CodeBlock({
         <CopyButton text={code} />
       </div>
       <div className="overflow-x-auto">
-        {html ? (
+        {html && !redacted ? (
           <div
             className="cp-shiki text-code [&_pre]:m-0 [&_pre]:bg-transparent [&_pre]:px-3 [&_pre]:py-2.5"
             // Shiki output is generated locally from our bundled grammars/theme;
@@ -83,7 +88,7 @@ export const CodeBlock = React.memo(function CodeBlock({
           />
         ) : (
           <pre className="m-0 px-3 py-2.5 font-mono text-code text-text">
-            <code>{code}</code>
+            <code>{redacted ? <SecretText>{code}</SecretText> : code}</code>
           </pre>
         )}
       </div>

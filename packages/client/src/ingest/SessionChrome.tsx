@@ -1,4 +1,4 @@
-import { Share2, X, Info, Cpu, FolderOpen, Clock } from 'lucide-react';
+import { X, Info, Cpu, FolderOpen, Clock } from 'lucide-react';
 import type { Session, DiagnosticRecord } from '@claudepad/schema';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
@@ -6,6 +6,7 @@ import { Tooltip, TooltipTrigger, TooltipContent } from '../components/ui/toolti
 import { ViewSwitch, type ViewMode } from '../components/shell/ViewSwitch';
 import type { TopBarContent } from '../components/shell/TopBar';
 import { SecretsControl, ExpandControl } from '../viewer';
+import { ShareButton } from '../share';
 import { formatAbsolute, formatRelative } from '../viewer/format';
 
 // The unified top bar's contents for a loaded session (D-49): breadcrumbs +
@@ -28,7 +29,13 @@ export function sessionTopBar(args: {
     titleIsHeading: true,
     labels: <SessionLabels diagnostics={diagnostics} />,
     // Secrets/Expand act on the prettified transcript, so they're hidden in raw view.
-    actions: <SessionActions onClear={onClear} showViewerControls={viewMode === 'pretty'} />,
+    actions: (
+      <SessionActions
+        session={session}
+        onClear={onClear}
+        showViewerControls={viewMode === 'pretty'}
+      />
+    ),
     meta: <SessionMetaLine session={session} />,
     viewSwitch: <ViewSwitch value={viewMode} onChange={onViewMode} />,
   };
@@ -60,9 +67,11 @@ function SessionLabels({ diagnostics }: { diagnostics: DiagnosticRecord[] }) {
 }
 
 function SessionActions({
+  session,
   onClear,
   showViewerControls,
 }: {
+  session: Session;
   onClear: () => void;
   showViewerControls: boolean;
 }) {
@@ -74,17 +83,7 @@ function SessionActions({
           <ExpandControl />
         </>
       )}
-      <Tooltip>
-        <TooltipTrigger
-          render={
-            <Button size="sm" variant="secondary" disabled>
-              <Share2 />
-              Share…
-            </Button>
-          }
-        />
-        <TooltipContent>Encrypted sharing arrives in P3 (identity + crypto)</TooltipContent>
-      </Tooltip>
+      <ShareButton session={session} />
       <Button size="sm" variant="ghost" onClick={onClear} aria-label="Clear session">
         <X />
         Clear

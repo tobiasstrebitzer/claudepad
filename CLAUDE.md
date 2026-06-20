@@ -27,16 +27,17 @@ If a name describes plumbing, rename it after the user-facing intent — and if 
 
 ## Project status (2026-06-21)
 
-**P0 + P1 + P2 built.** The production monorepo is scaffolded and the first three ROADMAP phases are done and committed:
+**P0 + P1 + P2 + P3 built.** The production monorepo is scaffolded and the first four ROADMAP phases are done and committed:
 
 - **P0 (Foundation):** `@claudepad/schema` (tolerant parser, PRD-02), `@claudepad/shared` (zero-dep WebCrypto core mirroring `poc/`, PRD-05), and `@claudepad/client` design system (tokens, AppShell, primitives on Base UI, `/gallery`, PRD-01).
 - **P1 (MVP-0):** drop/paste a session → prettified `SessionViewer` (PRD-03, in `client/src/viewer/`) fed by `@claudepad/ingest` (PRD-04). Fully offline, local-only; sharing is surfaced-but-disabled until P3.
 - **Post-P1 (frictionless UX, D-46…D-48):** optional File System Access **folder-connect** — grant `~/.claude` once and the sidebar lists every project/session (titles/branch/size read from the file tail, read-only, Chromium-only) — plus a **unified top bar** (breadcrumbs + context + actions in one surface). `client/src/fs/**` + `@claudepad/ingest` `extractSessionMeta`.
 - **P2 (Identity & Trust, PRD-10):** mint/import a client-side ECDH P-256 identity, persisted in IndexedDB; a `none → locked → unlocked` state machine; public-key card (`cp-pub-…`) + identity secret (`cp-id-…`) export; human-verifiable **fingerprint** (emoji + hex); optional **WebAuthn-PRF device protection** (pattern A, wraps the identity at rest). Lives in `client/src/identity/**`; the trust UI is a one-click sidebar-footer popover (D-51). Consumes the already-proven `@claudepad/shared` crypto.
+- **P3 (Trustless Sharing — the moat, PRD-11 + PRD-06):** the headline. A new **`@claudepad/secrets`** package (pure scanner + redactor: prefix/entropy/.env signals, suppressors, opaque `⟦cp-secret:id:TYPE:len⟧` placeholders, body+secret-map split). The client **share flow** (`client/src/share/**`) is a 4-step dialog — mandatory secret **review** → recipient key + **fingerprint confirm** → **tier** (body / body+secrets) → `cp-blob-…` output (auto-copy + `.cpblob`). **Receive** pastes/uploads a blob, decrypts with the current identity (fail-closed for non-recipients), shows the sender's fingerprint, and hands the session to the viewer (body+secrets feeds high-priv reveal). Crypto = the already-proven `createBlob`/`openBlob`. **Deferred (D-58, IDEAS.md):** Web-Worker scan, labeled-corpus recall numbers, advanced review (edit-span/merge/sensitivity slider), multi-recipient single blob.
 
 **As-built stack** (deviations from the intended-stack sketch are recorded in `docs/DECISIONS.md` D-34…D-44): pnpm workspaces · TS strict · React 18 · **Vite 8 + Tailwind v4 (CSS-first)** · **Vitest 4** · Playwright · shadcn-style primitives hand-composed on Base UI · self-hosted fonts via `@fontsource` · Shiki fine-grained core (no wasm). Gate: `pnpm check` (typecheck + lint + no-raw-hex + WCAG contrast + tests + `poc/verify.mjs`).
 
-**Next:** P3 (Trustless Sharing, PRD-11 + PRD-06) → P4 (Playback, PRD-08).
+**Next:** P4 (Playback, PRD-08) → P5 (Self-Hosting & Launch, PRD-09 → v1.0).
 
 The repo also contains the finalized **PRD set** (`docs/`) and the **proof of concept** (`poc/`, the crypto reference; `poc/verify.mjs` stays green).
 

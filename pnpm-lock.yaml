@@ -41,6 +41,9 @@ importers:
       '@claudepad/schema':
         specifier: workspace:*
         version: link:../schema
+      '@claudepad/secrets':
+        specifier: workspace:*
+        version: link:../secrets
       '@fontsource/inter':
         specifier: ^5.2.8
         version: 5.2.8
@@ -134,6 +137,12 @@ importers:
       fast-check:
         specifier: ^3.23.2
         version: 3.23.2
+
+  packages/secrets:
+    dependencies:
+      '@claudepad/schema':
+        specifier: workspace:*
+        version: link:../schema
 
   packages/shared: {}
 

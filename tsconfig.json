@@ -4,6 +4,7 @@
     { "path": "./packages/schema" },
     { "path": "./packages/shared" },
     { "path": "./packages/ingest" },
+    { "path": "./packages/secrets" },
     { "path": "./packages/client" }
   ]
 }
