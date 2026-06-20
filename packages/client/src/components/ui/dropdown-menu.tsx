@@ -74,12 +74,15 @@ export function DropdownMenuSeparator({
   );
 }
 
+// A plain, presentational section label. Base UI's GroupLabel throws unless it's
+// wrapped in <Menu.Group>; our menus use labels as simple dividers, so a styled
+// div is both correct and crash-proof anywhere in the popup.
 export function DropdownMenuLabel({
   className,
   ...props
-}: React.ComponentProps<typeof BaseMenu.GroupLabel>) {
+}: React.ComponentProps<'div'>) {
   return (
-    <BaseMenu.GroupLabel
+    <div
       data-slot="dropdown-menu-label"
       className={cn(
         'px-2 py-1.5 text-label uppercase tracking-[0.02em] text-muted',
@@ -90,4 +93,5 @@ export function DropdownMenuLabel({
   );
 }
 
+/** Opt-in semantic grouping (wrap a DropdownMenuLabel + its items) when needed. */
 export const DropdownMenuGroup = BaseMenu.Group;

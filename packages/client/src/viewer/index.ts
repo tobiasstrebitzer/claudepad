@@ -1,7 +1,12 @@
 export { SessionViewer } from './SessionViewer';
 export type { SessionViewerProps, SessionViewerOptions } from './SessionViewer';
+export { RawSessionView } from './components/RawSessionView';
 
-export type { SecretMap } from './hooks/useReveal';
+// View providers + controls — mounted at the app root (D-49) so the unified top
+// bar can host the secrets/expand controls above the transcript.
+export { RevealProvider, type SecretMap } from './hooks/useReveal';
+export { ExpandProvider } from './hooks/useExpand';
+export { SecretsControl, ExpandControl } from './components/SessionControls';
 
 // Provisional secret placeholder token format (contract with PRD-06).
 export {

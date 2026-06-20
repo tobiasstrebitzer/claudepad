@@ -3,6 +3,9 @@ import { render, screen } from '@testing-library/react';
 import type { Session, SessionEvent } from '@claudepad/schema';
 import { SessionViewer } from '../src/viewer';
 import { ContentBlocks } from '../src/viewer/components/blocks/ContentBlocks';
+import { TopBar } from '../src/components/shell/TopBar';
+import { sessionTopBar } from '../src/ingest';
+import { TooltipProvider } from '../src/components/ui/tooltip';
 
 function session(events: SessionEvent[]): Session {
   return {
@@ -48,17 +51,27 @@ describe('graceful degradation (FR-7)', () => {
 
 describe('header field omission (FR-14)', () => {
   it('omits absent meta fields without rendering "undefined"', () => {
+    // The session header now lives in the unified top bar (D-49): the title is the
+    // breadcrumb heading and the meta line omits absent fields.
     render(
-      <SessionViewer
-        session={{
-          id: 's',
-          source: 'claude-code',
-          formatVersion: 'test',
-          meta: { title: 'Only a title' }, // no model/cwd/startedAt
-          events: [{ kind: 'user', content: [{ type: 'text', text: 'hi' }] }],
-        }}
-        options={{ virtualize: false, showToc: false }}
-      />,
+      <TooltipProvider>
+        <TopBar
+          content={sessionTopBar({
+            session: {
+              id: 's',
+              source: 'claude-code',
+              formatVersion: 'test',
+              meta: { title: 'Only a title' }, // no model/cwd/startedAt
+              events: [{ kind: 'user', content: [{ type: 'text', text: 'hi' }] }],
+            },
+            diagnostics: [],
+            viewMode: 'pretty',
+            onViewMode: () => {},
+            onClear: () => {},
+            onHome: () => {},
+          })}
+        />
+      </TooltipProvider>,
     );
     expect(screen.getByRole('heading', { name: 'Only a title' })).toBeInTheDocument();
     expect(document.body.textContent).not.toContain('undefined');

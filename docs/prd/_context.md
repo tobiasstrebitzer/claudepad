@@ -32,6 +32,8 @@ claudepad turns a raw Claude Code session file (`~/.claude/projects/*.jsonl`) in
 
 > Capture the *feeling* — warm, calm, minimal, fast — without cloning it.
 
+**North-star principle — frictionless-first: every unnecessary click is a bug.** Remove steps, prompts, and manual choices at all costs; prefer *connect-once* (not repeat-the-action), *derive-don't-ask* (read metadata from the files), and *one-surface* (not stacked chrome). Pay implementation/browser-reach cost to delete a user step, and surface the trade-off honestly (§7-style) rather than padding the UI. Embodied by the `~/.claude` folder-connect sidebar and the unified top bar. See `CLAUDE.md → Design principles` and `DECISIONS.md` D-45.
+
 **Palette (warm neutrals + clay accent):**
 
 | Token | Value (approx) | Use |

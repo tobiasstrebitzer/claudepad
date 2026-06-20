@@ -4,19 +4,14 @@ import type { Session } from '@claudepad/schema';
 import { cn } from '../lib/cn';
 import { Button } from '../components/ui/button';
 import { Skeleton } from '../components/ui/skeleton';
-import { TooltipProvider } from '../components/ui/tooltip';
-import { RevealProvider, type SecretMap } from './hooks/useReveal';
-import { ExpandProvider } from './hooks/useExpand';
 import { useCorrelateTools } from './hooks/useCorrelateTools';
 import { useAnchor } from './hooks/useAnchor';
-import { SessionHeader } from './components/SessionHeader';
 import { buildToc, TableOfContents } from './components/TableOfContents';
 import { TranscriptList, type TranscriptHandle } from './components/TranscriptList';
 import { RawBlock } from './components/blocks/RawBlock';
 import { BlockErrorBoundary } from './components/BlockErrorBoundary';
 
 export interface SessionViewerOptions {
-  defaultCollapse?: { thinking?: boolean; toolIO?: boolean };
   showToc?: boolean;
   virtualize?: boolean;
   loading?: boolean;
@@ -25,34 +20,21 @@ export interface SessionViewerOptions {
 
 export interface SessionViewerProps {
   session: Session;
-  secretMap?: SecretMap;
   initialAnchor?: string;
   options?: SessionViewerOptions;
 }
 
 /**
- * Top-level session renderer (PRD-03). Header + TOC + virtualized transcript.
- * Pure render surface: holds no keys, does no crypto, makes no network calls.
+ * Top-level session renderer (PRD-03): TOC + virtualized transcript. Pure render
+ * surface — holds no keys, does no crypto, makes no network calls. The Tooltip/
+ * Reveal/Expand providers and the session title/meta now live in the app shell
+ * (D-49), so the unified top bar can host the secrets/expand controls; this
+ * component assumes those providers are mounted above it.
  */
-export function SessionViewer({
-  session,
-  secretMap,
-  initialAnchor,
-  options,
-}: SessionViewerProps) {
+export function SessionViewer({ session, initialAnchor, options }: SessionViewerProps) {
   return (
     <BlockErrorBoundary fallbackValue={session}>
-      <TooltipProvider>
-        <RevealProvider secretMap={secretMap}>
-          <ExpandProvider>
-            <ViewerInner
-              session={session}
-              initialAnchor={initialAnchor}
-              options={options}
-            />
-          </ExpandProvider>
-        </RevealProvider>
-      </TooltipProvider>
+      <ViewerInner session={session} initialAnchor={initialAnchor} options={options} />
     </BlockErrorBoundary>
   );
 }
@@ -122,7 +104,6 @@ function ViewerInner({
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <SessionHeader session={session} />
       <div className="flex min-h-0 flex-1">
         {showToc && tocOpen && (
           <aside

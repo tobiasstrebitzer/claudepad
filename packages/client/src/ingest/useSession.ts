@@ -6,7 +6,7 @@ import { classify, checkSize, type IngestShape } from '@claudepad/ingest';
 // makes zero network requests and persists nothing (FR-3/FR-18). Sharing is a separate,
 // explicit P3 action — never a side effect of loading (FR-23).
 
-export type IngestSource = 'drop' | 'paste' | 'file-picker';
+export type IngestSource = 'drop' | 'paste' | 'file-picker' | 'fs';
 
 export type SessionState =
   | { status: 'idle' }

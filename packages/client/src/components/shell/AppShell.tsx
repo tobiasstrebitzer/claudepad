@@ -1,20 +1,23 @@
 import * as React from 'react';
-import { Menu, X } from 'lucide-react';
+import { Menu } from 'lucide-react';
 import { cn } from '../../lib/cn';
 import { Wordmark } from '../brand/Wordmark';
 import { Button } from '../ui/button';
 import { ThemeToggle } from './ThemeToggle';
-import { Sidebar, type RecentItem } from './Sidebar';
+import { TopBar, type TopBarContent } from './TopBar';
+import { Sidebar, type RecentItem, type VaultNav } from './Sidebar';
 
 type AppShellProps = {
   recent: RecentItem[];
   activeId?: string;
   onSelect?: (id: string) => void;
+  /** Trigger the single-session open flow (drop/paste/file-picker). */
+  onOpen?: () => void;
+  /** Folder-backed navigation (Chromium only). */
+  vault?: VaultNav;
   route: string;
-  /** Topbar contextual title (left of the actions). */
-  title?: React.ReactNode;
-  /** Topbar actions (right). */
-  actions?: React.ReactNode;
+  /** The single top bar's contents (breadcrumbs + context + actions). */
+  topbar?: TopBarContent;
   children: React.ReactNode;
 };
 
@@ -25,9 +28,10 @@ export function AppShell({
   recent,
   activeId,
   onSelect,
+  onOpen,
+  vault,
   route,
-  title,
-  actions,
+  topbar,
   children,
 }: AppShellProps) {
   const [drawerOpen, setDrawerOpen] = React.useState(false);
@@ -44,7 +48,14 @@ export function AppShell({
     <div className="flex h-dvh w-full overflow-hidden bg-bg text-text">
       {/* Desktop sidebar */}
       <aside className="hidden md:block shrink-0">
-        <Sidebar recent={recent} activeId={activeId} onSelect={onSelect} route={route} />
+        <Sidebar
+          recent={recent}
+          activeId={activeId}
+          onSelect={onSelect}
+          onOpen={onOpen}
+          vault={vault}
+          route={route}
+        />
       </aside>
 
       {/* Mobile off-canvas drawer */}
@@ -61,6 +72,8 @@ export function AppShell({
               recent={recent}
               activeId={activeId}
               onSelect={onSelect}
+              onOpen={onOpen}
+              vault={vault}
               route={route}
             />
           </div>
@@ -69,25 +82,26 @@ export function AppShell({
 
       {/* Main canvas */}
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex h-14 items-center gap-2 border-b border-border px-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="md:hidden"
-            aria-label="Open menu"
-            onClick={() => setDrawerOpen(true)}
-          >
-            {drawerOpen ? <X /> : <Menu />}
-          </Button>
-          <span className="md:hidden">
-            <Wordmark size="small" />
-          </span>
-          <div className="min-w-0 flex-1 truncate text-body-sm text-muted">{title}</div>
-          <div className="flex items-center gap-1">
-            {actions}
-            <ThemeToggle />
-          </div>
-        </header>
+        <TopBar
+          content={topbar}
+          leading={
+            <>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="md:hidden"
+                aria-label="Open menu"
+                onClick={() => setDrawerOpen(true)}
+              >
+                <Menu />
+              </Button>
+              <span className="md:hidden">
+                <Wordmark size="small" />
+              </span>
+            </>
+          }
+          trailing={<ThemeToggle />}
+        />
 
         <main className="min-h-0 flex-1 overflow-y-auto">{children}</main>
       </div>

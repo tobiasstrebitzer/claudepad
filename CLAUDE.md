@@ -8,12 +8,30 @@ Guidance for Claude Code working in this repository.
 
 Open-source and self-hostable, with `claudepad.io` as a free hosted instance running the same code.
 
+## Design principles
+
+**Frictionless-first — every unnecessary click is a bug.** claudepad's job is to get a session in front of you with the least possible ceremony. If there's a way to remove a step, a prompt, or a manual choice, we find it and take it — *even when it costs implementation effort or browser reach*. This is a north star, not a nicety. When building or reviewing any flow, count the clicks and decisions a user must make and drive both toward zero:
+
+- **Connect-once, not repeat-the-action.** The File System Access folder-connect grants `~/.claude` a single time → the sidebar lists every project/session, no re-upload.
+- **Derive, don't ask.** Read titles/branch/cwd from the session files themselves (`ai-title` etc.) rather than making the user name or pick things.
+- **One surface, not stacked chrome.** A single top bar does breadcrumbs + context + actions, not three stacked rows.
+- **Pay to delete a step.** Accept a narrower-browser or more-code cost to remove user friction; surface the trade-off honestly (see `TRUSTLESS-MODEL.md` §7) instead of padding the UI.
+
+**Name for intent, not mechanism.** Names are the cheapest design surface — the code should read like the product. Name a thing for the *experience or outcome* a user gets, not the *action or input/output* a function performs. The axes (left wins):
+
+- **Intent / Outcome › Input / Output** — `SessionExperience`, not `JsonlRendererController`.
+- **Experience › Action** — "connect your folder", not "register a directory handle"; "explore a sample", not "load demo fixture".
+- **What it's *for* › what it *is*** — `vault` (a place your sessions live), not `FileSystemDirectoryHandleStore`.
+
+If a name describes plumbing, rename it after the user-facing intent — and if you can't, that's often a smell that the abstraction is at the wrong altitude.
+
 ## Project status (2026-06-20)
 
 **P0 + P1 built.** The production monorepo is scaffolded and the first two ROADMAP phases are done and committed:
 
 - **P0 (Foundation):** `@claudepad/schema` (tolerant parser, PRD-02), `@claudepad/shared` (zero-dep WebCrypto core mirroring `poc/`, PRD-05), and `@claudepad/client` design system (tokens, AppShell, primitives on Base UI, `/gallery`, PRD-01).
 - **P1 (MVP-0):** drop/paste a session → prettified `SessionViewer` (PRD-03, in `client/src/viewer/`) fed by `@claudepad/ingest` (PRD-04). Fully offline, local-only; sharing is surfaced-but-disabled until P3.
+- **Post-P1 (frictionless UX, D-46…D-48):** optional File System Access **folder-connect** — grant `~/.claude` once and the sidebar lists every project/session (titles/branch/size read from the file tail, read-only, Chromium-only) — plus a **unified top bar** (breadcrumbs + context + actions in one surface). `client/src/fs/**` + `@claudepad/ingest` `extractSessionMeta`.
 
 **As-built stack** (deviations from the intended-stack sketch are recorded in `docs/DECISIONS.md` D-34…D-44): pnpm workspaces · TS strict · React 18 · **Vite 8 + Tailwind v4 (CSS-first)** · **Vitest 4** · Playwright · shadcn-style primitives hand-composed on Base UI · self-hosted fonts via `@fontsource` · Shiki fine-grained core (no wasm). Gate: `pnpm check` (typecheck + lint + no-raw-hex + WCAG contrast + tests + `poc/verify.mjs`).
 
@@ -36,11 +54,12 @@ See `docs/DECISIONS.md` D-20…D-33 for the full rationale.
 ```
 docs/
   ROADMAP.md            # phases P0–P5 to v1, build order, success metrics
+  IDEAS.md              # running idea / future-task tracker (e.g. Show HN launch)
   CONCEPT.md            # the idea + prior-art / competitive landscape
   TRUSTLESS-MODEL.md    # ★ canonical v1 crypto/identity design (proven by poc/)
   SECURITY-MODEL.md     # threat-model framing (link/lifecycle sections = vNext)
   STORE-PROVIDER-SPEC.md# the pluggable-store seam (open spec; store = vNext)
-  DECISIONS.md          # ★ decision log (D-1…D-33) + open questions + vNext backlog
+  DECISIONS.md          # ★ decision log (D-1…D-49) + open questions + vNext backlog
   prd/
     _context.md         # ★ canonical shared facts (tech stack, tokens, security, schema)
     README.md           # PRD index + briefs
