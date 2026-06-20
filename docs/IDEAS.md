@@ -33,3 +33,21 @@ moment is a strong, screenshot-able hook that no other tool has.
   the JSONL?" and "is my data uploaded?" questions.
 
 **Status:** idea — not scheduled.
+
+
+## Additional Features
+
+- "Launch in VS Code" icon in project sidebar list
+
+### Turn Component Logic
+
+- Mapping of "matchers" to Viewer React Components
+- (e.g. "type": "system", "subtype": "local_command" > SystemLocalCommandTurn) 
+- This allows a flexible way to extend the Turn renderer
+
+### Viewer Themes
+
+- Themes for users to select to brand the session viewing appearance.
+- A Viewer Theme is defined as JSON, and provides deep style customization.
+- Ability to customize theme-global design tokens (e.g. base colors).
+- Ability to customize individual Turn components.
