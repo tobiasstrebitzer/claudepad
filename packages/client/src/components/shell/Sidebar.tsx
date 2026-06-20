@@ -1,6 +1,8 @@
 import * as React from 'react';
 import {
-  Plus,
+  FolderOpen,
+  PanelLeftClose,
+  Unlink,
   Palette,
   Folder,
   FileText,
@@ -36,6 +38,8 @@ type SidebarProps = {
   onSelect?: (id: string) => void;
   /** Open a single session via drop/paste/file-picker (the always-available path). */
   onOpen?: () => void;
+  /** Collapse the sidebar (desktop); omitted in the mobile drawer. */
+  onCollapse?: () => void;
   /** current hash route, to mark the gallery link active */
   route: string;
   /** Folder-backed navigation (Chromium only); falls back to `recent` when absent. */
@@ -51,6 +55,7 @@ export function Sidebar({
   activeId,
   onSelect,
   onOpen,
+  onCollapse,
   route,
   vault,
   className,
@@ -63,22 +68,32 @@ export function Sidebar({
       )}
       aria-label="Sessions"
     >
-      <div className="px-4 h-14 flex items-center">
-        <a href="#/" className="rounded-md" aria-label="claudepad home">
+      <div className="px-3 h-14 flex items-center gap-1">
+        <a href="#/" className="mr-auto rounded-md" aria-label="claudepad home">
           <Wordmark size="full" />
         </a>
-      </div>
-
-      <div className="px-3 pb-3">
         <Button
-          variant="secondary"
-          size="md"
-          className="w-full justify-start"
+          variant="ghost"
+          size="icon"
+          className="size-8"
           onClick={onOpen}
+          aria-label="Open a session"
+          title="Open a session"
         >
-          <Plus />
-          New / Open
+          <FolderOpen />
         </Button>
+        {onCollapse && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-8"
+            onClick={onCollapse}
+            aria-label="Collapse sidebar"
+            title="Collapse sidebar"
+          >
+            <PanelLeftClose />
+          </Button>
+        )}
       </div>
 
       {vault ? (
@@ -136,15 +151,26 @@ function VaultTree({ vault }: { vault: VaultNav }) {
       <div className="px-3 pt-2 flex items-center justify-between">
         <p className="px-2 text-label uppercase tracking-[0.02em] text-muted">Projects</p>
         {vault.status === 'connected' && (
-          <button
-            type="button"
-            onClick={() => void vault.refresh()}
-            className="grid size-6 place-items-center rounded-md text-muted hover:bg-accent-tint hover:text-text transition-colors"
-            aria-label="Rescan folder"
-            title="Rescan folder"
-          >
-            <RefreshCw className="size-3.5" />
-          </button>
+          <div className="flex items-center gap-0.5">
+            <button
+              type="button"
+              onClick={() => void vault.refresh()}
+              className="grid size-6 place-items-center rounded-md text-muted hover:bg-accent-tint hover:text-text transition-colors"
+              aria-label="Rescan folder"
+              title="Rescan folder"
+            >
+              <RefreshCw className="size-3.5" />
+            </button>
+            <button
+              type="button"
+              onClick={() => void vault.disconnect()}
+              className="grid size-6 place-items-center rounded-md text-muted hover:bg-accent-tint hover:text-text transition-colors"
+              aria-label="Unlink folder"
+              title="Unlink folder"
+            >
+              <Unlink className="size-3.5" />
+            </button>
+          </div>
         )}
       </div>
       <div className="flex-1 overflow-y-auto px-2 py-1">
@@ -299,7 +325,10 @@ function SessionRow({
         <FileText className="mt-0.5 size-3.5 shrink-0 text-muted" />
         <span className="min-w-0 flex-1">
           <span
-            className={cn('block truncate text-body-sm text-text', active && 'font-medium')}
+            className={cn(
+              'mb-[3px] block truncate text-body-sm leading-[18px] text-text',
+              active && 'font-medium',
+            )}
             title={session.title}
           >
             {session.title}

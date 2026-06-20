@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Menu } from 'lucide-react';
+import { Menu, PanelLeftOpen } from 'lucide-react';
 import { cn } from '../../lib/cn';
 import { Wordmark } from '../brand/Wordmark';
 import { Button } from '../ui/button';
@@ -35,6 +35,7 @@ export function AppShell({
   children,
 }: AppShellProps) {
   const [drawerOpen, setDrawerOpen] = React.useState(false);
+  const [collapsed, setCollapsed] = React.useState(false);
 
   // Close the drawer on route change / Escape.
   React.useEffect(() => setDrawerOpen(false), [route]);
@@ -46,13 +47,14 @@ export function AppShell({
 
   return (
     <div className="flex h-dvh w-full overflow-hidden bg-bg text-text">
-      {/* Desktop sidebar */}
-      <aside className="hidden md:block shrink-0">
+      {/* Desktop sidebar (collapsible) */}
+      <aside className={cn('shrink-0', collapsed ? 'hidden' : 'hidden md:block')}>
         <Sidebar
           recent={recent}
           activeId={activeId}
           onSelect={onSelect}
           onOpen={onOpen}
+          onCollapse={() => setCollapsed(true)}
           vault={vault}
           route={route}
         />
@@ -98,6 +100,22 @@ export function AppShell({
               <span className="md:hidden">
                 <Wordmark size="small" />
               </span>
+              {collapsed && (
+                <span className="hidden items-center gap-1 md:inline-flex">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    aria-label="Expand sidebar"
+                    title="Expand sidebar"
+                    onClick={() => setCollapsed(false)}
+                  >
+                    <PanelLeftOpen />
+                  </Button>
+                  <a href="#/" className="rounded-md" aria-label="claudepad home">
+                    <Wordmark size="small" />
+                  </a>
+                </span>
+              )}
             </>
           }
           trailing={<ThemeToggle />}
