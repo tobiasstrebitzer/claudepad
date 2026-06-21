@@ -66,25 +66,52 @@ moment is a strong, screenshot-able hook that no other tool has.
 
 ## Additional Features
 
-- "Launch in VS Code" icon in project sidebar list
+- "Launch in VS Code" icon in sidebar - **✅ shipped 2026-06-21 (project + session,
+  D-63).** Hover-revealed `Code2` button on each `ProjectRow` and `SessionRow`
+  opens `vscode://file/<path>` (`VaultSession` now retains `cwd`).
 
-### Turn Component Logic
+### Turn Component Logic - ✅ shipped 2026-06-21 (D-61, D-63)
 
-- Mapping of "matchers" to Viewer React Components
-- (e.g. "type": "system", "subtype": "local_command" > SystemLocalCommandTurn) 
-- This allows a flexible way to extend the Turn renderer
+- Matcher→component registry: `viewer/components/turns/registry.tsx` is an
+  ordered `{ id, match(row), render(row, ctx) }` list (first match wins);
+  `TurnRenderer` is now a one-liner over `matchTurn(row)`. Add a turn type = add
+  an entry. Custom turns: **SlashCommandTurn**, **TaskListTurn**,
+  **CommandOutputTurn** (`system:local_command`), **AskUserQuestionTurn**, plus
+  richer Read/web tool summaries.
+- **Event-group filter (D-63):** a persisted top-bar dropdown toggles
+  messages / tools / bash / commands / system (system off by default); the
+  viewer + playback share one `EventFilterProvider` so filtered groups are
+  ignored everywhere.
+- **Next custom turns:** Bash-as-terminal / Edit+Write as a diff view; AwaySummary
+  styling; per-MCP-tool renderers.
 
 ### Viewer Themes
 
 - Themes for users to select to brand the session viewing appearance.
 - A Viewer Theme is defined as JSON, and provides deep style customization.
 - Ability to customize theme-global design tokens (e.g. base colors).
-- Ability to customize individual Turn components.
+- Ability to customize individual Turn components (now that the registry exists,
+  a theme could swap a matcher's component).
 
-### Turn Rendering for Usability
+### Turn Rendering for Usability - partially shipped 2026-06-21 (D-61)
 
-- I'd like user/agent messages to stand out more, and system / tool calls to be slightly less prominent.
-- Also, would be nice if we can group some event-chains, e.g.: 6 chained "attachment" read events, maybe better to show "Read 6 files" (with option to expand). same for commands/tool calls. boundary should always be user/agent messages (i.e. never cross these)
+- **Done:** moderate prominence (user turns get a clay left-accent on a white
+  surface; tool calls recede onto the canvas), and **noise folding** via
+  `eventVisibility.isHiddenEvent` - pure session-metadata/telemetry
+  (`mode`/`ai-title`/`file-history-snapshot`/…, `turn_duration`, chatter
+  attachments like `task_reminder`/`deferred_tools_delta`/`hook_*`) is dropped
+  inside `correlateTools`, so viewer + playback filter identically and stay
+  index-aligned. Preserved in the raw view (nothing lost).
+- **Consecutive-run collapse - ✅ shipped 2026-06-21 (D-62, extended D-63).**
+  `groupRows` folds runs of >= 3 consecutive tool rows into a `ToolRunGroup`
+  ("Read ×6" when uniform, "6 tool calls" when **mixed-name**; collapsed,
+  expandable; auto-expands for a deep-link target) and inserts **idle "N later"
+  dividers** for >= 5 min real-time gaps. The fold is a pure *display* transform:
+  `TranscriptList` takes view items but its public API still speaks base-row
+  positions (`baseToViewIndex` maps them), so the TOC/deep-links/playback indices
+  never desync. Grouping + dividers are **reading-view only** - during playback
+  the surface renders base rows 1:1 (the timeline already paces tool-spam/idle).
+- **Still open:** grouping *during* playback (would need partial-group reveal).
 
 ## P3 hardening follow-ups · _logged 2026-06-21_
 

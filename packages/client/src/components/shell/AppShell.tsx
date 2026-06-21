@@ -6,6 +6,7 @@ import { Button } from '../ui/button';
 import { ThemeToggle } from './ThemeToggle';
 import { TopBar, type TopBarContent } from './TopBar';
 import { Sidebar, type RecentItem, type VaultNav } from './Sidebar';
+import { usePersistedState } from '../../lib/usePersistedState';
 
 type AppShellProps = {
   recent: RecentItem[];
@@ -36,7 +37,12 @@ export function AppShell({
   children,
 }: AppShellProps) {
   const [drawerOpen, setDrawerOpen] = React.useState(false);
-  const [collapsed, setCollapsed] = React.useState(false);
+  // Desktop sidebar starts hidden and remembers the user's choice across reloads.
+  const [collapsed, setCollapsed] = usePersistedState(
+    'claudepad.sidebar.collapsed',
+    true,
+    (v) => typeof v === 'boolean',
+  );
 
   // Close the drawer on route change / Escape.
   React.useEffect(() => setDrawerOpen(false), [route]);

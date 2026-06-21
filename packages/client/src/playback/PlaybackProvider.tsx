@@ -13,11 +13,24 @@ import {
   DEFAULT_PACING,
   mergePacing,
   clamp,
+  SPEEDS,
+  type Speed,
   type PacingConfig,
   type AppearMode,
 } from './pacing';
 import { usePrefersReducedMotion } from './usePrefersReducedMotion';
 import { parsePlaybackParams } from './deepLink';
+import { usePersistedState, readStored, writeStored } from '../lib/usePersistedState';
+import { useEventFilter } from '../viewer/hooks/useEventFilter';
+
+// Persisted transport preferences (mode/speed/appear/pacing). Playhead, active,
+// and status are session-scoped and intentionally NOT persisted.
+const KEY_MODE = 'claudepad.playback.mode';
+const KEY_SPEED = 'claudepad.playback.speed';
+const KEY_APPEAR = 'claudepad.playback.appear';
+// Persist only the user-editable reading-speed knob, not the whole pacing object,
+// so default-tuning changes to the other constants still take effect on reload.
+const KEY_READING_SPEED = 'claudepad.playback.readingSpeed';
 
 // The clock + transport state for PRD-08 playback. Owns a requestAnimationFrame
 // loop that advances a single monotonic virtual playhead (FR-3); every revealed/
@@ -113,15 +126,40 @@ export function PlaybackProvider({
 
   const [active, setActive] = React.useState(false);
   const [status, setStatus] = React.useState<PlaybackStatus>('idle');
-  const [mode, setModeState] = React.useState<PlaybackMode>('present');
-  const [speed, setSpeedState] = React.useState(1);
-  const [appear, setAppearState] = React.useState<AppearMode>('instant');
+  const [mode, setModeState] = usePersistedState<PlaybackMode>(
+    KEY_MODE,
+    'present',
+    (v) => v === 'present' || v === 'realtime',
+  );
+  const [speed, setSpeedState] = usePersistedState<number>(
+    KEY_SPEED,
+    1,
+    (v) => typeof v === 'number' && SPEEDS.includes(v as Speed),
+  );
+  const [appear, setAppearState] = usePersistedState<AppearMode>(
+    KEY_APPEAR,
+    'type',
+    (v) => v === 'instant' || v === 'type',
+  );
   const [playheadMs, setPlayheadMs] = React.useState(0);
-  const [pacingConfig, setPacingConfig] = React.useState<PacingConfig>(DEFAULT_PACING);
+  const [pacingConfig, setPacingConfig] = React.useState<PacingConfig>(() =>
+    mergePacing({
+      readingSpeed: readStored<number>(
+        KEY_READING_SPEED,
+        DEFAULT_PACING.readingSpeed,
+        (v) => typeof v === 'number',
+      ),
+    }),
+  );
+  React.useEffect(
+    () => writeStored(KEY_READING_SPEED, pacingConfig.readingSpeed),
+    [pacingConfig.readingSpeed],
+  );
 
+  const { visibility } = useEventFilter();
   const timeline = React.useMemo(
-    () => (session ? buildTimeline(session, mode, pacingConfig) : null),
-    [session, mode, pacingConfig],
+    () => (session ? buildTimeline(session, mode, pacingConfig, visibility) : null),
+    [session, mode, pacingConfig, visibility],
   );
   const totalMs = timeline?.totalMs ?? 0;
   const available = (timeline?.rowCount ?? 0) > 0;

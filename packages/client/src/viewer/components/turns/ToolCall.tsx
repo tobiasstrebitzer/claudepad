@@ -39,7 +39,7 @@ export const ToolCall = React.memo(function ToolCall({
       role="article"
       aria-label={`Tool call ${event.name}`}
       className={cn(
-        'group/turn relative scroll-mt-24 rounded-lg border border-border bg-surface px-3 py-2.5',
+        'group/turn relative scroll-mt-24 rounded-lg border border-border bg-bg px-3 py-2.5',
         highlighted && 'ring-2 ring-accent',
       )}
     >
@@ -89,15 +89,18 @@ export function summarizeInput(input: unknown): string {
   const obj = input as Record<string, unknown>;
   const command = pickString(obj, ['command', 'cmd', 'script']);
   if (command) return truncate(command);
-  const path = pickString(obj, [
-    'file_path',
-    'filePath',
-    'path',
-    'notebook_path',
-    'pattern',
-    'url',
-  ]);
-  if (path) return truncate(path);
+  const path = pickString(obj, ['file_path', 'filePath', 'path', 'notebook_path']);
+  if (path) {
+    // Read with an explicit window → show the line range too.
+    const offset = obj['offset'];
+    const limit = obj['limit'];
+    if (typeof offset === 'number' && typeof limit === 'number') {
+      return truncate(`${path} (lines ${offset}-${offset + limit})`);
+    }
+    return truncate(path);
+  }
+  const query = pickString(obj, ['query', 'pattern', 'url', 'prompt']);
+  if (query) return truncate(query);
   const keys = Object.keys(obj);
   if (keys.length === 0) return '';
   return truncate(keys.slice(0, 3).join(', '));

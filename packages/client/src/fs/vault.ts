@@ -22,6 +22,8 @@ export type VaultSession = {
   title: string;
   /** git branch at the session's last recorded turn */
   branch?: string;
+  /** the session's working directory (for "open in editor"), when recorded */
+  cwd?: string;
   handle: FileSystemFileHandle;
   size: number;
   lastModified: number;
@@ -113,6 +115,7 @@ async function readSession(
       fileName: f.name,
       title: meta.title ?? shortId(id),
       branch: meta.gitBranch,
+      cwd: meta.cwd,
       handle: f.handle,
       size: file.size,
       lastModified: file.lastModified,

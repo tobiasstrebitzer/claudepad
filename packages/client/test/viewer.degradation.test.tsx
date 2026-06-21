@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import type { Session, SessionEvent } from '@claudepad/schema';
-import { SessionViewer } from '../src/viewer';
+import { SessionViewer, EventFilterProvider, DEFAULT_VISIBILITY } from '../src/viewer';
 import { ContentBlocks } from '../src/viewer/components/blocks/ContentBlocks';
 import { TopBar } from '../src/components/shell/TopBar';
 import { sessionTopBar } from '../src/ingest';
@@ -26,15 +26,24 @@ describe('graceful degradation (FR-7)', () => {
   });
 
   it('renders a meta (unknown-kind) event as a note without crashing', () => {
+    // Meta lands in the System group (off by default); enable it to exercise the
+    // degradation render path.
+    localStorage.setItem(
+      'claudepad.eventFilter',
+      JSON.stringify({ ...DEFAULT_VISIBILITY, system: true }),
+    );
     render(
-      <SessionViewer
-        session={session([
-          { kind: 'meta', note: 'Session compacted', subtype: 'compact', raw: { x: 1 } },
-        ])}
-        options={{ virtualize: false, showToc: false }}
-      />,
+      <EventFilterProvider>
+        <SessionViewer
+          session={session([
+            { kind: 'meta', note: 'Session compacted', subtype: 'compact', raw: { x: 1 } },
+          ])}
+          options={{ virtualize: false, showToc: false }}
+        />
+      </EventFilterProvider>,
     );
     expect(screen.getByText('Session compacted')).toBeInTheDocument();
+    localStorage.clear();
   });
 
   it('does not render a broken image ref (shows placeholder, no img)', () => {

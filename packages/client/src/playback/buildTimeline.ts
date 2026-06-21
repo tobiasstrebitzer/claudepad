@@ -8,6 +8,11 @@
 import type { Session } from '@claudepad/schema';
 import { correlateTools, type RenderRow } from '../viewer/hooks/useCorrelateTools';
 import {
+  filterRows,
+  ALL_VISIBLE,
+  type EventVisibility,
+} from '../viewer/hooks/eventFilter';
+import {
   DEFAULT_PACING,
   dwellPresentMs,
   spamDwellMs,
@@ -103,8 +108,11 @@ export function buildTimeline(
   session: Session,
   mode: PlaybackMode = 'present',
   cfg: PacingConfig = DEFAULT_PACING,
+  visibility: EventVisibility = ALL_VISIBLE,
 ): Timeline {
-  const rows = correlateTools(session.events);
+  // Filtered-out groups are ignored entirely - the timeline never paces or
+  // reveals them - and the viewer applies the same filter, so indices align.
+  const rows = filterRows(correlateTools(session.events), visibility);
   const segs: Segment[] = [];
   const rowToSeg = new Array<number>(rows.length).fill(-1);
   let t = 0;

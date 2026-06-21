@@ -6,13 +6,24 @@ import { test, expect } from '@playwright/test';
 test.describe('app shell - desktop (1280px)', () => {
   test.use({ viewport: { width: 1280, height: 800 } });
 
-  test('shows the persistent sidebar, hides the menu button', async ({ page }) => {
+  test('sidebar is hidden by default, toggles open, and persists the choice', async ({
+    page,
+  }) => {
     await page.goto('/#/');
-    await expect(page.getByRole('navigation', { name: 'Sessions' })).toBeVisible();
+    // Canvas-first: the desktop sidebar starts hidden (no mobile menu button here).
+    await expect(page.getByRole('navigation', { name: 'Sessions' })).toBeHidden();
     await expect(page.getByRole('button', { name: 'Open menu' })).toBeHidden();
     await expect(
       page.getByRole('heading', { name: /Drop a session to begin/ }),
     ).toBeVisible();
+
+    // Expand it...
+    await page.getByRole('button', { name: 'Expand sidebar' }).click();
+    await expect(page.getByRole('navigation', { name: 'Sessions' })).toBeVisible();
+
+    // ...and the choice survives a reload (localStorage-backed).
+    await page.reload();
+    await expect(page.getByRole('navigation', { name: 'Sessions' })).toBeVisible();
   });
 
   test('theme toggle flips <html data-theme>', async ({ page }) => {

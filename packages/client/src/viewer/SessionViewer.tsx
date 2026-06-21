@@ -5,6 +5,9 @@ import { cn } from '../lib/cn';
 import { Button } from '../components/ui/button';
 import { Skeleton } from '../components/ui/skeleton';
 import { useCorrelateTools } from './hooks/useCorrelateTools';
+import { groupRows, type ViewItem } from './hooks/groupRows';
+import { filterRows } from './hooks/eventFilter';
+import { useEventFilter } from './hooks/useEventFilter';
 import { useAnchor, anchorIdFor } from './hooks/useAnchor';
 import { usePlayback, TYPING_BUFFER_RATIO } from '../playback';
 import { buildToc, TableOfContents } from './components/TableOfContents';
@@ -53,7 +56,10 @@ function ViewerInner({
   const virtualize = options?.virtualize ?? true;
   const loading = options?.loading ?? false;
 
-  const rows = useCorrelateTools(session);
+  const baseRows = useCorrelateTools(session);
+  const { visibility } = useEventFilter();
+  // The same filter the playback engine applies, so reveal indices stay aligned.
+  const rows = React.useMemo(() => filterRows(baseRows, visibility), [baseRows, visibility]);
   const toc = React.useMemo(() => buildToc(rows), [rows]);
   const { highlightId, reportAnchor } = useAnchor(initialAnchor, options?.onAnchorChange);
 
@@ -70,10 +76,16 @@ function ViewerInner({
   );
   const [tocOpen, setTocOpen] = React.useState(showToc);
 
-  const visibleRows = React.useMemo(
-    () => (playbackActive ? rows.slice(0, Math.max(0, pb.frame.revealedCount)) : rows),
-    [rows, playbackActive, pb.frame.revealedCount],
-  );
+  // Reading view folds consecutive same-tool runs ("Read ×6"); playback renders
+  // base rows 1:1 (no fold) so progressive reveal + typing + active highlight stay
+  // simple and aligned with the engine's per-row reveal.
+  const items = React.useMemo<ViewItem[]>(() => {
+    if (playbackActive) {
+      const revealed = rows.slice(0, Math.max(0, pb.frame.revealedCount));
+      return revealed.map((row, i) => ({ kind: 'single', baseStart: i, row }));
+    }
+    return groupRows(rows);
+  }, [rows, playbackActive, pb.frame.revealedCount]);
 
   // The active turn reuses PRD-03's `highlighted` ring (FR-15) by overriding the
   // anchor highlight while playing.
@@ -180,7 +192,7 @@ function ViewerInner({
           )}
           <TranscriptList
             ref={transcriptRef}
-            rows={visibleRows}
+            items={items}
             highlightId={activeHighlightId ?? highlightId}
             virtualize={virtualize}
             onActiveRowChange={playbackActive ? undefined : onActiveRowChange}

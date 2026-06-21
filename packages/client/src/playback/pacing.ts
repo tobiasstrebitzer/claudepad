@@ -44,21 +44,23 @@ export interface PacingConfig {
 }
 
 // Defaults (PRD-08 §6.3). Treated as a tunable starting point, not contract.
+// Calibrated so the default 1x feels like the previous 1.5x (the old pace read
+// too slow) - reading is ~1.5x faster and dwell floors/caps shrink to match.
 export const DEFAULT_PACING: PacingConfig = {
-  readingSpeed: 28,
-  baseDwell: 0.45,
-  minDwell: 0.3,
-  maxDwell: 12,
-  imageCost: 2,
+  readingSpeed: 42,
+  baseDwell: 0.3,
+  minDwell: 0.2,
+  maxDwell: 8,
+  imageCost: 1.3,
   toolIoCap: 600,
   idleThreshold: 20,
-  idleCollapsed: 0.8,
+  idleCollapsed: 0.55,
   maxRealtimeGap: 10,
   toolSpamRun: 3,
   // Thinking is usually collapsed/hidden in the viewer and meta is incidental -
   // don't make the audience wait on them; cap to a brief beat.
   fastTrackKinds: ['thinking', 'meta'],
-  fastTrackMaxDwell: 1,
+  fastTrackMaxDwell: 0.7,
   weights: { text: 1, thinking: 0.6, code: 0.35, toolIo: 0.25, image: 0 },
 };
 

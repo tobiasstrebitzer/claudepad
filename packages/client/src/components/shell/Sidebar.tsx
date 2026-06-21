@@ -10,6 +10,7 @@ import {
   ChevronRight,
   Loader2,
   AlertTriangle,
+  Code2,
 } from 'lucide-react';
 import { formatBytes } from '@claudepad/ingest';
 import { cn } from '../../lib/cn';
@@ -236,6 +237,32 @@ function VaultBody({ vault }: { vault: VaultNav }) {
   }
 }
 
+/** `vscode://file/<abs-path>` deep link that the OS hands to VS Code. */
+function vscodeUrl(path: string): string {
+  const abs = path.startsWith('/') ? path : `/${path}`;
+  return `vscode://file${encodeURI(abs)}`;
+}
+
+/** Hover-revealed "open this folder in VS Code" affordance. The caller supplies
+ * the `group-hover/*` variant matching its row's hover group. */
+function LaunchInEditor({ path, className }: { path?: string; className?: string }) {
+  if (!path) return null;
+  return (
+    <a
+      href={vscodeUrl(path)}
+      onClick={(e) => e.stopPropagation()}
+      className={cn(
+        'mr-1 grid size-6 shrink-0 place-items-center rounded-md text-muted opacity-0 transition hover:text-accent focus-visible:opacity-100',
+        className,
+      )}
+      aria-label="Open in VS Code"
+      title="Open in VS Code"
+    >
+      <Code2 className="size-3.5" />
+    </a>
+  );
+}
+
 function ProjectRow({
   project,
   defaultOpen,
@@ -252,25 +279,28 @@ function ProjectRow({
 
   return (
     <li>
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-center gap-1.5 rounded-md px-2 py-1.5 text-left text-body-sm text-text hover:bg-accent-tint transition-colors"
-        aria-expanded={open}
-        title={project.path}
-      >
-        <ChevronRight
-          className={cn(
-            'size-3.5 shrink-0 text-muted transition-transform',
-            open && 'rotate-90',
-          )}
-        />
-        <Folder className="size-3.5 shrink-0 text-muted" />
-        <span className="line-clamp-1 flex-1 font-medium">{project.label}</span>
-        <span className="text-label text-muted tabular-nums">
-          {project.sessions.length}
-        </span>
-      </button>
+      <div className="group/proj flex items-center rounded-md hover:bg-accent-tint transition-colors">
+        <button
+          type="button"
+          onClick={() => setOpen((v) => !v)}
+          className="flex min-w-0 flex-1 items-center gap-1.5 rounded-md px-2 py-1.5 text-left text-body-sm text-text"
+          aria-expanded={open}
+          title={project.path}
+        >
+          <ChevronRight
+            className={cn(
+              'size-3.5 shrink-0 text-muted transition-transform',
+              open && 'rotate-90',
+            )}
+          />
+          <Folder className="size-3.5 shrink-0 text-muted" />
+          <span className="line-clamp-1 flex-1 font-medium">{project.label}</span>
+          <span className="text-label text-muted tabular-nums">
+            {project.sessions.length}
+          </span>
+        </button>
+        <LaunchInEditor path={project.path} className="group-hover/proj:opacity-100" />
+      </div>
 
       {open && (
         <ul className="ml-3 border-l border-border pl-1 py-0.5 space-y-0.5">
@@ -299,36 +329,40 @@ function SessionRow({
 }) {
   return (
     <li>
-      <button
-        type="button"
-        onClick={() => onSelect(session)}
+      <div
         className={cn(
-          'relative flex w-full items-start gap-1.5 rounded-md px-2 py-1.5 text-left',
-          'transition-colors hover:bg-accent-tint',
+          'group/sess relative flex items-center rounded-md transition-colors hover:bg-accent-tint',
           active && 'bg-accent-tint',
         )}
-        title={session.fileName}
       >
         {active && (
           <span className="absolute -left-1 top-1.5 bottom-1.5 w-0.5 rounded-full bg-accent" />
         )}
-        <FileText className="mt-0.5 size-3.5 shrink-0 text-muted" />
-        <span className="min-w-0 flex-1">
-          <span
-            className={cn(
-              'mb-[3px] block truncate text-body-sm leading-[18px] text-text',
-              active && 'font-medium',
-            )}
-            title={session.title}
-          >
-            {session.title}
+        <button
+          type="button"
+          onClick={() => onSelect(session)}
+          className="relative flex min-w-0 flex-1 items-start gap-1.5 rounded-md px-2 py-1.5 text-left"
+          title={session.fileName}
+        >
+          <FileText className="mt-0.5 size-3.5 shrink-0 text-muted" />
+          <span className="min-w-0 flex-1">
+            <span
+              className={cn(
+                'mb-[3px] block truncate text-body-sm leading-[18px] text-text',
+                active && 'font-medium',
+              )}
+              title={session.title}
+            >
+              {session.title}
+            </span>
+            <span className="block truncate text-label text-muted">
+              {formatRelativeTime(session.lastModified)}
+              {session.branch && ` · ${session.branch}`} · {formatBytes(session.size)}
+            </span>
           </span>
-          <span className="block truncate text-label text-muted">
-            {formatRelativeTime(session.lastModified)}
-            {session.branch && ` · ${session.branch}`} · {formatBytes(session.size)}
-          </span>
-        </span>
-      </button>
+        </button>
+        <LaunchInEditor path={session.cwd} className="mt-0.5 group-hover/sess:opacity-100" />
+      </div>
     </li>
   );
 }

@@ -5,7 +5,7 @@ import { Button } from '../components/ui/button';
 import { Tooltip, TooltipTrigger, TooltipContent } from '../components/ui/tooltip';
 import { ViewSwitch, type ViewMode } from '../components/shell/ViewSwitch';
 import type { TopBarContent } from '../components/shell/TopBar';
-import { SecretsControl, ExpandControl } from '../viewer';
+import { SecretsControl, ExpandControl, EventFilterControl } from '../viewer';
 import { ShareButton } from '../share';
 import { PlayToggleButton } from '../playback';
 import { formatAbsolute, formatRelative } from '../viewer/format';
@@ -80,6 +80,7 @@ function SessionActions({
     <>
       {showViewerControls && (
         <>
+          <EventFilterControl />
           <SecretsControl />
           <ExpandControl />
         </>

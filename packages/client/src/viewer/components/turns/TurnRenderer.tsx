@@ -2,12 +2,7 @@ import * as React from 'react';
 import { BlockErrorBoundary } from '../BlockErrorBoundary';
 import type { RenderRow } from '../../hooks/useCorrelateTools';
 import { anchorIdFor } from '../../hooks/useAnchor';
-import { UserTurn } from './UserTurn';
-import { AssistantTurn } from './AssistantTurn';
-import { ThinkingBlock } from './ThinkingBlock';
-import { ToolCall } from './ToolCall';
-import { ToolResult } from './ToolResult';
-import { MetaBlock } from './MetaBlock';
+import { matchTurn } from './registry';
 
 /** Render one top-level transcript row, error-isolated (FR-7). */
 export const TurnRenderer = React.memo(function TurnRenderer({
@@ -38,46 +33,5 @@ function Row({
 }) {
   const anchorId = anchorIdFor(row.event, row.index);
   const highlighted = highlightId === anchorId;
-
-  if (row.kind === 'tool') {
-    return (
-      <ToolCall
-        event={row.event}
-        result={row.result}
-        anchorId={anchorId}
-        highlighted={highlighted}
-      />
-    );
-  }
-  if (row.kind === 'orphan-result') {
-    return <ToolResult event={row.event} standalone anchorId={anchorId} />;
-  }
-
-  const event = row.event;
-  switch (event.kind) {
-    case 'user':
-      return (
-        <UserTurn
-          event={event}
-          anchorId={anchorId}
-          highlighted={highlighted}
-          typingFraction={typingFraction}
-        />
-      );
-    case 'assistant':
-      return (
-        <AssistantTurn
-          event={event}
-          anchorId={anchorId}
-          highlighted={highlighted}
-          typingFraction={typingFraction}
-        />
-      );
-    case 'thinking':
-      return <ThinkingBlock event={event} anchorId={anchorId} />;
-    case 'meta':
-      return <MetaBlock event={event} anchorId={anchorId} />;
-    default:
-      return null;
-  }
+  return <>{matchTurn(row).render(row, { anchorId, highlighted, typingFraction })}</>;
 }

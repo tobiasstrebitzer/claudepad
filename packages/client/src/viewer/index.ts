@@ -7,6 +7,19 @@ export { RawSessionView } from './components/RawSessionView';
 export { RevealProvider, type SecretMap } from './hooks/useReveal';
 export { ExpandProvider } from './hooks/useExpand';
 export { SecretsControl, ExpandControl } from './components/SessionControls';
+export { EventFilterControl } from './components/EventFilterControl';
+
+// Event-group filter - shared by the viewer and the playback engine (D-63).
+export { EventFilterProvider, useEventFilter } from './hooks/useEventFilter';
+export {
+  filterRows,
+  rowGroup,
+  DEFAULT_VISIBILITY,
+  ALL_VISIBLE,
+  EVENT_GROUPS,
+  type EventGroup,
+  type EventVisibility,
+} from './hooks/eventFilter';
 
 // Provisional secret placeholder token format (contract with PRD-06).
 export {

@@ -5,7 +5,7 @@ import type { TopBarContent } from './components/shell/TopBar';
 import type { ViewMode } from './components/shell/ViewSwitch';
 import { Gallery } from './pages/Gallery';
 import { SessionExperience, useSession, sessionTopBar } from './ingest';
-import { RevealProvider, ExpandProvider, demoSecretMap } from './viewer';
+import { RevealProvider, ExpandProvider, EventFilterProvider, demoSecretMap } from './viewer';
 import { IdentityProvider } from './identity';
 import { ReceiveDialog, type OpenShareResult } from './share';
 import { PlaybackProvider, TransportBar } from './playback';
@@ -176,6 +176,7 @@ export function App() {
       <IdentityProvider>
         <RevealProvider secretMap={secretMap}>
           <ExpandProvider>
+            <EventFilterProvider>
             <PlaybackProvider session={loaded?.session ?? null}>
             <AppShell
               route={route}
@@ -213,6 +214,7 @@ export function App() {
               tabIndex={-1}
             />
             </PlaybackProvider>
+            </EventFilterProvider>
           </ExpandProvider>
         </RevealProvider>
       </IdentityProvider>

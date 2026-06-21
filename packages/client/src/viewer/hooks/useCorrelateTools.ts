@@ -5,6 +5,7 @@ import type {
   ToolUseEvent,
   ToolResultEvent,
 } from '@claudepad/schema';
+import { isHiddenEvent } from './eventVisibility';
 
 /**
  * A render-plan row: one top-level virtualized item. Tool results that
@@ -34,6 +35,11 @@ export function correlateTools(events: readonly SessionEvent[]): RenderRow[] {
   const rows: RenderRow[] = [];
 
   events.forEach((event, index) => {
+    // Pure session-metadata / telemetry never becomes a transcript row. Both
+    // the viewer and the playback timeline derive rows from this function, so
+    // filtering here keeps their indices in lockstep (preserved in raw view).
+    if (isHiddenEvent(event)) return;
+
     if (event.kind === 'tool_use') {
       const row: RenderRow = { kind: 'tool', index, event };
       const rowIndex = rows.push(row) - 1;

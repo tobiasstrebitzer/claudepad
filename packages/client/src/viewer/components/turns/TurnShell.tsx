@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Link2, Check } from 'lucide-react';
+import { Link2, Check, UserRound, Sparkles, Info } from 'lucide-react';
 import { cn } from '../../../lib/cn';
 import { formatClock, formatAbsolute } from '../../format';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../../../components/ui/tooltip';
@@ -39,7 +39,7 @@ export function TurnShell({
       className={cn(
         'group/turn relative scroll-mt-24 rounded-lg border px-4 py-3',
         variant === 'user'
-          ? 'border-border bg-sidebar'
+          ? 'border-border border-l-2 border-l-accent bg-surface'
           : variant === 'assistant'
             ? 'border-border bg-surface'
             : 'border-dashed border-border bg-bg',
@@ -48,11 +48,7 @@ export function TurnShell({
       )}
     >
       <header className="mb-2 flex items-center gap-2 text-label text-muted">
-        {variant === 'assistant' && (
-          <span aria-hidden className="text-accent">
-            ◆
-          </span>
-        )}
+        <Avatar variant={variant} />
         <span className="font-medium uppercase tracking-[0.02em]">{roleLabel}</span>
         {headerExtra}
         <span className="ml-auto flex items-center gap-1.5">
@@ -73,6 +69,27 @@ export function TurnShell({
       </header>
       <div className="min-w-0">{children}</div>
     </section>
+  );
+}
+
+/** A small role marker so user / agent / system turns read as distinct at a glance. */
+function Avatar({ variant }: { variant: 'user' | 'assistant' | 'system' }) {
+  return (
+    <span
+      aria-hidden
+      className={cn(
+        'grid size-5 shrink-0 place-items-center rounded-full',
+        variant === 'assistant' ? 'bg-accent-tint text-accent' : 'bg-sidebar text-muted',
+      )}
+    >
+      {variant === 'assistant' ? (
+        <Sparkles className="size-3" />
+      ) : variant === 'user' ? (
+        <UserRound className="size-3" />
+      ) : (
+        <Info className="size-3" />
+      )}
+    </span>
   );
 }
 
