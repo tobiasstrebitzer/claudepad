@@ -279,7 +279,7 @@ function ProjectRow({
 
   return (
     <li>
-      <div className="group/proj flex items-center rounded-md hover:bg-accent-tint transition-colors">
+      <div className="group/proj flex items-center rounded-md hover:bg-accent-tint transition-colors pr-3">
         <button
           type="button"
           onClick={() => setOpen((v) => !v)}
@@ -295,11 +295,11 @@ function ProjectRow({
           />
           <Folder className="size-3.5 shrink-0 text-muted" />
           <span className="line-clamp-1 flex-1 font-medium">{project.label}</span>
-          <span className="text-label text-muted tabular-nums">
-            {project.sessions.length}
-          </span>
         </button>
         <LaunchInEditor path={project.path} className="group-hover/proj:opacity-100" />
+        <span className="text-label text-muted tabular-nums">
+          {project.sessions.length}
+        </span>
       </div>
 
       {open && (
@@ -361,7 +361,6 @@ function SessionRow({
             </span>
           </span>
         </button>
-        <LaunchInEditor path={session.cwd} className="mt-0.5 group-hover/sess:opacity-100" />
       </div>
     </li>
   );
