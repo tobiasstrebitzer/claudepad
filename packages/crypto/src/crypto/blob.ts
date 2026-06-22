@@ -1,6 +1,6 @@
 // The v1 ShareBlob - an ephemeral sealed box, encrypted to one recipient's public key.
 // This is the live v1 artifact (TRUSTLESS-MODEL §3, PRD-05 §6.10), NOT the vNext
-// link-store ShareEnvelope. Mirrors poc/verify.mjs `createBlob` / `openBlob` exactly.
+// link-store ShareEnvelope. Verified end-to-end by test/conformance.test.ts.
 
 import { bytesToB64url, b64urlToBytes, utf8ToBytes, bytesToUtf8 } from './base64url';
 import {

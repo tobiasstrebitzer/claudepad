@@ -14,7 +14,7 @@ concurrency:
 
 jobs:
   gate:
-    name: gate (typecheck + lint + test + verify:poc)
+    name: gate (typecheck + lint + test)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -28,7 +28,7 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      # typecheck + lint (incl. no-raw-hex + WCAG contrast) + vitest + poc/verify.mjs
+      # typecheck + lint (incl. no-raw-hex + WCAG contrast) + vitest
       - run: pnpm check
 
       # build the single static bundle and assert it makes no third-party fetches

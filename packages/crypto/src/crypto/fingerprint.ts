@@ -1,13 +1,13 @@
 // Human-verifiable key fingerprint: SHA-256 over the RAW public key bytes, rendered
 // as 6 emoji (palette of 64, via `byte & 63`) + an 8-hex code formatted `XXXX-XXXX`.
-// EXACTLY mirrors poc/verify.mjs (digests the decoded raw key bytes, not the b64 string).
+// Digests the decoded raw key bytes, not the b64 string.
 
 import { b64urlToBytes } from './base64url';
 import { ab } from './primitives';
 
 const subtle = globalThis.crypto.subtle;
 
-// 64-emoji palette - copied verbatim from poc/verify.mjs (must stay in sync).
+// 64-emoji palette (stable - changing it changes every fingerprint).
 const FP_EMOJI = [
   '😀',
   '😁',

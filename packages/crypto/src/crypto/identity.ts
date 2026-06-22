@@ -1,6 +1,6 @@
 // Identity types + (de)serialization helpers. An identity is an ECDH P-256 keypair
 // plus a self-claimed display name (the name asserts nothing - trust comes from the
-// fingerprint, see fingerprint.ts). Mirrors poc/verify.mjs.
+// fingerprint, see fingerprint.ts). Verified end-to-end by test/conformance.test.ts.
 
 import { bytesToB64url, b64urlToBytes, utf8ToBytes, bytesToUtf8 } from './base64url';
 import { ECDH, ab } from './primitives';

@@ -1,6 +1,6 @@
-// Low-level WebCrypto wrappers - pure, zero-dependency, isomorphic.
-// Mirrors the exact calls in poc/verify.mjs. Uses globalThis.crypto so it runs
-// identically in browsers and Node 20+ (no `node:crypto` import).
+// Low-level WebCrypto wrappers - pure, zero-dependency, isomorphic. Uses
+// globalThis.crypto so it runs identically in browsers and Node 20+ (no
+// `node:crypto` import).
 
 import { bytesToB64url, b64urlToBytes, utf8ToBytes } from './base64url';
 import { CryptoAuthError } from './errors';
@@ -84,9 +84,9 @@ export async function importContentKey(raw: Uint8Array): Promise<CryptoKey> {
   ]);
 }
 
-// Production HKDF `info` domain-separation strings. These differ from the poc's
-// `claudepad-poc-*` strings on purpose: they are internal labels and both sides of
-// every exchange are our own code, so there is no interop constraint with the PoC.
+// HKDF `info` domain-separation strings. These are internal labels: both sides of
+// every exchange are our own code, so the exact value is arbitrary as long as it
+// stays stable.
 const SHARE_INFO = utf8ToBytes('claudepad-share-v1');
 const DEVICE_KEK_INFO = utf8ToBytes('claudepad-device-kek-v1');
 
@@ -116,7 +116,7 @@ export async function deriveWrappingKey(
 /**
  * Derive a device key-encryption-key from a WebAuthn-PRF output (pattern A).
  * HKDF-SHA256 (empty salt, info=`claudepad-device-kek-v1`) -> AES-256-GCM.
- * Mirrors poc/verify.mjs test [6].
+ * Verified by test/conformance.test.ts.
  */
 export async function deriveDeviceKEK(prfBytes: Uint8Array): Promise<CryptoKey> {
   const hk = await subtle.importKey('raw', ab(prfBytes), 'HKDF', false, ['deriveKey']);
