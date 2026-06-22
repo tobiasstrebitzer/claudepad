@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { parseSession, type Session, type DiagnosticRecord } from '@claudepad/schema'
 import { classify, checkSize, type IngestShape } from '@claudepad/ingest'
-import { isShareBlob } from '../share/detect'
+import { isShareBlob, isShareLink } from '../share/detect'
 
 // Browser ingest state machine (PRD-04). Local-only by default: acquiring a session
 // makes zero network requests and persists nothing (FR-3/FR-18). Sharing is a separate,
@@ -64,7 +64,7 @@ export function useSession(opts: UseSessionOpts = {}): SessionApi {
     async (text: string, bytes: number, fileName?: string, confirmed = false) => {
       // An encrypted share routes to decrypt, not the parser - checked before the
       // size caps (those bound the session parser, not opaque ciphertext).
-      if (onShareBlobRef.current && isShareBlob(text)) {
+      if (onShareBlobRef.current && (isShareBlob(text) || isShareLink(text))) {
         onShareBlobRef.current(text.trim())
         return
       }

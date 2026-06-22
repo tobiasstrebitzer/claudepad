@@ -3,6 +3,7 @@ import type { Session } from '@claudepad/schema';
 import { mintIdentity, encodePublicCard } from '@claudepad/shared';
 import { scanSession, redact } from '@claudepad/secrets';
 import { createShare, openShare } from '../src/share/blob';
+import { isShareBlob, isShareLink } from '../src/share/detect';
 
 const AWS = 'AKIAIOSFODNN7EXAMPLE';
 
@@ -83,6 +84,30 @@ describe('trustless share round-trip (PRD-11)', () => {
   it('rejects a corrupt / unsupported blob (FR-15)', async () => {
     const me = await mintIdentity('Toby');
     await expect(openShare(me, 'cp-blob-not-valid')).rejects.toBeTruthy();
+  });
+});
+
+describe('home-surface sniffing (routes a registry short link to receive)', () => {
+  it('isShareLink matches a https /blobs/<id> URL', () => {
+    expect(isShareLink('https://registry.claudepad.io/blobs/8ca1c2ae-6c96-49b3')).toBe(true);
+    expect(isShareLink('  https://r.example.com/blobs/abc123  ')).toBe(true);
+    expect(isShareLink('http://localhost:8787/blobs/xyz')).toBe(true);
+  });
+
+  it('isShareLink rejects non-links and non-blob URLs', () => {
+    expect(isShareLink('cp-blob-abc')).toBe(false); // an inline blob, not a link
+    expect(isShareLink('https://registry.claudepad.io/directory/dana')).toBe(false);
+    expect(isShareLink('https://example.com')).toBe(false);
+    expect(isShareLink('{"some":"jsonl"}\n{"line":2}')).toBe(false); // a pasted session
+    expect(isShareLink('not a url at all')).toBe(false);
+  });
+
+  it('a short link is not mistaken for an inline blob, and vice-versa', () => {
+    const link = 'https://registry.claudepad.io/blobs/abc';
+    expect(isShareLink(link)).toBe(true);
+    expect(isShareBlob(link)).toBe(false);
+    expect(isShareBlob('cp-blob-xyz')).toBe(true);
+    expect(isShareLink('cp-blob-xyz')).toBe(false);
   });
 });
 

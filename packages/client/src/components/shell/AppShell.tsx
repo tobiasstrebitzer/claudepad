@@ -5,6 +5,7 @@ import { usePersistedState } from '../../lib/usePersistedState'
 import { Wordmark } from '../brand/Wordmark'
 import { Button } from '../ui/Button'
 import { AppearanceMenu } from './AppearanceMenu'
+import { SettingsMenu } from './SettingsMenu'
 import { Sidebar, type RecentItem, type VaultNav } from './Sidebar'
 import { TopBar, type TopBarContent } from './TopBar'
 
@@ -125,7 +126,12 @@ export function AppShell({
               )}
             </>
           }
-          trailing={<AppearanceMenu />}
+          trailing={
+            <span className="flex items-center gap-0.5">
+              <SettingsMenu />
+              <AppearanceMenu />
+            </span>
+          }
         />
 
         <main className="min-h-0 flex-1 overflow-y-auto">{children}</main>

@@ -1,9 +1,13 @@
-// The share wizard (PRD-11 §4.1 + PRD-06 review). Four steps in one dialog:
-//   1. Review   - mandatory secret review; redact/dismiss, add a literal, ACK limits
-//   2. Recipient- paste cp-pub-…, confirm name + fingerprint out of band
-//   3. Grant    - body-only vs body+secrets (secrets disabled when none redacted)
+// The share wizard (PRD-11 §4.1 + PRD-06 review). Steps in one dialog:
+//   1. Recipient- paste cp-pub-…, confirm name + fingerprint out of band
+//   2. Grant    - body-only vs body+secrets (secrets disabled when none redacted)
+//   3. Review   - secret review; redact/dismiss, add a literal, ACK limits.
+//                 Only when sharing body-only (strip mode) - body+secrets ships
+//                 the secrets anyway - and only while the setting is on.
 //   4. Result   - the cp-blob-…, auto-copied + downloadable, with honest trade-offs
 //
+// Two app settings trim friction (both default on): the fingerprint confirm and
+// the review step. Quick-share pre-selects a recipient and opens at Grant.
 // All crypto + redaction is local; nothing is uploaded (PRD-11 FR-17).
 
 import type { Session } from '@claudepad/schema'
@@ -46,6 +50,7 @@ import { Fingerprint, useIdentityContext } from '../identity'
 import { useCopy } from '../ingest/useCopy'
 import { cn } from '../lib/cn'
 import { useRegistry, pubHash, type RegistryApi } from '../registry'
+import { useAppSettings } from '../settings/appSettings'
 import { createShare, createMultiShare } from './blob'
 import { useAddressBook, type AddressBook, type Contact } from './useAddressBook'
 import { useSecretScan } from './useSecretScan'
@@ -72,15 +77,19 @@ const SENSITIVITY_PRESETS = [
 export function ShareDialog({
   session,
   open,
-  onOpenChange
+  onOpenChange,
+  initialContact
 }: {
   session: Session
   open: boolean
   onOpenChange: (open: boolean) => void
+  /** Quick-share: a recent recipient to pre-select, opening the dialog at Grant. */
+  initialContact?: Contact
 }) {
   const { state: idState } = useIdentityContext()
   const registry = useRegistry()
-  const [step, setStep] = React.useState<Step>('review')
+  const settings = useAppSettings()
+  const [step, setStep] = React.useState<Step>('recipient')
   const [detections, setDetections] = React.useState<Detection[]>([])
   const [ack, setAck] = React.useState(false)
   const [literal, setLiteral] = React.useState('')
@@ -112,21 +121,25 @@ export function ShareDialog({
 
   // Reset the wizard whenever it opens so re-share starts clean. The scan itself
   // is owned by useSecretScan; we seed the editable detection list from it.
+  // Quick-share seeds the pre-selected recipient and opens at Grant.
   React.useEffect(() => {
     if (!open) return
-    setStep('review')
+    const seeded = initialContact
+      ? [{ card: initialContact.card, name: initialContact.name, pub: initialContact.pub }]
+      : []
+    setRecipients(seeded)
+    setStep(seeded.length > 0 ? 'grant' : 'recipient')
     setAck(false)
     setDetections([])
     setSensitivity(DEFAULT_SCAN_SETTINGS.entropySensitivity)
     setHideDismissed(false)
     setRecipientInput('')
     setRecipientConfirmed(false)
-    setRecipients([])
     setTier('body')
     setBlob('')
     setRedactedBody(null)
     setError(null)
-  }, [open, session])
+  }, [open, session, initialContact])
 
   // Seed the editable list once the (worker) scan completes. A re-scan (e.g. a
   // sensitivity change) replaces the scanner's findings but preserves values the
@@ -165,8 +178,10 @@ export function ShareDialog({
   const alreadyAdded = recipient != null && recipients.some((r) => r.pub === recipient.pub)
 
   // Add the confirmed in-progress recipient to the list, then clear the input.
+  // The fingerprint confirm is skipped when the setting is off.
   const addRecipient = () => {
-    if (!recipient || !recipientConfirmed || alreadyAdded) return
+    if (!recipient || (settings.requireFingerprintConfirm && !recipientConfirmed) || alreadyAdded)
+      return
     setRecipients((prev) => [
       ...prev,
       { card: recipientInput.trim(), name: recipient.name, pub: recipient.pub }
@@ -184,7 +199,9 @@ export function ShareDialog({
   const addDirectoryRecipient = (entry: DirectoryEntry) => {
     if (recipients.some((r) => r.pub === entry.pub)) return
     const card = encodePublicCard({ v: 1, name: entry.name, pub: entry.pub })
-    if (isVerifiedAssurance(entry.assurance)) {
+    // Verified (domain/sso) entries - or any entry when the manual confirm is
+    // off - are added directly; otherwise route through the fingerprint confirm.
+    if (isVerifiedAssurance(entry.assurance) || !settings.requireFingerprintConfirm) {
       setRecipients((prev) => [...prev, { card, name: entry.name, pub: entry.pub }])
     } else {
       setRecipientInput(PUB_PREFIX + card)
@@ -193,6 +210,11 @@ export function ShareDialog({
 
   const recipientLabel =
     recipients.length === 1 ? recipients[0]!.name : `${recipients.length} recipients`
+
+  // Review is only meaningful when sharing body-only (strip mode) - body+secrets
+  // ships the secrets regardless - and only while the setting is on and the scan
+  // actually found something to strip.
+  const reviewNeeded = settings.requireSecretReview && tier === 'body' && redactedCount > 0
 
   const toggle = (id: string) =>
     setDetections((prev) =>
@@ -267,6 +289,38 @@ export function ShareDialog({
       <DialogContent className="max-w-lg">
         {idState.status !== 'unlocked' ? (
           <NeedsIdentity />
+        ) : step === 'recipient' ? (
+          <RecipientStep
+            recipientInput={recipientInput}
+            setRecipientInput={setRecipientInput}
+            recipient={recipient}
+            confirmed={recipientConfirmed}
+            setConfirmed={setRecipientConfirmed}
+            requireConfirm={settings.requireFingerprintConfirm}
+            recipients={recipients}
+            alreadyAdded={alreadyAdded}
+            addRecipient={addRecipient}
+            removeRecipient={removeRecipient}
+            addressBook={addressBook}
+            registry={registry}
+            onPickDirectory={addDirectoryRecipient}
+            onCancel={() => onOpenChange(false)}
+            onNext={() => setStep('grant')}
+          />
+        ) : step === 'grant' ? (
+          <GrantStep
+            recipientName={recipientLabel}
+            redactedCount={redactedCount}
+            tier={tier}
+            setTier={setTier}
+            busy={busy}
+            scanning={scan.scanning}
+            reviewNeeded={reviewNeeded}
+            error={error}
+            onBack={() => setStep('recipient')}
+            onReview={() => setStep('review')}
+            onEncrypt={encrypt}
+          />
         ) : step === 'review' ? (
           <ReviewStep
             scanning={scan.scanning}
@@ -287,35 +341,8 @@ export function ShareDialog({
             setLiteral={setLiteral}
             addLiteral={addLiteral}
             toggle={toggle}
-            onCancel={() => onOpenChange(false)}
-            onNext={() => setStep('recipient')}
-          />
-        ) : step === 'recipient' ? (
-          <RecipientStep
-            recipientInput={recipientInput}
-            setRecipientInput={setRecipientInput}
-            recipient={recipient}
-            confirmed={recipientConfirmed}
-            setConfirmed={setRecipientConfirmed}
-            recipients={recipients}
-            alreadyAdded={alreadyAdded}
-            addRecipient={addRecipient}
-            removeRecipient={removeRecipient}
-            addressBook={addressBook}
-            registry={registry}
-            onPickDirectory={addDirectoryRecipient}
-            onBack={() => setStep('review')}
-            onNext={() => setStep('grant')}
-          />
-        ) : step === 'grant' ? (
-          <GrantStep
-            recipientName={recipientLabel}
-            redactedCount={redactedCount}
-            tier={tier}
-            setTier={setTier}
             busy={busy}
-            error={error}
-            onBack={() => setStep('recipient')}
+            onBack={() => setStep('grant')}
             onEncrypt={encrypt}
           />
         ) : (
@@ -364,8 +391,9 @@ function ReviewStep({
   setLiteral,
   addLiteral,
   toggle,
-  onCancel,
-  onNext
+  busy,
+  onBack,
+  onEncrypt
 }: {
   scanning: boolean
   progress: number | null
@@ -385,8 +413,9 @@ function ReviewStep({
   setLiteral: (v: string) => void
   addLiteral: () => void
   toggle: (id: string) => void
-  onCancel: () => void
-  onNext: () => void
+  busy: boolean
+  onBack: () => void
+  onEncrypt: () => void
 }) {
   return (
     <>
@@ -544,11 +573,12 @@ function ReviewStep({
 
       <DialogFooter>
         <span className="mr-auto text-label text-muted-foreground">{redactedCount} will be redacted</span>
-        <Button variant="ghost" onClick={onCancel}>
-          Cancel
+        <Button variant="ghost" onClick={onBack} disabled={busy}>
+          Back
         </Button>
-        <Button onClick={onNext} disabled={!ack || scanning}>
-          Continue
+        <Button onClick={onEncrypt} disabled={!ack || scanning || busy}>
+          {busy ? <Loader2 className="animate-spin" /> : null}
+          Confirm share
         </Button>
       </DialogFooter>
     </>
@@ -561,6 +591,7 @@ function RecipientStep({
   recipient,
   confirmed,
   setConfirmed,
+  requireConfirm,
   recipients,
   alreadyAdded,
   addRecipient,
@@ -568,7 +599,7 @@ function RecipientStep({
   addressBook,
   registry,
   onPickDirectory,
-  onBack,
+  onCancel,
   onNext
 }: {
   recipientInput: string
@@ -576,6 +607,7 @@ function RecipientStep({
   recipient: { name: string; pub: string } | null
   confirmed: boolean
   setConfirmed: (v: boolean) => void
+  requireConfirm: boolean
   recipients: Recipient[]
   alreadyAdded: boolean
   addRecipient: () => void
@@ -583,7 +615,7 @@ function RecipientStep({
   addressBook: AddressBook
   registry: RegistryApi
   onPickDirectory: (entry: DirectoryEntry) => void
-  onBack: () => void
+  onCancel: () => void
   onNext: () => void
 }) {
   const invalid = recipientInput.trim().length > 0 && !recipient
@@ -676,22 +708,24 @@ function RecipientStep({
             For <span className="font-medium">{recipient.name}</span>
           </p>
           <Fingerprint pub={recipient.pub} className="mt-1" size="sm" />
-          <label className="mt-2 flex items-start gap-2 text-body-sm text-text">
-            <Checkbox
-              checked={confirmed}
-              onCheckedChange={(v) => setConfirmed(v === true)}
-              className="mt-0.5"
-            />
-            <span>
-              This fingerprint matches what {recipient.name} told me out of band.
-            </span>
-          </label>
+          {requireConfirm && (
+            <label className="mt-2 flex items-start gap-2 text-body-sm text-text">
+              <Checkbox
+                checked={confirmed}
+                onCheckedChange={(v) => setConfirmed(v === true)}
+                className="mt-0.5"
+              />
+              <span>
+                This fingerprint matches what {recipient.name} told me out of band.
+              </span>
+            </label>
+          )}
           <Button
             variant="secondary"
             size="sm"
             className="mt-2"
             onClick={addRecipient}
-            disabled={!confirmed}
+            disabled={requireConfirm && !confirmed}
           >
             <Plus /> Add recipient
           </Button>
@@ -702,8 +736,8 @@ function RecipientStep({
         <span className="mr-auto text-label text-muted-foreground">
           {recipients.length} added
         </span>
-        <Button variant="ghost" onClick={onBack}>
-          Back
+        <Button variant="ghost" onClick={onCancel}>
+          Cancel
         </Button>
         <Button onClick={onNext} disabled={recipients.length === 0}>
           Continue
@@ -884,8 +918,11 @@ function GrantStep({
   tier,
   setTier,
   busy,
+  scanning,
+  reviewNeeded,
   error,
   onBack,
+  onReview,
   onEncrypt
 }: {
   recipientName: string
@@ -893,14 +930,17 @@ function GrantStep({
   tier: Tier
   setTier: (t: Tier) => void
   busy: boolean
+  scanning: boolean
+  reviewNeeded: boolean
   error: string | null
   onBack: () => void
+  onReview: () => void
   onEncrypt: () => void
 }) {
   const hasSecrets = redactedCount > 0
   return (
     <>
-      <DialogTitle>Grant</DialogTitle>
+      <DialogTitle>Confirm share</DialogTitle>
       <DialogDescription>
         Choose what {recipientName} can read. This is enforced by cryptography, not
         by the UI.
@@ -936,9 +976,9 @@ function GrantStep({
         <Button variant="ghost" onClick={onBack} disabled={busy}>
           Back
         </Button>
-        <Button onClick={onEncrypt} disabled={busy}>
+        <Button onClick={reviewNeeded ? onReview : onEncrypt} disabled={busy || scanning}>
           {busy ? <Loader2 className="animate-spin" /> : null}
-          Encrypt for {recipientName}
+          {scanning ? 'Scanning…' : reviewNeeded ? 'Review secrets' : 'Confirm share'}
         </Button>
       </DialogFooter>
     </>
@@ -1178,7 +1218,7 @@ function RegistryUpload({
 
   if (link) {
     return (
-      <div className="mt-3 rounded-md border border-border bg-bg p-2.5">
+      <div className="mt-3 min-w-0 rounded-md border border-border bg-bg p-2.5">
         <p className="text-label text-muted-foreground">Short link (auto-copied)</p>
         <div className="mt-1 flex items-center gap-2">
           <code className="min-w-0 flex-1 truncate font-mono text-body-sm text-text">{link}</code>
