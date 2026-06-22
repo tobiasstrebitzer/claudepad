@@ -1,0 +1,77 @@
+name: Release
+
+# On a version tag: build the single static bundle, attach it + SHA-256
+# checksums to the GitHub Release, and deploy claudepad.io from the same tag.
+# v1 is serverless, so there are no Docker images to publish (PRD-09 server
+# stack is the vNext store addon).
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Gate
+        run: pnpm check
+
+      - name: Build bundle
+        run: pnpm build
+
+      - name: Verify no third-party fetches
+        run: node scripts/check-no-external-origins.mjs
+
+      - name: Package bundle + checksums
+        run: |
+          tag="${GITHUB_REF_NAME}"
+          tar -C packages/client/dist -czf "claudepad-${tag}.tar.gz" .
+          sha256sum "claudepad-${tag}.tar.gz" > "claudepad-${tag}.tar.gz.sha256"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: |
+            claudepad-*.tar.gz
+            claudepad-*.tar.gz.sha256
+
+  deploy:
+    needs: release
+    runs-on: ubuntu-latest
+    # Requires repo secrets CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID.
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm build
+
+      - name: Deploy claudepad.io (Cloudflare)
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: packages/client
+          command: deploy

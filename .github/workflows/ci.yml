@@ -1,0 +1,72 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  gate:
+    name: gate (typecheck + lint + test + verify:poc)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # typecheck + lint (incl. no-raw-hex + WCAG contrast) + vitest + poc/verify.mjs
+      - run: pnpm check
+
+      # build the single static bundle and assert it makes no third-party fetches
+      - run: pnpm build
+      - run: node scripts/check-no-external-origins.mjs
+
+      - name: Upload client bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: client-dist
+          path: packages/client/dist
+          if-no-files-found: error
+
+  e2e:
+    name: e2e (Playwright)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright browsers
+        run: pnpm --filter @claudepad/client exec playwright install --with-deps chromium
+
+      - run: pnpm --filter @claudepad/client run test:e2e
+
+      - name: Upload Playwright report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: packages/client/playwright-report
+          if-no-files-found: ignore
+          retention-days: 7

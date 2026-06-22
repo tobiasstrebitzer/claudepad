@@ -2,8 +2,8 @@
 
 > Drop a Claude Code session, see it beautifully, share it with one person - encrypted so only they can read it, with no server in the middle.
 
-**Status:** Pre-development (crypto core proven via `poc/`) · **Target:** v1.0 (open-source, self-hostable, **entirely client-side**)
-**Last updated:** 2026-06-20
+**Status:** P0-P4 built; P5 (launch hardening) in progress - artifacts/docs/CI shipped, the independent security review (FR-16) is the one remaining v1.0 gate · **Target:** v1.0 (open-source, self-hostable, **entirely client-side**)
+**Last updated:** 2026-06-22
 
 ---
 

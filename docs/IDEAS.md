@@ -27,6 +27,40 @@ shipped or dropped.
 
 ---
 
+## ▶ Next session scope: Viewer Themes · _logged 2026-06-22_
+
+Build **viewer themes** - let the reader change the *look* of a prettified
+session beyond the single warm-minimal light/dark pair (a presentation/aesthetic
+choice, distinct from the app's functional light/dark mode).
+
+**What already exists (start here, don't rebuild):**
+- **Functional light/dark** is done: `lib/theme.ts` flips a single `<html
+  data-theme>` attribute (light/dark/system, persisted at
+  `localStorage["claudepad.theme"]`); `components/shell/ThemeToggle.tsx` is the
+  control; `styles/tokens.css` is the **single source of truth for color** (the
+  `check-no-raw-hex` + `check-contrast` gates enforce this - any new theme's
+  colors must live there and clear WCAG).
+- **Code highlighting already follows the theme:** `viewer/highlighter.ts` emits
+  dual `--shiki-light`/`--shiki-dark` token vars (no inline color), switched by
+  `globals.css` off `data-theme`. A new theme palette needs a matching Shiki
+  theme mapping (or it inherits the light/dark pair).
+
+**Likely scope to design:**
+- A theme *axis* separate from light/dark (e.g. `data-viewer-theme`) or extra
+  `data-theme` values, so a viewer theme = a token override block in `tokens.css`
+  + a Shiki theme choice. Keep the one-attribute-flip, no-recompute model (D-49).
+- Where the picker lives (viewer top bar vs. settings popover) and whether the
+  choice is per-session or global + persisted (mirror `lib/theme.ts`).
+- Honor `prefers-reduced-motion` / contrast like the rest of the app; every new
+  palette must pass `scripts/check-contrast.mjs` (extend its pairings list).
+- Decide if playback "presentation mode" gets its own theme (ties to PRD-08).
+
+**Gates that will bite:** `check-no-raw-hex` (colors only in `tokens.css`),
+`check-contrast` (every documented pairing, light + dark), and the no-phone-home
+bundle scan. No PRD exists yet - promote to a PRD/ROADMAP entry once scoped.
+
+---
+
 ## ▶ Next session scope · _logged 2026-06-21_
 
 **1. Ingest / share-entry improvements - ✅ shipped 2026-06-21.**

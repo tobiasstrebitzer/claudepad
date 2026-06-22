@@ -27,7 +27,7 @@ If a name describes plumbing, rename it after the user-facing intent - and if yo
 
 ## Project status (2026-06-21)
 
-**P0 + P1 + P2 + P3 + P4 built.** The production monorepo is scaffolded and the first five ROADMAP phases are done and committed:
+**P0 + P1 + P2 + P3 + P4 built; P5 launch hardening in progress.** The production monorepo is scaffolded and the first five ROADMAP phases are done and committed:
 
 - **P0 (Foundation):** `@claudepad/schema` (tolerant parser, PRD-02), `@claudepad/shared` (zero-dep WebCrypto core mirroring `poc/`, PRD-05), and `@claudepad/client` design system (tokens, AppShell, primitives on Base UI, `/gallery`, PRD-01).
 - **P1 (MVP-0):** drop/paste a session → prettified `SessionViewer` (PRD-03, in `client/src/viewer/`) fed by `@claudepad/ingest` (PRD-04). Fully offline, local-only; sharing is surfaced-but-disabled until P3.
@@ -39,7 +39,9 @@ If a name describes plumbing, rename it after the user-facing intent - and if yo
 
 **As-built stack** (deviations from the intended-stack sketch are recorded in `docs/DECISIONS.md` D-34…D-44): pnpm workspaces · TS strict · React 19 · **Vite 8 + Tailwind v4 (CSS-first)** · **Vitest 4** · Playwright · shadcn-style primitives hand-composed on Base UI · self-hosted fonts via `@fontsource` · Shiki fine-grained core (no wasm). Gate: `pnpm check` (typecheck + lint + no-raw-hex + WCAG contrast + tests + `poc/verify.mjs`).
 
-**Next:** P5 (Self-Hosting & Launch, PRD-09 → v1.0).
+- **P5 (Self-Hosting & Launch, PRD-09 - serverless scope, D-66…D-70):** the v1 deploy path was already shipped (Vite build → `packages/client/dist`, served by anything; `claudepad.io` via `packages/client/wrangler.jsonc`). P5 adds the launch *artifacts*: `LICENSE` (MIT, D-67), public plain-language `docs/THREAT-MODEL.md`, `SECURITY.md`, `CONTRIBUTING.md`, `CHANGELOG.md`, rewritten `README.md`, `docs/self-hosting.md`, `docs/verify-zero-knowledge.md` + `scripts/check-no-external-origins.mjs` (ZK is reproducible, D-68), and CI/CD (`.github/workflows/{ci,release}.yml`; tag → bundle + SHA-256 + `wrangler` deploy, D-70). PRD-09's docker/Postgres/MinIO/Workers-R2 stack stays **vNext** (the optional store addon). 
+
+**Next:** the **independent security review** (FR-16 / Q-12, D-69) is the one remaining hard gate before the v1.0 tag - an external-vendor task; everything else for P5 is in place.
 
 The repo also contains the finalized **PRD set** (`docs/`) and the **proof of concept** (`poc/`, the crypto reference; `poc/verify.mjs` stays green).
 
