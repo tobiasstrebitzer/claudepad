@@ -479,22 +479,24 @@ describe('large input stress (FR-29/FR-30) - generated, not committed', () => {
   it('parses a multi-MB synthetic session without throwing', async () => {
     const lines: string[] = [];
     let i = 0;
-    // Build until > ~3MB.
-    while (lines.join('\n').length < 3_000_000) {
+    let approxLen = 0;
+    // Build until > ~3MB. Track length incrementally - re-joining the whole array
+    // each iteration to measure it is O(n^2) and made this test flaky.
+    while (approxLen < 3_000_000) {
       const uuid = `u${i}`;
       const parent = i === 0 ? null : `u${i - 1}`;
-      lines.push(
-        JSON.stringify({
-          type: i % 2 === 0 ? 'user' : 'assistant',
-          uuid,
-          parentUuid: parent,
-          timestamp: new Date(1_700_000_000_000 + i * 1000).toISOString(),
-          version: '2.1.177',
-          message: {
-            content: i % 2 === 0 ? `prompt ${i}` : [{ type: 'text', text: `reply ${i}` }],
-          },
-        }),
-      );
+      const line = JSON.stringify({
+        type: i % 2 === 0 ? 'user' : 'assistant',
+        uuid,
+        parentUuid: parent,
+        timestamp: new Date(1_700_000_000_000 + i * 1000).toISOString(),
+        version: '2.1.177',
+        message: {
+          content: i % 2 === 0 ? `prompt ${i}` : [{ type: 'text', text: `reply ${i}` }],
+        },
+      });
+      lines.push(line);
+      approxLen += line.length + 1; // +1 for the join newline
       i++;
     }
     const input = lines.join('\n');

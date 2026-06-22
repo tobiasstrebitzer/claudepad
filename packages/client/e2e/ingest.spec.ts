@@ -29,8 +29,8 @@ test.describe('ingest + viewer', () => {
     // Secret placeholder is masked - the raw token never leaks.
     await expect(page.getByText(/AWS_KEY ••••••••\(20\)/)).toBeVisible();
     await expect(page.locator('body')).not.toContainText('cp-secret');
-    // Clear returns to the empty state.
-    await page.getByRole('button', { name: 'Clear session' }).click();
+    // Closing the session returns to the empty state.
+    await page.getByRole('button', { name: 'Close session' }).click();
     await expect(
       page.getByRole('heading', { name: /Drop a session to begin/ }),
     ).toBeVisible();
