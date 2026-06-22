@@ -20,7 +20,7 @@
     "verify:poc": "node poc/verify.mjs",
     "verify:no-phone-home": "node scripts/check-no-external-origins.mjs",
     "dev": "pnpm --filter @claudepad/client run dev",
-    "check": "pnpm run typecheck && pnpm run lint && pnpm run test && pnpm run verify:poc"
+    "check": "pnpm run build && pnpm run typecheck && pnpm run lint && pnpm run test && pnpm run verify:poc"
   },
   "devDependencies": {
     "@eslint/js": "^9.17.0",
