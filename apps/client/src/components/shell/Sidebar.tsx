@@ -1,4 +1,4 @@
-import { formatBytes } from '@claudepad/ingest'
+import { formatBytes } from '@/ingest'
 import {
   AlertTriangle,
   ChevronRight,

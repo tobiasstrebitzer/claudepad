@@ -1,5 +1,6 @@
+// @vitest-environment node
 import { describe, it, expect } from 'vitest';
-import { checkSize, DEFAULT_CAPS, formatBytes } from '../src/limits';
+import { checkSize, DEFAULT_CAPS, formatBytes } from '@/ingest/limits';
 
 describe('size caps (PRD-04 FR-16)', () => {
   it('passes under the soft cap', () => {

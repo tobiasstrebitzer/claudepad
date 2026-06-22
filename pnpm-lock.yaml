@@ -50,9 +50,6 @@ importers:
       '@base-ui/react':
         specifier: ^1.6.0
         version: 1.6.0(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
-      '@claudepad/ingest':
-        specifier: workspace:*
-        version: link:../../packages/ingest
       '@claudepad/registry-client':
         specifier: workspace:*
         version: link:../../packages/registry-client
@@ -161,8 +158,6 @@ importers:
         version: link:../../packages/registry-spec
 
   packages/crypto: {}
-
-  packages/ingest: {}
 
   packages/registry-client:
     dependencies:

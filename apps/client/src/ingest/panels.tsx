@@ -1,4 +1,4 @@
-import { formatBytes } from '@claudepad/ingest'
+import { formatBytes } from './limits'
 import { AlertTriangle, FileWarning, RotateCcw } from 'lucide-react'
 import { ReadingColumn } from '../components/shell/AppShell'
 import { Button } from '../components/ui/Button'

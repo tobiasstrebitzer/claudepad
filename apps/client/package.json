@@ -17,7 +17,6 @@
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",
-    "@claudepad/ingest": "workspace:*",
     "@claudepad/registry-client": "workspace:*",
     "@fontsource/inter": "^5.2.8",
     "@fontsource/jetbrains-mono": "^5.2.8",

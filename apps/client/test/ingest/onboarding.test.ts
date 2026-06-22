@@ -1,5 +1,6 @@
+// @vitest-environment node
 import { describe, it, expect } from 'vitest';
-import { detectOS, onboardingPaths, allOnboarding } from '../src/onboarding';
+import { detectOS, onboardingPaths, allOnboarding } from '@/ingest/onboarding';
 
 describe('onboarding (PRD-04 FR-7/FR-8)', () => {
   it('detects OS from the user-agent', () => {

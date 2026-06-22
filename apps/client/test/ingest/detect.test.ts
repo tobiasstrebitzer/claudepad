@@ -1,5 +1,6 @@
+// @vitest-environment node
 import { describe, it, expect } from 'vitest';
-import { classify, isIngestible } from '../src/detect';
+import { classify, isIngestible } from '@/ingest/detect';
 
 const obj = '{"type":"user","message":{"role":"user","content":"hi"},"uuid":"a"}';
 const obj2 =

@@ -4,7 +4,7 @@
 // only directory entries and per-file size/mtime (cheap stat-level metadata), not
 // session contents. Contents are read lazily, one session at a time, on click.
 
-import { extractSessionMeta } from '@claudepad/ingest'
+import { extractSessionMeta } from '@/ingest'
 
 const SESSION_RE = /\.jsonl$/i
 

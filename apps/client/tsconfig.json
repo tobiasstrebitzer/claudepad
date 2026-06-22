@@ -13,7 +13,6 @@
   },
   "include": ["src"],
   "references": [
-    { "path": "../../packages/crypto" },
-    { "path": "../../packages/ingest" }
+    { "path": "../../packages/crypto" }
   ]
 }

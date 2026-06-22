@@ -7,7 +7,7 @@ import {
   CollapsibleTrigger,
   CollapsibleContent
 } from '../components/ui/Collapsible'
-import { allOnboarding, detectOS } from '@claudepad/ingest'
+import { allOnboarding, detectOS } from './onboarding'
 import { DropZone } from './DropZone'
 import { useCopy } from './useCopy'
 

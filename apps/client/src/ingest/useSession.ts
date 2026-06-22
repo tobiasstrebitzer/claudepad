@@ -1,6 +1,8 @@
 import * as React from 'react'
 import { parseSession, type Session, type DiagnosticRecord } from '@/schema'
-import { classify, checkSize, type IngestShape } from '@claudepad/ingest'
+import { classify } from './detect'
+import { checkSize } from './limits'
+import type { IngestShape } from './types'
 import { isShareBlob, isShareLink } from '../share/detect'
 
 // Browser ingest state machine (PRD-04). Local-only by default: acquiring a session

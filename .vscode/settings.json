@@ -12,7 +12,8 @@
     "**/node_modules": true,
     "**/test-results": true,
     "**/dist": true,
-    "**/tsconfig.tsbuildinfo": true
+    "**/tsconfig.tsbuildinfo": true,
+    "**/.wrangler": true
   },
   "[jsonc]": {
     "editor.formatOnSave": false

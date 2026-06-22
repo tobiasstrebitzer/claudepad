@@ -1,5 +1,6 @@
+// @vitest-environment node
 import { describe, it, expect } from 'vitest';
-import { extractSessionMeta, cleanTitleText } from '../src/session-meta';
+import { extractSessionMeta, cleanTitleText } from '@/ingest/session-meta';
 
 // Record shapes mirror real ~/.claude session files (the trailing meta block that
 // Claude Code appends per turn): ai-title, last-prompt, plus cwd/gitBranch on
