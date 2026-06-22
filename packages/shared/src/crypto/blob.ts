@@ -40,6 +40,35 @@ export interface ShareBlob {
   secret: AesLayer | null; // AES-GCM(K_secret, secretMap) | null
 }
 
+/** One recipient's wrap inside a multi-recipient blob: their ephemeral pub + wrapped keys. */
+export interface WrapEntry {
+  eph: string; // ephemeral public key for this recipient (raw, base64url)
+  wrap: AesLayer; // AES-GCM(KW_i, JSON{ kb, ks? })
+}
+
+/**
+ * A blob addressed to several recipients in one artifact. The body/secret are
+ * encrypted ONCE under shared content keys; those keys are wrapped independently
+ * per recipient (fresh ephemeral each), so any one recipient can open it and a
+ * non-recipient can open none. Trade-off vs. one-blob-per-recipient: the
+ * recipient *count* (`wraps.length`) is visible in the clear. Identities are not.
+ */
+export interface MultiShareBlob {
+  v: 1;
+  alg: typeof ALG;
+  multi: true; // discriminator from the single-recipient ShareBlob
+  from: { name: string; pub: string };
+  tier: Tier;
+  wraps: WrapEntry[];
+  body: AesLayer;
+  secret: AesLayer | null;
+}
+
+/** True for the multi-recipient shape (vs. the single-recipient ShareBlob). */
+export function isMultiBlob(blob: ShareBlob | MultiShareBlob): blob is MultiShareBlob {
+  return (blob as MultiShareBlob).multi === true;
+}
+
 /** What the wrap layer carries: independent content keys (base64url raw). */
 interface WrapObj {
   kb: string;
@@ -114,19 +143,47 @@ export interface OpenBlobResult {
  */
 export async function openBlob(opts: {
   me: Identity;
-  blob: ShareBlob;
+  blob: ShareBlob | MultiShareBlob;
 }): Promise<OpenBlobResult> {
   const { me, blob } = opts;
-  validateBlobShape(blob);
-
   const myPriv = await importPrivateKey(me);
+
+  if (isMultiBlob(blob)) {
+    validateMultiBlobShape(blob);
+    // Try each recipient wrap; the one addressed to us unwraps (others fail the
+    // AES-GCM tag). Fail-closed if none is ours.
+    const wrapObj = await unwrapFirst(myPriv, blob.wraps);
+    return decryptPayload(blob, wrapObj);
+  }
+
+  validateBlobShape(blob);
   const ephPub = await importPublicKey(blob.eph);
   const KW = await deriveWrappingKey(myPriv, ephPub);
-
   // Throws CryptoAuthError if the blob is not addressed to us (wrong KW).
-  const wrapBytes = await aesDecrypt(KW, blob.wrap);
-  const wrapObj = parseWrapObj(wrapBytes);
+  const wrapObj = parseWrapObj(await aesDecrypt(KW, blob.wrap));
+  return decryptPayload(blob, wrapObj);
+}
 
+/** Find and unwrap the wrap entry addressed to `myPriv`; fail-closed otherwise. */
+async function unwrapFirst(myPriv: CryptoKey, wraps: WrapEntry[]): Promise<WrapObj> {
+  for (const entry of wraps) {
+    try {
+      const ephPub = await importPublicKey(entry.eph);
+      const KW = await deriveWrappingKey(myPriv, ephPub);
+      return parseWrapObj(await aesDecrypt(KW, entry.wrap));
+    } catch (e) {
+      if (e instanceof CryptoAuthError) continue; // not our entry - try the next
+      throw e;
+    }
+  }
+  throw new CryptoAuthError('blob is not addressed to you');
+}
+
+/** Decrypt body (+ secret at high tier) given the unwrapped content keys. */
+async function decryptPayload(
+  blob: ShareBlob | MultiShareBlob,
+  wrapObj: WrapObj,
+): Promise<OpenBlobResult> {
   const kb = await importContentKey(b64urlToBytes(wrapObj.kb));
   const bodyBytes = await aesDecrypt(kb, blob.body);
 
@@ -139,13 +196,13 @@ export async function openBlob(opts: {
   return { from: blob.from, tier: blob.tier, bodyBytes, secretBytes };
 }
 
-/** Serialize a blob to its `cp-blob` JSON string (droppable anywhere). */
-export function encodeBlob(blob: ShareBlob): string {
+/** Serialize a blob (single- or multi-recipient) to its `cp-blob` JSON string. */
+export function encodeBlob(blob: ShareBlob | MultiShareBlob): string {
   return JSON.stringify(blob);
 }
 
-/** Parse and validate a serialized blob. */
-export function decodeBlob(s: string): ShareBlob {
+/** Parse and validate a serialized blob (single- or multi-recipient). */
+export function decodeBlob(s: string): ShareBlob | MultiShareBlob {
   let obj: unknown;
   try {
     obj = JSON.parse(s);
@@ -155,19 +212,93 @@ export function decodeBlob(s: string): ShareBlob {
   if (typeof obj !== 'object' || obj === null) {
     throw new CryptoFormatError('malformed blob: not an object');
   }
+  if ((obj as MultiShareBlob).multi === true) {
+    const blob = obj as MultiShareBlob;
+    validateMultiBlobShape(blob);
+    return blob;
+  }
   const blob = obj as ShareBlob;
   validateBlobShape(blob);
   return blob;
 }
 
+/** A single recipient, by raw public key or encoded public card. */
+export interface RecipientRef {
+  recipientPub?: string;
+  recipientCard?: string;
+}
+
+function recipientPubOf(ref: RecipientRef): string {
+  if (ref.recipientPub) {
+    return ref.recipientPub;
+  }
+  if (ref.recipientCard) {
+    return decodePublicCard(ref.recipientCard).pub;
+  }
+  throw new CryptoFormatError('recipient requires recipientPub or recipientCard');
+}
+
 function resolveRecipientPub(opts: CreateBlobOpts): string {
-  if (opts.recipientPub) {
-    return opts.recipientPub;
+  return recipientPubOf(opts);
+}
+
+export interface CreateMultiBlobOpts {
+  sender: Identity | PublicCard;
+  /** One or more recipients (deduped by public key). At least one required. */
+  recipients: RecipientRef[];
+  bodyBytes: Uint8Array;
+  /** Only wrapped when tier is 'body+secret'. */
+  secretBytes?: Uint8Array;
+  tier: Tier;
+}
+
+/**
+ * Build one blob addressed to several recipients. The body (and secret map, at
+ * the high tier) is encrypted once under shared content keys; those keys are
+ * wrapped per recipient under a per-recipient KW (fresh ephemeral each). Any
+ * listed recipient can open it; nobody else can. Recipients are deduped by key.
+ */
+export async function createMultiBlob(opts: CreateMultiBlobOpts): Promise<MultiShareBlob> {
+  if (opts.recipients.length === 0) {
+    throw new CryptoFormatError('createMultiBlob requires at least one recipient');
   }
-  if (opts.recipientCard) {
-    return decodePublicCard(opts.recipientCard).pub;
+
+  // Shared content keys: encrypt the payload exactly once.
+  const kb = await generateContentKey();
+  const bodyCt = await aesEncrypt(kb.key, opts.bodyBytes);
+
+  let secretCt: AesLayer | null = null;
+  const wrapObj: WrapObj = { kb: bytesToB64url(kb.raw) };
+  if (opts.tier === 'body+secret' && opts.secretBytes) {
+    const ks = await generateContentKey();
+    secretCt = await aesEncrypt(ks.key, opts.secretBytes);
+    wrapObj.ks = bytesToB64url(ks.raw);
   }
-  throw new CryptoFormatError('createBlob requires recipientPub or recipientCard');
+  const wrapPlain = utf8ToBytes(JSON.stringify(wrapObj));
+
+  const seen = new Set<string>();
+  const wraps: WrapEntry[] = [];
+  for (const ref of opts.recipients) {
+    const pubB64 = recipientPubOf(ref);
+    if (seen.has(pubB64)) continue; // a double-add must not double-wrap
+    seen.add(pubB64);
+    const recipientPub = await importPublicKey(pubB64);
+    const eph = await subtle.generateKey(ECDH, true, ['deriveBits']);
+    const ephPub = bytesToB64url(new Uint8Array(await subtle.exportKey('raw', eph.publicKey)));
+    const KW = await deriveWrappingKey(eph.privateKey, recipientPub);
+    wraps.push({ eph: ephPub, wrap: await aesEncrypt(KW, wrapPlain) });
+  }
+
+  return {
+    v: 1,
+    alg: ALG,
+    multi: true,
+    from: { name: opts.sender.name, pub: opts.sender.pub },
+    tier: opts.tier,
+    wraps,
+    body: bodyCt,
+    secret: secretCt,
+  };
 }
 
 function isLayer(x: unknown): x is AesLayer {
@@ -205,6 +336,43 @@ function validateBlobShape(blob: ShareBlob): void {
   }
   if (!isLayer(blob.wrap) || !isLayer(blob.body)) {
     throw new CryptoFormatError('malformed blob: missing wrap/body layer');
+  }
+  if (blob.secret !== null && !isLayer(blob.secret)) {
+    throw new CryptoFormatError('malformed blob: invalid secret layer');
+  }
+}
+
+function validateMultiBlobShape(blob: MultiShareBlob): void {
+  if (typeof blob !== 'object' || blob === null) {
+    throw new CryptoFormatError('malformed blob: not an object');
+  }
+  if (blob.v !== 1) {
+    throw new CryptoVersionError(`unsupported blob version: ${String(blob.v)}`);
+  }
+  if (blob.alg !== ALG) {
+    throw new CryptoVersionError(`unsupported blob alg: ${String(blob.alg)}`);
+  }
+  if (blob.tier !== 'body' && blob.tier !== 'body+secret') {
+    throw new CryptoFormatError(`malformed blob: invalid tier ${String(blob.tier)}`);
+  }
+  if (
+    typeof blob.from !== 'object' ||
+    blob.from === null ||
+    typeof blob.from.name !== 'string' ||
+    typeof blob.from.pub !== 'string'
+  ) {
+    throw new CryptoFormatError('malformed blob: missing/invalid from');
+  }
+  if (!Array.isArray(blob.wraps) || blob.wraps.length === 0) {
+    throw new CryptoFormatError('malformed blob: missing wraps');
+  }
+  for (const w of blob.wraps) {
+    if (typeof w !== 'object' || w === null || typeof w.eph !== 'string' || !isLayer(w.wrap)) {
+      throw new CryptoFormatError('malformed blob: invalid wrap entry');
+    }
+  }
+  if (!isLayer(blob.body)) {
+    throw new CryptoFormatError('malformed blob: missing body layer');
   }
   if (blob.secret !== null && !isLayer(blob.secret)) {
     throw new CryptoFormatError('malformed blob: invalid secret layer');

@@ -34,12 +34,18 @@ export { fingerprint } from './fingerprint';
 export {
   type Tier,
   type ShareBlob,
+  type MultiShareBlob,
+  type WrapEntry,
+  type RecipientRef,
   type CreateBlobOpts,
+  type CreateMultiBlobOpts,
   type OpenBlobResult,
   createBlob,
+  createMultiBlob,
   openBlob,
   encodeBlob,
   decodeBlob,
+  isMultiBlob,
 } from './blob';
 
 export { wrapIdentity, unwrapIdentity } from './device';

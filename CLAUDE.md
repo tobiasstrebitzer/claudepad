@@ -70,7 +70,7 @@ docs/
     PRD-01 … PRD-11     # the PRDs (see index below)
 poc/
   trustless-share.html  # ★ runnable PoC: identity, encrypt-to-recipient, tiers, fingerprints, WebAuthn-PRF
-  verify.mjs            # 16-check headless crypto conformance anchor (`node poc/verify.mjs`)
+  verify.mjs            # 21-check headless crypto conformance anchor (`node poc/verify.mjs`)
   README.md             # how to run (incl. localhost for WebAuthn)
 ```
 

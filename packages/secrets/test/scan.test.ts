@@ -95,6 +95,41 @@ describe('.env exact match (FR-6, FR-7)', () => {
   });
 });
 
+describe('progress reporting (FR-10)', () => {
+  function sessionWithStrings(n: number): Session {
+    return {
+      id: 's',
+      source: 'claude-code',
+      formatVersion: 'test',
+      meta: {},
+      events: Array.from({ length: n }, (_, i) => ({
+        kind: 'user' as const,
+        id: `u${i}`,
+        content: [{ type: 'text' as const, text: `line ${i}` }],
+      })),
+    };
+  }
+
+  it('fires onProgress monotonically and ends at total, without changing output', () => {
+    const session = sessionWithStrings(450);
+    const calls: [number, number][] = [];
+    const withProgress = scanSession(session, DEFAULT_SCAN_SETTINGS, {
+      onProgress: (done, total) => calls.push([done, total]),
+      progressEvery: 100,
+    });
+    const without = scanSession(session);
+
+    expect(calls.length).toBeGreaterThan(0);
+    // total is constant; done is non-decreasing; final call reaches total.
+    const total = calls[0][1];
+    expect(total).toBe(450);
+    for (let i = 1; i < calls.length; i++) expect(calls[i][0]).toBeGreaterThanOrEqual(calls[i - 1][0]);
+    expect(calls[calls.length - 1][0]).toBe(total);
+    // Determinism: progress hooks don't alter what is detected.
+    expect(withProgress.map((d) => d.value)).toEqual(without.map((d) => d.value));
+  });
+});
+
 describe('utilities', () => {
   it('shannonEntropy is higher for random than repeated', () => {
     expect(shannonEntropy('aaaaaaaa')).toBeLessThan(shannonEntropy('a8Kd7Lm2'));

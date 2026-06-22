@@ -13,8 +13,9 @@ export {
   DEFAULT_SCAN_SETTINGS,
 } from './model';
 
-export { scanSession } from './scan';
+export { scanSession, type ScanOptions } from './scan';
 export { redact, findLeakedValues } from './redact';
 export { collectStrings, mapSessionStrings } from './text';
 export { makeSecretToken, sanitizeType, neutralizeSentinels } from './placeholder';
 export { shannonEntropy, parseEnv } from './detectors';
+export { DETECTION_QUALITY } from './quality';

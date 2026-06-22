@@ -6,6 +6,7 @@
 
 import {
   createBlob,
+  createMultiBlob,
   openBlob,
   encodeBlob,
   decodeBlob,
@@ -31,20 +32,48 @@ export interface CreateShareOpts {
 
 const PUB_PREFIX = 'cp-pub-'
 
+const stripPub = (card: string) => {
+  const c = card.trim()
+  return c.startsWith(PUB_PREFIX) ? c.slice(PUB_PREFIX.length) : c
+}
+
+const bodyBytesOf = (opts: { body: Session }) => utf8ToBytes(JSON.stringify(opts.body))
+const secretBytesOf = (opts: { secretMap: SecretMap; tier: Tier }) =>
+  opts.tier === 'body+secret' ? utf8ToBytes(JSON.stringify(opts.secretMap)) : undefined
+
 /** Build a `cp-blob-…` string addressed to the recipient at the chosen tier. */
 export async function createShare(opts: CreateShareOpts): Promise<string> {
-  const card = opts.recipientCard.trim().startsWith(PUB_PREFIX)
-    ? opts.recipientCard.trim().slice(PUB_PREFIX.length)
-    : opts.recipientCard.trim()
-
   const blob = await createBlob({
     sender: opts.sender,
-    recipientCard: card,
-    bodyBytes: utf8ToBytes(JSON.stringify(opts.body)),
-    secretBytes:
-      opts.tier === 'body+secret'
-        ? utf8ToBytes(JSON.stringify(opts.secretMap))
-        : undefined,
+    recipientCard: stripPub(opts.recipientCard),
+    bodyBytes: bodyBytesOf(opts),
+    secretBytes: secretBytesOf(opts),
+    tier: opts.tier
+  })
+
+  return CP_BLOB_PREFIX + bytesToB64url(utf8ToBytes(encodeBlob(blob)))
+}
+
+export interface CreateMultiShareOpts {
+  sender: Identity
+  /** Recipient public cards (`cp-pub-…` or prefix-free). At least one. */
+  recipientCards: string[]
+  body: Session
+  secretMap: SecretMap
+  tier: Tier
+}
+
+/**
+ * Build ONE `cp-blob-…` addressed to several recipients (PRD-11 Q-14). Prefer
+ * `createShare` for a single recipient (leaks nothing); this exposes the
+ * recipient count by design. Any listed recipient can decrypt; nobody else can.
+ */
+export async function createMultiShare(opts: CreateMultiShareOpts): Promise<string> {
+  const blob = await createMultiBlob({
+    sender: opts.sender,
+    recipients: opts.recipientCards.map((c) => ({ recipientCard: stripPub(c) })),
+    bodyBytes: bodyBytesOf(opts),
+    secretBytes: secretBytesOf(opts),
     tier: opts.tier
   })
 

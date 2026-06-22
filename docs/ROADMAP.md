@@ -66,7 +66,7 @@ P1 (PRD-01–04) is a usable offline prettifier. P2–P3 are the trustless-shari
 | 11 | Trustless Recipient Sharing | P3 | The share/receive flow: encrypt-to-recipient, tiers, drop-anywhere blob. |
 | ~~07~~ | ~~Backend Blob Store & API~~ | **vNext** | Deferred - kept for when an optional convenience store returns. |
 
-Full briefs in `docs/prd/README.md`; canonical shared facts in `docs/prd/_context.md`; the crypto/identity design in `docs/TRUSTLESS-MODEL.md`. The reference implementation is `poc/` (`poc/verify.mjs` = 16-check conformance anchor).
+Full briefs in `docs/prd/README.md`; canonical shared facts in `docs/prd/_context.md`; the crypto/identity design in `docs/TRUSTLESS-MODEL.md`. The reference implementation is `poc/` (`poc/verify.mjs` = 21-check conformance anchor).
 
 ## 6. Out of scope for v1 (vNext)
 

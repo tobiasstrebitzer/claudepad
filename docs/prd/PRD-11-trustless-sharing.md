@@ -1,7 +1,7 @@
 # PRD-11 - Trustless Recipient Sharing
 
 > **Phase:** P3 (Trustless Sharing - the moat) · **Status:** Draft · **New in the serverless-v1 pivot**
-> **Canonical refs:** `../TRUSTLESS-MODEL.md` (§3 the share, §5 fingerprints, §7 threat model - conform exactly), `_context.md` §5, §7 (template). **Reference implementation:** `poc/` (the entire flow works; `poc/verify.mjs` = 16-check anchor).
+> **Canonical refs:** `../TRUSTLESS-MODEL.md` (§3 the share, §5 fingerprints, §7 threat model - conform exactly), `_context.md` §5, §7 (template). **Reference implementation:** `poc/` (the entire flow works; `poc/verify.mjs` = 21-check anchor).
 
 ---
 
@@ -177,7 +177,7 @@ Conforms to `TRUSTLESS-MODEL.md` §3/§5/§7 and `_context.md` §5:
 - [ ] Sender fingerprint shown on decrypt; name labeled unverified (FR-12, FR-16).
 - [ ] Decrypted session renders in the viewer; body-only shows placeholders, body+secrets substitutes (FR-13).
 - [ ] **No-network test:** share + receive perform zero egress of session content or keys (FR-17).
-- [ ] Production `createBlob`/`openBlob` keep `poc/verify.mjs` (16 checks) green.
+- [ ] Production `createBlob`/`openBlob` keep `poc/verify.mjs` (21 checks) green.
 - [ ] Versioned blob; unknown version → clear error (FR-15).
 
 ## 11. Open questions

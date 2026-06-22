@@ -4,7 +4,7 @@ Proves the core idea from the brainstorm: **identity + encrypt-to-recipient + pe
 
 ## Files
 - **`trustless-share.html`** - mint an identity, share a session encrypted to a recipient's public key at a chosen tier (body / body+secrets), decrypt as the recipient, verify keys by fingerprint, and optionally lock your identity behind a device passkey. The blob is inert text to everyone else.
-- **`verify.mjs`** - headless verification of the exact same crypto (16 checks). `node poc/verify.mjs`.
+- **`verify.mjs`** - headless verification of the exact same crypto (21 checks). `node poc/verify.mjs`.
 
 ## Running it
 - **Basic features** (identity, share, decrypt, fingerprints) work from `file://` - just open the HTML.

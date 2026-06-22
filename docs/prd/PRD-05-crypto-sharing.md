@@ -1,7 +1,7 @@
 # PRD-05 - Crypto Core & Recipient Wrapping
 
 > **Phase:** P0/P3 · **Status:** Draft · **Re-scoped by the serverless-v1 pivot (DECISIONS D-20…D-29).**
-> **Canonical refs:** `../TRUSTLESS-MODEL.md` (the v1 design - conform exactly), `docs/SECURITY-MODEL.md` (threat-model framing), `_context.md` §3/§5, §7 (template). **Reference implementation:** `poc/` (`poc/verify.mjs` = 16-check anchor).
+> **Canonical refs:** `../TRUSTLESS-MODEL.md` (the v1 design - conform exactly), `docs/SECURITY-MODEL.md` (threat-model framing), `_context.md` §3/§5, §7 (template). **Reference implementation:** `poc/` (`poc/verify.mjs` = 21-check anchor).
 >
 > **v1 scope of this PRD = the cryptographic core:** the WebCrypto primitives (AES-256-GCM, ECDH P-256, HKDF-SHA256, SHA-256), the **two independent content keys** (`K_body`/`K_secret`), the **ephemeral-ECDH recipient wrap** (sealed box), and the **fingerprint** primitive. It is consumed by **PRD-10** (identity) and **PRD-11** (the share/receive flow + blob format). **Deferred to vNext:** the **URL-fragment link grammar (§7.3)**, **lifecycle/expiry/burn (§6.6)**, and the **backend wire contract (§7.4)** - these belong to the optional store addon (PRD-07) and link mode, not v1. Where this document says "upload"/"server"/"link," read it as the vNext path; the v1 path is "wrap to recipient → blob" (PRD-11).
 

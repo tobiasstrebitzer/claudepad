@@ -3,12 +3,15 @@ import {
   mintIdentity,
   encodePublicCard,
   createBlob,
+  createMultiBlob,
   openBlob,
   encodeBlob,
   decodeBlob,
+  isMultiBlob,
   bytesToUtf8,
   utf8ToBytes,
   CryptoAuthError,
+  CryptoFormatError,
 } from '../src/index';
 
 const BODY =
@@ -149,5 +152,106 @@ describe('ShareBlob tiers', () => {
     const open = await openBlob({ me: steve, blob: decoded });
     expect(bytesToUtf8(open.bodyBytes)).toBe(BODY);
     expect(bytesToUtf8(open.secretBytes!)).toBe(SECRETS);
+  });
+});
+
+describe('MultiShareBlob (multi-recipient, PRD-11 Q-14)', () => {
+  it('every listed recipient can open it; an outsider cannot', async () => {
+    const toby = await mintIdentity('Toby');
+    const steve = await mintIdentity('Steve');
+    const alice = await mintIdentity('Alice');
+    const eve = await mintIdentity('Eve');
+
+    const blob = await createMultiBlob({
+      sender: toby,
+      recipients: [{ recipientPub: steve.pub }, { recipientCard: encodePublicCard(alice) }],
+      bodyBytes: utf8ToBytes(BODY),
+      secretBytes: utf8ToBytes(SECRETS),
+      tier: 'body+secret',
+    });
+    expect(isMultiBlob(blob)).toBe(true);
+    expect(blob.wraps).toHaveLength(2);
+
+    for (const me of [steve, alice]) {
+      const open = await openBlob({ me, blob });
+      expect(bytesToUtf8(open.bodyBytes)).toBe(BODY);
+      expect(bytesToUtf8(open.secretBytes!)).toBe(SECRETS);
+      expect(open.from.name).toBe('Toby');
+    }
+    await expect(openBlob({ me: eve, blob })).rejects.toBeInstanceOf(CryptoAuthError);
+  });
+
+  it('body-only tier wraps no secret key; recipients get no secrets', async () => {
+    const toby = await mintIdentity('Toby');
+    const steve = await mintIdentity('Steve');
+    const alice = await mintIdentity('Alice');
+    const blob = await createMultiBlob({
+      sender: toby,
+      recipients: [{ recipientPub: steve.pub }, { recipientPub: alice.pub }],
+      bodyBytes: utf8ToBytes(BODY),
+      secretBytes: utf8ToBytes(SECRETS),
+      tier: 'body',
+    });
+    expect(blob.secret).toBeNull();
+    const open = await openBlob({ me: alice, blob });
+    expect(open.secretBytes).toBeNull();
+  });
+
+  it('encrypts the payload once (shared content key) but wraps per recipient', async () => {
+    const toby = await mintIdentity('Toby');
+    const steve = await mintIdentity('Steve');
+    const alice = await mintIdentity('Alice');
+    const blob = await createMultiBlob({
+      sender: toby,
+      recipients: [{ recipientPub: steve.pub }, { recipientPub: alice.pub }],
+      bodyBytes: utf8ToBytes(BODY),
+      tier: 'body',
+    });
+    // Distinct ephemeral keys + wraps per recipient...
+    expect(blob.wraps[0]!.eph).not.toBe(blob.wraps[1]!.eph);
+    expect(blob.wraps[0]!.wrap.ct).not.toBe(blob.wraps[1]!.wrap.ct);
+    // ...but both decrypt the same single body ciphertext.
+    const a = await openBlob({ me: steve, blob });
+    const b = await openBlob({ me: alice, blob });
+    expect(bytesToUtf8(a.bodyBytes)).toBe(bytesToUtf8(b.bodyBytes));
+  });
+
+  it('dedupes a recipient added twice (no double wrap)', async () => {
+    const toby = await mintIdentity('Toby');
+    const steve = await mintIdentity('Steve');
+    const blob = await createMultiBlob({
+      sender: toby,
+      recipients: [{ recipientPub: steve.pub }, { recipientPub: steve.pub }],
+      bodyBytes: utf8ToBytes(BODY),
+      tier: 'body',
+    });
+    expect(blob.wraps).toHaveLength(1);
+  });
+
+  it('requires at least one recipient', async () => {
+    const toby = await mintIdentity('Toby');
+    await expect(
+      createMultiBlob({ sender: toby, recipients: [], bodyBytes: utf8ToBytes(BODY), tier: 'body' }),
+    ).rejects.toBeInstanceOf(CryptoFormatError);
+  });
+
+  it('round-trips through encode/decodeBlob and leaks no plaintext', async () => {
+    const toby = await mintIdentity('Toby');
+    const steve = await mintIdentity('Steve');
+    const alice = await mintIdentity('Alice');
+    const blob = await createMultiBlob({
+      sender: toby,
+      recipients: [{ recipientPub: steve.pub }, { recipientPub: alice.pub }],
+      bodyBytes: utf8ToBytes(BODY),
+      secretBytes: utf8ToBytes(SECRETS),
+      tier: 'body+secret',
+    });
+    const wire = encodeBlob(blob);
+    expect(wire).not.toContain('sk-live');
+    expect(wire).not.toContain('deploy');
+    const decoded = decodeBlob(wire);
+    expect(isMultiBlob(decoded)).toBe(true);
+    const open = await openBlob({ me: alice, blob: decoded });
+    expect(bytesToUtf8(open.bodyBytes)).toBe(BODY);
   });
 });

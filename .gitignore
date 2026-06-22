@@ -32,4 +32,5 @@ test-results/
 
 # Local user artifacts (never commit identities or shared blobs)
 *.cpblob
+*.cpad
 claudepad-identity-*.txt

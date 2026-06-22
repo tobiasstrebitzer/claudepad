@@ -90,12 +90,50 @@ async function fingerprint(pubB64) {
   return { emoji, code };
 }
 
-// ---- open a blob as a recipient ----
+// ---- create a multi-recipient blob: payload encrypted once, wrapped per recipient ----
+async function createMultiBlob({ sender, recipientCards, body, secrets, tier }) {
+  const kb = await genContentKey();
+  const bodyCt = await aesEnc(kb.key, enc.encode(body));
+  let secretCt = null;
+  const wrapObj = { kb: b64(kb.raw) };
+  if (tier === 'body+secret' && secrets) {
+    const ks = await genContentKey();
+    secretCt = await aesEnc(ks.key, enc.encode(secrets));
+    wrapObj.ks = b64(ks.raw);
+  }
+  const wrapPlain = enc.encode(JSON.stringify(wrapObj));
+  const wraps = [];
+  for (const card of recipientCards) {
+    const recipientPub = await importPub(parseCard(card).pub);
+    const eph = await subtle.generateKey(ECDH, true, ['deriveBits']);
+    const ephPub = b64(new Uint8Array(await subtle.exportKey('raw', eph.publicKey)));
+    const KW = await deriveKW(eph.privateKey, recipientPub);
+    wraps.push({ eph: ephPub, wrap: await aesEnc(KW, wrapPlain) });
+  }
+  return {
+    v: 1, alg: 'ECDH-P256+HKDF-SHA256+AES-256-GCM', multi: true,
+    from: { name: sender.name, pub: sender.pub }, tier, wraps, body: bodyCt, secret: secretCt,
+  };
+}
+
+// ---- open a blob as a recipient (single- or multi-recipient) ----
 async function openBlob({ me, blob }) {
   const myPriv = await importPriv(me);
-  const ephPub = await importPub(blob.eph);
-  const KW = await deriveKW(myPriv, ephPub);
-  const wrapObj = JSON.parse(dec.decode(await aesDec(KW, blob.wrap))); // throws if not addressed to me
+  let wrapObj;
+  if (blob.multi) {
+    wrapObj = null;
+    for (const entry of blob.wraps) {
+      try {
+        const KW = await deriveKW(myPriv, await importPub(entry.eph));
+        wrapObj = JSON.parse(dec.decode(await aesDec(KW, entry.wrap)));
+        break;
+      } catch { /* not our wrap - try the next */ }
+    }
+    if (!wrapObj) throw new Error('not addressed to me');
+  } else {
+    const KW = await deriveKW(myPriv, await importPub(blob.eph));
+    wrapObj = JSON.parse(dec.decode(await aesDec(KW, blob.wrap))); // throws if not addressed to me
+  }
   const kb = await importContentKey(buf(wrapObj.kb));
   const body = dec.decode(await aesDec(kb, blob.body));
   let secrets = null;
@@ -182,6 +220,23 @@ const kekWrong = await deriveKEK(rand(32));             // a different device/cr
 let deviceBlocked = false;
 try { await aesDec(kekWrong, wrapped); } catch { deviceBlocked = true; }
 ok(deviceBlocked, 'identity does NOT unwrap with a different PRF secret (wrong/absent device)');
+
+console.log('\n[7] One blob to many recipients (payload encrypted once, wrapped per recipient):');
+const alice = await mintIdentity('Alice');
+const aliceCard = publicCard(alice);
+const multi = await createMultiBlob({
+  sender: toby, recipientCards: [steveCard, aliceCard], body: BODY, secrets: SECRETS, tier: 'body+secret',
+});
+ok(multi.wraps.length === 2, 'blob carries one wrap per recipient (count is visible by design)');
+const mSteve = await openBlob({ me: steve, blob: multi });
+const mAlice = await openBlob({ me: alice, blob: multi });
+ok(mSteve.body === BODY && mSteve.secrets === SECRETS, 'recipient #1 (Steve) reads body + secrets');
+ok(mAlice.body === BODY && mAlice.secrets === SECRETS, 'recipient #2 (Alice) reads body + secrets');
+let multiBlocked = false;
+try { await openBlob({ me: eve, blob: multi }); } catch { multiBlocked = true; }
+ok(multiBlocked, 'an outsider (Eve) can open none of the wraps');
+const multiWire = JSON.stringify(multi);
+ok(!multiWire.includes('sk-live') && !multiWire.includes('deploy'), 'multi-recipient wire leaks no plaintext');
 
 console.log(`\n──────────────\n${pass} passed, ${fail} failed\n`);
 process.exit(fail ? 1 : 0);

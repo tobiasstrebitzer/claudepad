@@ -34,17 +34,34 @@ function randomId(): string {
   return 's' + n.toString(36);
 }
 
+/** Optional hooks for long scans (FR-10). The output stays deterministic. */
+export interface ScanOptions {
+  /**
+   * Called as strings are processed, at most once per `progressEvery` items and
+   * once at the end. Lets a host (e.g. a Web Worker) report progress without
+   * changing the result. `done`/`total` count scannable strings.
+   */
+  onProgress?: (done: number, total: number) => void;
+  /** How often to fire `onProgress`, in strings. Default 200. */
+  progressEvery?: number;
+}
+
 /**
  * Scan a normalized session for candidate secrets. Deterministic for a given
- * session + settings except for the random ids (FR-9/FR-22). Runs on the calling
- * thread; a Web Worker variant is a documented follow-up (FR-10).
+ * session + settings except for the random ids (FR-9/FR-22).
+ *
+ * Pure and isomorphic - safe to run on the main thread or inside a Web Worker
+ * (FR-10; the client runs it in a worker with progress + cancellation). Pass
+ * `onProgress` to observe progress on long sessions.
  */
 export function scanSession(
   session: Session,
   settings: ScanSettings = DEFAULT_SCAN_SETTINGS,
+  options: ScanOptions = {},
 ): Detection[] {
   const strings = collectStrings(session);
   const env = envDetectors(settings.envBlobs, settings.envMinValueLength);
+  const { onProgress, progressEvery = 200 } = options;
 
   // value → aggregated detection fields.
   const byValue = new Map<
@@ -72,11 +89,15 @@ export function scanSession(
     }
   };
 
+  let done = 0;
   for (const text of strings) {
     detectPrefixes(text).forEach(addHit);
     detectEntropy(text, settings.entropySensitivity, settings.entropyMinTokenLength).forEach(addHit);
     detectEnv(text, env).forEach(addHit);
+    done += 1;
+    if (onProgress && done % progressEvery === 0) onProgress(done, strings.length);
   }
+  onProgress?.(strings.length, strings.length);
 
   const detections: Detection[] = [];
   for (const [value, agg] of byValue) {

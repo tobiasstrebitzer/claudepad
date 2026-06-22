@@ -1,6 +1,6 @@
 # claudepad - Trustless & Identity Model
 
-> The canonical design for claudepad's **serverless, client-side** sharing. This is the spine of v1. It is **proven by `poc/`** (`poc/trustless-share.html` + `poc/verify.mjs`, 16/16 checks). PRD-05 (crypto core), PRD-10 (identity), and PRD-11 (sharing) implement this; `SECURITY-MODEL.md` holds the threat-model framing it conforms to.
+> The canonical design for claudepad's **serverless, client-side** sharing. This is the spine of v1. It is **proven by `poc/`** (`poc/trustless-share.html` + `poc/verify.mjs`, 21/21 checks). PRD-05 (crypto core), PRD-10 (identity), and PRD-11 (sharing) implement this; `SECURITY-MODEL.md` holds the threat-model framing it conforms to.
 
 ## 0. One paragraph
 
