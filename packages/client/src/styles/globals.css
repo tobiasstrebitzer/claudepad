@@ -178,6 +178,15 @@
     z-index: 60;
   }
 
+  /* Lucide icons ship with a hardcoded width/height="24" attribute. Default
+     them to 16px (our standard icon size) so callers don't have to size every
+     icon. `:where()` keeps specificity at 0, so any explicit utility class
+     (size-4, size-3.5, …) still wins. */
+  :where(svg.lucide) {
+    width: 1rem;
+    height: 1rem;
+  }
+
   /* Shiki dual-theme code (highlighter.ts emits `--shiki-light`/`--shiki-dark`
      per token, no inline color/background). Pick the palette off the same
      `data-theme` the design tokens swap on; the block's themed background

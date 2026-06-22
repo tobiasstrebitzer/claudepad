@@ -16,7 +16,7 @@ export function PlayToggleButton() {
       aria-label={pb.active ? 'Stop playback' : 'Play session'}
     >
       {pb.active ? <Square /> : <Play />}
-      {pb.active ? 'Stop' : 'Play'}
+      <span className="hidden @3xl/topbar:inline">{pb.active ? 'Stop' : 'Play'}</span>
     </Button>
   )
 }

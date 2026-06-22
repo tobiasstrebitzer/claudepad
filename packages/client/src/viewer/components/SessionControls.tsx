@@ -28,9 +28,9 @@ export function SecretsControl() {
     <DropdownMenu>
       <DropdownMenuTrigger
         render={
-          <Button variant="secondary" size="sm">
+          <Button variant="secondary" size="sm" aria-label="Secrets">
             <Eye className="size-4" />
-            Secrets
+            <span className="hidden @3xl/topbar:inline">Secrets</span>
           </Button>
         }
       />
@@ -59,7 +59,7 @@ export function ExpandControl() {
         render={
           <Button variant="ghost" size="sm" aria-label="Expand or collapse blocks">
             <ChevronsUpDown className="size-4" />
-            Expand
+            <span className="hidden @3xl/topbar:inline">Expand</span>
           </Button>
         }
       />

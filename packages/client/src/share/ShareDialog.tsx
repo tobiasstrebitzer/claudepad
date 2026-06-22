@@ -545,16 +545,18 @@ function ResultStep({
         Drop it anywhere - Slack, email, a file. Only {recipientName} can read it.
       </DialogDescription>
 
-      <div className="mt-3 flex items-stretch gap-2">
-        <code className="min-w-0 flex-1 truncate rounded-sm border border-border bg-bg px-2 py-1.5 font-mono text-body-sm text-text">
+      <div className="mt-3 flex items-start gap-2">
+        <code className="block min-w-0 flex-1 max-h-[40vh] overflow-y-auto rounded-sm border border-border bg-bg px-2 py-1.5 font-mono text-body-sm text-text whitespace-pre-wrap break-all">
           {blob}
         </code>
-        <Button variant="secondary" size="icon" aria-label="Copy blob" onClick={() => copy(blob)}>
-          {copied ? <Check className="text-success" /> : <Copy />}
-        </Button>
-        <Button variant="secondary" size="icon" aria-label="Download .cpad" onClick={download}>
-          <Download />
-        </Button>
+        <div className="flex shrink-0 flex-col gap-2">
+          <Button variant="secondary" size="icon" aria-label="Copy blob" onClick={() => copy(blob)}>
+            {copied ? <Check className="text-success" /> : <Copy />}
+          </Button>
+          <Button variant="secondary" size="icon" aria-label="Download .cpad" onClick={download}>
+            <Download />
+          </Button>
+        </div>
       </div>
 
       <div className="mt-3 flex items-start gap-2 rounded-md border border-border bg-bg p-2.5 text-label text-muted-foreground">

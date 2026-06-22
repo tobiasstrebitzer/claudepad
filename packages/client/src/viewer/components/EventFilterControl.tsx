@@ -23,7 +23,7 @@ export function EventFilterControl() {
         render={
           <Button variant="ghost" size="sm" aria-label="Filter events">
             <SlidersHorizontal className="size-4" />
-            Filter
+            <span className="hidden @3xl/topbar:inline">Filter</span>
             {hiddenCount > 0 && (
               <span className="ml-0.5 rounded-full bg-accent-tint px-1.5 text-label text-accent tabular-nums">
                 {hiddenCount}

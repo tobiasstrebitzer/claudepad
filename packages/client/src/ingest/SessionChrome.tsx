@@ -1,9 +1,8 @@
 import type { DiagnosticRecord, Session } from '@claudepad/schema'
-import { Clock, Cpu, FolderOpen, Info, X } from 'lucide-react'
+import { Clock, Cpu, FolderOpen, Info } from 'lucide-react'
 import type { TopBarContent } from '../components/shell/TopBar'
 import { ViewSwitch, type ViewMode } from '../components/shell/ViewSwitch'
 import { Badge } from '../components/ui/Badge'
-import { Button } from '../components/ui/Button'
 import { Tooltip, TooltipContent, TooltipTrigger } from '../components/ui/Tooltip'
 import { PlayToggleButton } from '../playback'
 import { ShareButton } from '../share'
@@ -20,23 +19,18 @@ export function sessionTopBar(args: {
   fileName?: string
   viewMode: ViewMode
   onViewMode: (mode: ViewMode) => void
-  onClear: () => void
   onHome: () => void
 }): TopBarContent {
-  const { session, diagnostics, fileName, viewMode, onViewMode, onClear, onHome } = args
+  const { session, diagnostics, fileName, viewMode, onViewMode, onHome } = args
   const title = session.meta.title ?? fileName ?? 'Untitled session'
   return {
-    crumbs: [{ label: 'Overview', onClick: onHome }, { label: title }],
+    crumbs: [{ label: title }],
     titleIsHeading: true,
+    // The breadcrumb back button closes the session and returns to the start.
+    onBack: onHome,
     labels: <SessionLabels diagnostics={diagnostics} />,
     // Secrets/Expand act on the prettified transcript, so they're hidden in raw view.
-    actions: (
-      <SessionActions
-        session={session}
-        onClear={onClear}
-        showViewerControls={viewMode === 'pretty'}
-      />
-    ),
+    actions: <SessionActions session={session} showViewerControls={viewMode === 'pretty'} />,
     meta: <SessionMetaLine session={session} />,
     viewSwitch: <ViewSwitch value={viewMode} onChange={onViewMode} />
   }
@@ -69,11 +63,9 @@ function SessionLabels({ diagnostics }: { diagnostics: DiagnosticRecord[] }) {
 
 function SessionActions({
   session,
-  onClear,
   showViewerControls
 }: {
   session: Session
-  onClear: () => void
   showViewerControls: boolean
 }) {
   return (
@@ -87,10 +79,6 @@ function SessionActions({
       )}
       <PlayToggleButton />
       <ShareButton session={session} />
-      <Button size="sm" variant="ghost" onClick={onClear} aria-label="Clear session">
-        <X />
-        Clear
-      </Button>
     </>
   )
 }

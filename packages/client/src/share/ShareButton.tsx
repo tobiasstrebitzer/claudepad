@@ -12,9 +12,9 @@ export function ShareButton({ session }: { session: Session }) {
   const [open, setOpen] = React.useState(false)
   return (
     <>
-      <Button size="sm" variant="secondary" onClick={() => setOpen(true)}>
+      <Button size="sm" variant="secondary" onClick={() => setOpen(true)} aria-label="Share">
         <Share2 />
-        Share…
+        <span className="hidden @3xl/topbar:inline">Share…</span>
       </Button>
       {/* Mount only when open: the dialog reads identity context + scans the
           session, neither of which should run (or require a provider) until used. */}

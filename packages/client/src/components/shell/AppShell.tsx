@@ -102,7 +102,9 @@ export function AppShell({
               >
                 <Menu />
               </Button>
-              <span className="md:hidden">
+              {/* On mobile the brand yields to the session's back-button + title
+                  (onBack signals a loaded session); the hamburger still anchors nav. */}
+              <span className={cn(topbar?.onBack ? 'hidden' : 'md:hidden')}>
                 <Wordmark size="small" />
               </span>
               {collapsed && (

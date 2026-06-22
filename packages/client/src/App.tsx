@@ -150,7 +150,7 @@ export function App() {
   const secretMap = isDemo ? demoSecretMap : receivedSecretMap
 
   const topbar: TopBarContent = isGallery
-    ? { crumbs: [{ label: 'Overview', onClick: onHome }, { label: 'Gallery' }] }
+    ? { crumbs: [{ label: 'Gallery' }] }
     : loaded
       ? sessionTopBar({
         session: loaded.session,
@@ -158,11 +158,10 @@ export function App() {
         fileName: loaded.fileName,
         viewMode,
         onViewMode: setViewMode,
-        onClear: session.clear,
         onHome
       })
       : {
-        crumbs: [{ label: 'Overview' }],
+        crumbs: [],
         actions: (
           <Button size="sm" variant="secondary" onClick={openFilePicker}>
             <FolderOpen />

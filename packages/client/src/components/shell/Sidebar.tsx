@@ -7,7 +7,6 @@ import {
   Folder,
   FolderInput,
   Loader2,
-  Palette,
   PanelLeftClose,
   RefreshCw,
   Unlink
@@ -402,8 +401,8 @@ function Hint({ icon, children }: { icon?: React.ReactNode; children: React.Reac
 
 function SidebarFooter({ route }: { route: string }) {
   return (
-    <div className="px-2 py-2 border-t border-border space-y-0.5">
-      <a
+    <div className="px-2 py-2 border-t border-border flex flex-col gap-0.5">
+      {/* <a
         href="#/gallery"
         className={cn(
           'flex items-center gap-2 rounded-md px-3 py-2 text-body-sm text-muted-foreground',
@@ -413,7 +412,7 @@ function SidebarFooter({ route }: { route: string }) {
       >
         <Palette className="size-4" />
         Gallery
-      </a>
+      </a> */}
       <IdentityControl />
     </div>
   )

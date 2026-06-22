@@ -149,7 +149,7 @@ export function Wordmark({ size = 'full', variant = 'spark', className }: Wordma
   if (size === 'mark') return <Mark variant={variant} className={className} />
   const markSize = size === 'small' ? 20 : 24
   return (
-    <span className={cn('inline-flex items-center gap-2 text-text', className)}>
+    <span className={cn('flex items-center gap-1 text-text', className)}>
       <Mark size={markSize} variant={variant} />
       <span
         className={cn(

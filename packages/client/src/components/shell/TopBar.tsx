@@ -1,5 +1,6 @@
 import * as React from 'react'
-import { ChevronRight } from 'lucide-react'
+import { ArrowLeft, ChevronRight } from 'lucide-react'
+import { Button } from '../ui/Button'
 
 export interface Crumb { label: string; onClick?: () => void }
 
@@ -12,6 +13,8 @@ export interface TopBarContent {
   crumbs: Crumb[]
   /** Render the final crumb as the page <h1> (the session title). */
   titleIsHeading?: boolean
+  /** When set, a back icon-button leads the breadcrumbs (e.g. close the session). */
+  onBack?: () => void
   labels?: React.ReactNode
   actions?: React.ReactNode
   meta?: React.ReactNode
@@ -30,14 +33,21 @@ export function TopBar({
   const hasSecondLine = Boolean(content?.meta || content?.viewSwitch)
   return (
     <header className="border-b border-border bg-bg/90 backdrop-blur supports-[backdrop-filter]:bg-bg/75">
-      <div className="flex h-14 items-center gap-2 px-4">
+      {/* Named container so the action buttons collapse to icon-only based on the
+          actual top-bar width (which already accounts for the sidebar), not the
+          window width. Label spans below use `@3xl/topbar:inline`. */}
+      <div className="@container/topbar flex h-14 items-center gap-2 px-4">
         {leading}
         {content && (
-          <Breadcrumbs crumbs={content.crumbs} titleIsHeading={content.titleIsHeading} />
+          <Breadcrumbs
+            crumbs={content.crumbs}
+            titleIsHeading={content.titleIsHeading}
+            onBack={content.onBack}
+          />
         )}
         <div className="min-w-0 flex-1" />
         {content?.labels && (
-          <div className="hidden items-center gap-1.5 sm:flex">{content.labels}</div>
+          <div className="hidden items-center gap-1.5 @3xl/topbar:flex">{content.labels}</div>
         )}
         {content?.actions && (
           <div className="flex items-center gap-1.5">{content.actions}</div>
@@ -57,16 +67,30 @@ export function TopBar({
 
 function Breadcrumbs({
   crumbs,
-  titleIsHeading
+  titleIsHeading,
+  onBack
 }: {
   crumbs: Crumb[]
   titleIsHeading?: boolean
+  onBack?: () => void
 }) {
   return (
     <nav
       aria-label="Breadcrumb"
       className="flex min-w-0 items-center gap-1.5 text-body-sm"
     >
+      {onBack && (
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          className="-ml-1 shrink-0"
+          onClick={onBack}
+          aria-label="Close session"
+          title="Close session"
+        >
+          <ArrowLeft />
+        </Button>
+      )}
       {crumbs.map((crumb, i) => {
         const last = i === crumbs.length - 1
         return (
