@@ -2,7 +2,10 @@ packages:
   - 'packages/*'
 
 # esbuild ships a platform binary via its install script; Vite + Vitest need it.
+# workerd is wrangler's runtime. sharp is only wrangler's optional image-transform
+# dep for local dev - we never use it, so its native build stays off (it would
+# otherwise fail-hard on source builds and abort the whole install).
 allowBuilds:
   esbuild: true
-  sharp: true
+  sharp: false
   workerd: true
