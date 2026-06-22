@@ -22,33 +22,33 @@
 /** A parsed placeholder. `len` is the real length of the redacted value. */
 export interface SecretPlaceholder {
   /** Opaque id; key into the secret map. */
-  id: string;
+  id: string
   /** Type label, e.g. "AWS_KEY". */
-  type: string;
+  type: string
   /** Real length of the original value. */
-  len: number;
+  len: number
 }
 
 /** Delimiters chosen to be vanishingly unlikely in real session text. */
-const OPEN = '⟦'; // ⟦
-const CLOSE = '⟧'; // ⟧
+const OPEN = '⟦' // ⟦
+const CLOSE = '⟧' // ⟧
 
 // id: word-ish, TYPE: upper/word-ish, len: digits. Tolerant but bounded.
-const TOKEN_BODY = 'cp-secret:([A-Za-z0-9_-]+):([A-Za-z0-9_]+):(\\d+)';
+const TOKEN_BODY = 'cp-secret:([A-Za-z0-9_-]+):([A-Za-z0-9_]+):(\\d+)'
 
 /** Global matcher used to split a text node into [text, placeholder, …] parts. */
 export function secretTokenRegex(): RegExp {
-  return new RegExp(`${OPEN}${TOKEN_BODY}${CLOSE}`, 'g');
+  return new RegExp(`${OPEN}${TOKEN_BODY}${CLOSE}`, 'g')
 }
 
 /** Build a token string (used by the demo fixture / future PRD-06). */
 export function makeSecretToken(p: SecretPlaceholder): string {
-  return `${OPEN}cp-secret:${p.id}:${p.type}:${p.len}${CLOSE}`;
+  return `${OPEN}cp-secret:${p.id}:${p.type}:${p.len}${CLOSE}`
 }
 
 /** True if the string contains at least one placeholder token. */
 export function hasSecretToken(text: string): boolean {
-  return secretTokenRegex().test(text);
+  return secretTokenRegex().test(text)
 }
 
 /**
@@ -59,27 +59,27 @@ export function hasSecretToken(text: string): boolean {
  */
 export type TextSegment =
   | { kind: 'text'; text: string }
-  | { kind: 'secret'; placeholder: SecretPlaceholder };
+  | { kind: 'secret'; placeholder: SecretPlaceholder }
 
 /** Split a raw text string into ordered text / placeholder segments. */
 export function splitSecretTokens(input: string): TextSegment[] {
-  const re = secretTokenRegex();
-  const segments: TextSegment[] = [];
-  let lastIndex = 0;
-  let match: RegExpExecArray | null;
+  const re = secretTokenRegex()
+  const segments: TextSegment[] = []
+  let lastIndex = 0
+  let match: RegExpExecArray | null
   while ((match = re.exec(input)) !== null) {
-    const [full, id, type, lenRaw] = match;
+    const [full, id, type, lenRaw] = match
     if (match.index > lastIndex) {
-      segments.push({ kind: 'text', text: input.slice(lastIndex, match.index) });
+      segments.push({ kind: 'text', text: input.slice(lastIndex, match.index) })
     }
     segments.push({
       kind: 'secret',
-      placeholder: { id: id ?? '', type: type ?? 'SECRET', len: Number(lenRaw ?? 0) },
-    });
-    lastIndex = match.index + full.length;
+      placeholder: { id: id ?? '', type: type ?? 'SECRET', len: Number(lenRaw ?? 0) }
+    })
+    lastIndex = match.index + full.length
   }
   if (lastIndex < input.length) {
-    segments.push({ kind: 'text', text: input.slice(lastIndex) });
+    segments.push({ kind: 'text', text: input.slice(lastIndex) })
   }
-  return segments;
+  return segments
 }

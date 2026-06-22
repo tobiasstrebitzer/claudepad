@@ -1,31 +1,31 @@
-import * as React from 'react';
-import { PanelLeftOpen, TriangleAlert, Inbox } from 'lucide-react';
-import type { Session } from '@claudepad/schema';
-import { cn } from '../lib/cn';
-import { Button } from '../components/ui/button';
-import { Skeleton } from '../components/ui/skeleton';
-import { useCorrelateTools } from './hooks/useCorrelateTools';
-import { groupRows, type ViewItem } from './hooks/groupRows';
-import { filterRows } from './hooks/eventFilter';
-import { useEventFilter } from './hooks/useEventFilter';
-import { useAnchor, anchorIdFor } from './hooks/useAnchor';
-import { usePlayback, TYPING_BUFFER_RATIO } from '../playback';
-import { buildToc, TableOfContents } from './components/TableOfContents';
-import { TranscriptList, type TranscriptHandle } from './components/TranscriptList';
-import { RawBlock } from './components/blocks/RawBlock';
-import { BlockErrorBoundary } from './components/BlockErrorBoundary';
+import type { Session } from '@claudepad/schema'
+import { Inbox, PanelLeftOpen, TriangleAlert } from 'lucide-react'
+import * as React from 'react'
+import { Button } from '../components/ui/Button'
+import { Skeleton } from '../components/ui/Skeleton'
+import { cn } from '../lib/cn'
+import { TYPING_BUFFER_RATIO, usePlayback } from '../playback'
+import { BlockErrorBoundary } from './components/BlockErrorBoundary'
+import { buildToc, TableOfContents } from './components/TableOfContents'
+import { TranscriptList, type TranscriptHandle } from './components/TranscriptList'
+import { RawBlock } from './components/blocks/RawBlock'
+import { filterRows } from './hooks/eventFilter'
+import { groupRows, type ViewItem } from './hooks/groupRows'
+import { anchorIdFor, useAnchor } from './hooks/useAnchor'
+import { useCorrelateTools } from './hooks/useCorrelateTools'
+import { useEventFilter } from './hooks/useEventFilter'
 
 export interface SessionViewerOptions {
-  showToc?: boolean;
-  virtualize?: boolean;
-  loading?: boolean;
-  onAnchorChange?: (id: string) => void;
+  showToc?: boolean
+  virtualize?: boolean
+  loading?: boolean
+  onAnchorChange?: (id: string) => void
 }
 
 export interface SessionViewerProps {
-  session: Session;
-  initialAnchor?: string;
-  options?: SessionViewerOptions;
+  session: Session
+  initialAnchor?: string
+  options?: SessionViewerOptions
 }
 
 /**
@@ -40,126 +40,126 @@ export function SessionViewer({ session, initialAnchor, options }: SessionViewer
     <BlockErrorBoundary fallbackValue={session}>
       <ViewerInner session={session} initialAnchor={initialAnchor} options={options} />
     </BlockErrorBoundary>
-  );
+  )
 }
 
 function ViewerInner({
   session,
   initialAnchor,
-  options,
+  options
 }: {
-  session: Session;
-  initialAnchor?: string;
-  options?: SessionViewerOptions;
+  session: Session
+  initialAnchor?: string
+  options?: SessionViewerOptions
 }) {
-  const showToc = options?.showToc ?? true;
-  const virtualize = options?.virtualize ?? true;
-  const loading = options?.loading ?? false;
+  const showToc = options?.showToc ?? true
+  const virtualize = options?.virtualize ?? true
+  const loading = options?.loading ?? false
 
-  const baseRows = useCorrelateTools(session);
-  const { visibility } = useEventFilter();
+  const baseRows = useCorrelateTools(session)
+  const { visibility } = useEventFilter()
   // The same filter the playback engine applies, so reveal indices stay aligned.
-  const rows = React.useMemo(() => filterRows(baseRows, visibility), [baseRows, visibility]);
-  const toc = React.useMemo(() => buildToc(rows), [rows]);
-  const { highlightId, reportAnchor } = useAnchor(initialAnchor, options?.onAnchorChange);
+  const rows = React.useMemo(() => filterRows(baseRows, visibility), [baseRows, visibility])
+  const toc = React.useMemo(() => buildToc(rows), [rows])
+  const { highlightId, reportAnchor } = useAnchor(initialAnchor, options?.onAnchorChange)
 
   // Playback (PRD-08): when the surface is active, reveal only rows up to the
   // playhead, drive the active-row highlight + scroll from the engine, and let
   // the engine own the active row (so user scrolling doesn't fight it).
-  const pb = usePlayback();
-  const playbackActive = pb.active;
-  const playbackActiveRow = pb.frame.activeRowIndex;
+  const pb = usePlayback()
+  const playbackActive = pb.active
+  const playbackActiveRow = pb.frame.activeRowIndex
 
-  const transcriptRef = React.useRef<TranscriptHandle>(null);
+  const transcriptRef = React.useRef<TranscriptHandle>(null)
   const [activeRowIndex, setActiveRowIndex] = React.useState<number | null>(
-    rows.length ? 0 : null,
-  );
-  const [tocOpen, setTocOpen] = React.useState(showToc);
+    rows.length ? 0 : null
+  )
+  const [tocOpen, setTocOpen] = React.useState(showToc)
 
   // Reading view folds consecutive same-tool runs ("Read ×6"); playback renders
   // base rows 1:1 (no fold) so progressive reveal + typing + active highlight stay
   // simple and aligned with the engine's per-row reveal.
   const items = React.useMemo<ViewItem[]>(() => {
     if (playbackActive) {
-      const revealed = rows.slice(0, Math.max(0, pb.frame.revealedCount));
-      return revealed.map((row, i) => ({ kind: 'single', baseStart: i, row }));
+      const revealed = rows.slice(0, Math.max(0, pb.frame.revealedCount))
+      return revealed.map((row, i) => ({ kind: 'single', baseStart: i, row }))
     }
-    return groupRows(rows);
-  }, [rows, playbackActive, pb.frame.revealedCount]);
+    return groupRows(rows)
+  }, [rows, playbackActive, pb.frame.revealedCount])
 
   // The active turn reuses PRD-03's `highlighted` ring (FR-15) by overriding the
   // anchor highlight while playing.
   const activeHighlightId =
     playbackActive && playbackActiveRow >= 0 && rows[playbackActiveRow]
       ? anchorIdFor(rows[playbackActiveRow].event, rows[playbackActiveRow].index)
-      : undefined;
+      : undefined
 
   // Typing reveal (FR-17): only the active turn types, paced so its prose
   // finishes within the dwell minus a short end-pause. Never under reduced-motion.
-  let typingRowIndex: number | undefined;
-  let typingFraction: number | undefined;
+  let typingRowIndex: number | undefined
+  let typingFraction: number | undefined
   if (playbackActive && pb.appear === 'type' && !pb.reducedMotion && playbackActiveRow >= 0) {
-    const { activeSegStartMs, activeSegDwellMs } = pb.frame;
-    const typeWindow = activeSegDwellMs * (1 - TYPING_BUFFER_RATIO);
-    const elapsed = pb.playheadMs - activeSegStartMs;
-    typingRowIndex = playbackActiveRow;
-    typingFraction = typeWindow > 0 ? Math.min(1, Math.max(0, elapsed / typeWindow)) : 1;
+    const { activeSegStartMs, activeSegDwellMs } = pb.frame
+    const typeWindow = activeSegDwellMs * (1 - TYPING_BUFFER_RATIO)
+    const elapsed = pb.playheadMs - activeSegStartMs
+    typingRowIndex = playbackActiveRow
+    typingFraction = typeWindow > 0 ? Math.min(1, Math.max(0, elapsed / typeWindow)) : 1
   }
 
   // Smooth-scroll the active turn into view; instant under reduced-motion or fast
   // speeds (FR-16/21).
   React.useEffect(() => {
-    if (!playbackActive || playbackActiveRow < 0) return;
+    if (!playbackActive || playbackActiveRow < 0) return
     const behavior: ScrollBehavior =
-      pb.reducedMotion || pb.speed >= 4 ? 'auto' : 'smooth';
-    transcriptRef.current?.scrollToRow(playbackActiveRow, { align: 'center', behavior });
-  }, [playbackActive, playbackActiveRow, pb.reducedMotion, pb.speed]);
+      pb.reducedMotion || pb.speed >= 4 ? 'auto' : 'smooth'
+    transcriptRef.current?.scrollToRow(playbackActiveRow, { align: 'center', behavior })
+  }, [playbackActive, playbackActiveRow, pb.reducedMotion, pb.speed])
 
   // Deep-link: scroll the initial anchor into view on mount (FR-16).
   React.useEffect(() => {
-    if (!initialAnchor) return;
-    const idx = toc.findIndex((e) => e.anchorId === initialAnchor);
+    if (!initialAnchor) return
+    const idx = toc.findIndex((e) => e.anchorId === initialAnchor)
     if (idx >= 0) {
       // Defer to let the virtualizer mount.
-      const t = requestAnimationFrame(() => transcriptRef.current?.scrollToRow(idx));
-      return () => cancelAnimationFrame(t);
+      const t = requestAnimationFrame(() => transcriptRef.current?.scrollToRow(idx))
+      return () => cancelAnimationFrame(t)
     }
-    return;
-  }, [initialAnchor, toc]);
+    return
+  }, [initialAnchor, toc])
 
   const onActiveRowChange = React.useCallback(
     (rowIndex: number) => {
-      setActiveRowIndex(rowIndex);
-      const entry = toc[rowIndex];
-      if (entry) reportAnchor(entry.anchorId);
+      setActiveRowIndex(rowIndex)
+      const entry = toc[rowIndex]
+      if (entry) reportAnchor(entry.anchorId)
     },
-    [toc, reportAnchor],
-  );
+    [toc, reportAnchor]
+  )
 
   const onJump = React.useCallback(
     (rowIndex: number) => {
       // During playback a TOC jump seeks the playhead (the engine then reveals +
       // scrolls); otherwise it's a plain scroll.
       if (playbackActive) {
-        pb.seekToRow(rowIndex);
-        return;
+        pb.seekToRow(rowIndex)
+        return
       }
-      transcriptRef.current?.scrollToRow(rowIndex);
-      setActiveRowIndex(rowIndex);
-      const entry = toc[rowIndex];
-      if (entry) reportAnchor(entry.anchorId);
+      transcriptRef.current?.scrollToRow(rowIndex)
+      setActiveRowIndex(rowIndex)
+      const entry = toc[rowIndex]
+      if (entry) reportAnchor(entry.anchorId)
     },
-    [toc, reportAnchor, playbackActive, pb],
-  );
+    [toc, reportAnchor, playbackActive, pb]
+  )
 
-  if (loading) return <LoadingState />;
+  if (loading) return <LoadingState />
 
   // Whole-session error: events isn't an array we can render.
   if (!Array.isArray(session.events)) {
-    return <SessionError session={session} />;
+    return <SessionError session={session} />
   }
 
-  if (rows.length === 0) return <EmptyState />;
+  if (rows.length === 0) return <EmptyState />
 
   return (
     <div className="flex h-full min-h-0 flex-col">
@@ -168,7 +168,7 @@ function ViewerInner({
           <aside
             className={cn(
               'hidden w-60 shrink-0 border-r border-border bg-bg p-3 md:block',
-              'overflow-hidden',
+              'overflow-hidden'
             )}
           >
             <TableOfContents
@@ -185,7 +185,7 @@ function ViewerInner({
               type="button"
               onClick={() => setTocOpen(true)}
               aria-label="Show table of contents"
-              className="absolute left-2 top-2 z-10 hidden rounded-md border border-border bg-surface p-1.5 text-muted hover:text-accent md:inline-flex"
+              className="absolute left-2 top-2 z-10 hidden rounded-md border border-border bg-surface p-1.5 text-muted-foreground hover:text-accent md:inline-flex"
             >
               <PanelLeftOpen className="size-4" />
             </button>
@@ -202,7 +202,7 @@ function ViewerInner({
         </div>
       </div>
     </div>
-  );
+  )
 }
 
 function LoadingState() {
@@ -216,27 +216,27 @@ function LoadingState() {
         </div>
       ))}
     </div>
-  );
+  )
 }
 
 function EmptyState() {
   return (
     <div className="grid h-full place-items-center p-8 text-center">
       <div className="max-w-sm">
-        <div className="mx-auto grid size-12 place-items-center rounded-full bg-sidebar text-muted">
+        <div className="mx-auto grid size-12 place-items-center rounded-full bg-sidebar text-muted-foreground">
           <Inbox className="size-5" />
         </div>
         <p className="mt-4 text-body text-text">Nothing to show yet</p>
-        <p className="mt-1 text-body-sm text-muted">
+        <p className="mt-1 text-body-sm text-muted-foreground">
           Drop or paste a Claude Code session to see it here.
         </p>
       </div>
     </div>
-  );
+  )
 }
 
 function SessionError({ session }: { session: Session }) {
-  const [showRaw, setShowRaw] = React.useState(false);
+  const [showRaw, setShowRaw] = React.useState(false)
   return (
     <div className="grid h-full place-items-center p-8 text-center">
       <div className="max-w-md">
@@ -244,7 +244,7 @@ function SessionError({ session }: { session: Session }) {
           <TriangleAlert className="size-5" />
         </div>
         <p className="mt-4 text-body text-text">Couldn&rsquo;t render this session.</p>
-        <p className="mt-1 text-body-sm text-muted">The session data looks malformed.</p>
+        <p className="mt-1 text-body-sm text-muted-foreground">The session data looks malformed.</p>
         <div className="mt-4">
           <Button variant="secondary" size="sm" onClick={() => setShowRaw((v) => !v)}>
             {showRaw ? 'Hide raw' : 'Show raw'}
@@ -257,5 +257,5 @@ function SessionError({ session }: { session: Session }) {
         )}
       </div>
     </div>
-  );
+  )
 }

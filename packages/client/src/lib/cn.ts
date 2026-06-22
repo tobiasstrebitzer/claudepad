@@ -1,7 +1,3 @@
-import { clsx, type ClassValue } from 'clsx';
-import { twMerge } from 'tailwind-merge';
-
-/** shadcn-style class combiner: clsx + tailwind-merge conflict resolution. */
-export function cn(...inputs: ClassValue[]): string {
-  return twMerge(clsx(inputs));
-}
+// Back-compat re-export: `cn` now lives in ./utils (the shadcn `utils` alias
+// from components.json). Existing imports of `@/lib/cn` keep working.
+export { cn } from './utils'

@@ -1,5 +1,5 @@
-import * as React from 'react';
-import type { SessionEvent } from '@claudepad/schema';
+import * as React from 'react'
+import type { SessionEvent } from '@claudepad/schema'
 
 /**
  * Stable anchor id for an event. Prefers the source/event id; falls back to a
@@ -8,7 +8,7 @@ import type { SessionEvent } from '@claudepad/schema';
  * re-parses is coordinated with PRD-02 - see PRD-03 §11.7).
  */
 export function anchorIdFor(event: SessionEvent, index: number): string {
-  if (event.id) return sanitizeAnchor(event.id);
+  if (event.id) return sanitizeAnchor(event.id)
   const prefix =
     event.kind === 'user'
       ? 'u'
@@ -20,12 +20,12 @@ export function anchorIdFor(event: SessionEvent, index: number): string {
             ? 't'
             : event.kind === 'tool_result'
               ? 'r'
-              : 'm';
-  return `${prefix}${index}`;
+              : 'm'
+  return `${prefix}${index}`
 }
 
 function sanitizeAnchor(raw: string): string {
-  return raw.replace(/[^A-Za-z0-9_-]/g, '-');
+  return raw.replace(/[^A-Za-z0-9_-]/g, '-')
 }
 
 /**
@@ -35,27 +35,27 @@ function sanitizeAnchor(raw: string): string {
  */
 export function useAnchor(
   initialAnchor: string | undefined,
-  onAnchorChange: ((id: string) => void) | undefined,
+  onAnchorChange: ((id: string) => void) | undefined
 ) {
-  const [highlightId, setHighlightId] = React.useState<string | undefined>(initialAnchor);
-  const lastReported = React.useRef<string | undefined>(undefined);
+  const [highlightId, setHighlightId] = React.useState<string | undefined>(initialAnchor)
+  const lastReported = React.useRef<string | undefined>(undefined)
 
   // Clear the one-shot highlight shortly after mount.
   React.useEffect(() => {
-    if (!initialAnchor) return;
-    setHighlightId(initialAnchor);
-    const t = setTimeout(() => setHighlightId(undefined), 2000);
-    return () => clearTimeout(t);
-  }, [initialAnchor]);
+    if (!initialAnchor) return
+    setHighlightId(initialAnchor)
+    const t = setTimeout(() => setHighlightId(undefined), 2000)
+    return () => clearTimeout(t)
+  }, [initialAnchor])
 
   const reportAnchor = React.useCallback(
     (id: string) => {
-      if (lastReported.current === id) return;
-      lastReported.current = id;
-      onAnchorChange?.(id);
+      if (lastReported.current === id) return
+      lastReported.current = id
+      onAnchorChange?.(id)
     },
-    [onAnchorChange],
-  );
+    [onAnchorChange]
+  )
 
-  return { highlightId, reportAnchor };
+  return { highlightId, reportAnchor }
 }

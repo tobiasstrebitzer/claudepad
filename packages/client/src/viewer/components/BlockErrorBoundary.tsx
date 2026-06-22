@@ -1,14 +1,14 @@
-import * as React from 'react';
-import { RawBlock } from './blocks/RawBlock';
+import * as React from 'react'
+import { RawBlock } from './blocks/RawBlock'
 
 interface Props {
   /** Raw payload to offer as the "show raw" escape hatch when render fails. */
-  fallbackValue?: unknown;
-  children: React.ReactNode;
+  fallbackValue?: unknown
+  children: React.ReactNode
 }
 
 interface State {
-  error: Error | null;
+  error: Error | null
 }
 
 /**
@@ -16,10 +16,10 @@ interface State {
  * (FR-7). On error, degrades to a "show raw" fallback.
  */
 export class BlockErrorBoundary extends React.Component<Props, State> {
-  override state: State = { error: null };
+  override state: State = { error: null }
 
   static getDerivedStateFromError(error: Error): State {
-    return { error };
+    return { error }
   }
 
   override render() {
@@ -29,8 +29,8 @@ export class BlockErrorBoundary extends React.Component<Props, State> {
           label="Couldn't render this block"
           value={this.props.fallbackValue ?? { error: String(this.state.error?.message) }}
         />
-      );
+      )
     }
-    return this.props.children;
+    return this.props.children
   }
 }

@@ -3,7 +3,6 @@
 // secret is the only copy (no server recovery, FR-3/FR-18), and device protection
 // degrades with a clear note where WebAuthn can't run (FR-13).
 
-import * as React from 'react';
 import {
   Check,
   Copy,
@@ -15,45 +14,46 @@ import {
   ShieldCheck,
   ShieldOff,
   Trash2,
-  TriangleAlert,
-} from 'lucide-react';
-import { Button } from '../components/ui/button';
-import { Input } from '../components/ui/input';
-import { Textarea } from '../components/ui/textarea';
-import { useCopy } from '../ingest/useCopy';
-import { Fingerprint } from './Fingerprint';
-import { useIdentityContext } from './IdentityProvider';
+  TriangleAlert
+} from 'lucide-react'
+import * as React from 'react'
+import { Button } from '../components/ui/Button'
+import { Input } from '../components/ui/Input'
+import { Textarea } from '../components/ui/Textarea'
+import { useCopy } from '../ingest/useCopy'
+import { Fingerprint } from './Fingerprint'
+import { useIdentityContext } from './IdentityProvider'
 
 /** Run an async action with pending + friendly-error state for the UI. */
 function useAction(): {
-  pending: boolean;
-  error: string | null;
-  run: (fn: () => Promise<void>) => Promise<void>;
-  clearError: () => void;
+  pending: boolean
+  error: string | null
+  run: (fn: () => Promise<void>) => Promise<void>
+  clearError: () => void
 } {
-  const [pending, setPending] = React.useState(false);
-  const [error, setError] = React.useState<string | null>(null);
+  const [pending, setPending] = React.useState(false)
+  const [error, setError] = React.useState<string | null>(null)
   const run = React.useCallback(async (fn: () => Promise<void>) => {
-    setPending(true);
-    setError(null);
+    setPending(true)
+    setError(null)
     try {
-      await fn();
+      await fn()
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Something went wrong.');
+      setError(e instanceof Error ? e.message : 'Something went wrong.')
     } finally {
-      setPending(false);
+      setPending(false)
     }
-  }, []);
-  return { pending, error, run, clearError: () => setError(null) };
+  }, [])
+  return { pending, error, run, clearError: () => setError(null) }
 }
 
 function downloadText(filename: string, text: string): void {
-  const url = URL.createObjectURL(new Blob([text], { type: 'text/plain' }));
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  a.click();
-  URL.revokeObjectURL(url);
+  const url = URL.createObjectURL(new Blob([text], { type: 'text/plain' }))
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  a.click()
+  URL.revokeObjectURL(url)
 }
 
 function ErrorNote({ children }: { children: React.ReactNode }) {
@@ -65,39 +65,39 @@ function ErrorNote({ children }: { children: React.ReactNode }) {
       <TriangleAlert className="mt-0.5 size-4 shrink-0" />
       <span>{children}</span>
     </p>
-  );
+  )
 }
 
 export function IdentityPanel() {
-  const { state } = useIdentityContext();
+  const { state } = useIdentityContext()
   switch (state.status) {
     case 'loading':
       return (
-        <div className="flex items-center gap-2 text-body-sm text-muted">
+        <div className="flex items-center gap-2 text-body-sm text-muted-foreground">
           <Loader2 className="size-4 animate-spin" /> Loading identity…
         </div>
-      );
+      )
     case 'none':
-      return <NonePanel />;
+      return <NonePanel />
     case 'locked':
-      return <LockedPanel name={state.name} />;
+      return <LockedPanel name={state.name} />
     case 'unlocked':
-      return <UnlockedPanel />;
+      return <UnlockedPanel />
   }
 }
 
 function NonePanel() {
-  const { mint, importSecret } = useIdentityContext();
-  const [name, setName] = React.useState('');
-  const [secret, setSecret] = React.useState('');
-  const mintAction = useAction();
-  const importAction = useAction();
+  const { mint, importSecret } = useIdentityContext()
+  const [name, setName] = React.useState('')
+  const [secret, setSecret] = React.useState('')
+  const mintAction = useAction()
+  const importAction = useAction()
 
   return (
     <div className="space-y-5">
       <header className="space-y-1">
         <h2 className="font-serif text-heading-3 text-text">Set up your identity</h2>
-        <p className="text-body-sm text-muted">
+        <p className="text-body-sm text-muted-foreground">
           A keypair minted in your browser - no account, nothing uploaded. You’ll
           need it to share sessions and to receive them back.
         </p>
@@ -106,11 +106,11 @@ function NonePanel() {
       <form
         className="space-y-2"
         onSubmit={(e) => {
-          e.preventDefault();
-          void mintAction.run(() => mint(name));
+          e.preventDefault()
+          void mintAction.run(() => mint(name))
         }}
       >
-        <label className="text-label text-muted" htmlFor="cp-id-name">
+        <label className="text-label text-muted-foreground" htmlFor="cp-id-name">
           Display name
         </label>
         <div className="flex gap-2">
@@ -129,7 +129,7 @@ function NonePanel() {
         {mintAction.error && <ErrorNote>{mintAction.error}</ErrorNote>}
       </form>
 
-      <div className="flex items-center gap-3 text-label text-muted">
+      <div className="flex items-center gap-3 text-label text-muted-foreground">
         <span className="h-px flex-1 bg-border" /> or import a backup{' '}
         <span className="h-px flex-1 bg-border" />
       </div>
@@ -137,8 +137,8 @@ function NonePanel() {
       <form
         className="space-y-2"
         onSubmit={(e) => {
-          e.preventDefault();
-          void importAction.run(() => importSecret(secret));
+          e.preventDefault()
+          void importAction.run(() => importSecret(secret))
         }}
       >
         <Textarea
@@ -160,21 +160,21 @@ function NonePanel() {
         {importAction.error && <ErrorNote>{importAction.error}</ErrorNote>}
       </form>
     </div>
-  );
+  )
 }
 
 function LockedPanel({ name }: { name: string }) {
-  const { unlock, forget } = useIdentityContext();
-  const unlockAction = useAction();
-  const forgetAction = useAction();
+  const { unlock, forget } = useIdentityContext()
+  const unlockAction = useAction()
+  const forgetAction = useAction()
 
   return (
     <div className="space-y-4">
       <header className="space-y-1">
         <h2 className="flex items-center gap-2 font-serif text-heading-3 text-text">
-          <KeyRound className="size-4 text-muted" /> Locked
+          <KeyRound className="size-4 text-muted-foreground" /> Locked
         </h2>
-        <p className="text-body-sm text-muted">
+        <p className="text-body-sm text-muted-foreground">
           Identity <span className="font-medium text-text">{name}</span> is locked
           by your device. Unlock with your fingerprint / Face ID / security key.
         </p>
@@ -193,15 +193,15 @@ function LockedPanel({ name }: { name: string }) {
       <Button
         variant="ghost"
         size="sm"
-        className="w-full text-muted"
+        className="w-full text-muted-foreground"
         disabled={forgetAction.pending}
         onClick={() => {
           if (
             window.confirm(
-              'Forget this identity on this browser? Recovery then requires your exported cp-id-… secret.',
+              'Forget this identity on this browser? Recovery then requires your exported cp-id-… secret.'
             )
           ) {
-            void forgetAction.run(forget);
+            void forgetAction.run(forget)
           }
         }}
       >
@@ -209,21 +209,21 @@ function LockedPanel({ name }: { name: string }) {
       </Button>
       {forgetAction.error && <ErrorNote>{forgetAction.error}</ErrorNote>}
     </div>
-  );
+  )
 }
 
 function UnlockedPanel() {
   const { state, deviceAvailable, publicCard, exportSecret, protect, removeProtection, signOut } =
-    useIdentityContext();
-  const [copiedCard, copyCard] = useCopy();
-  const protectAction = useAction();
-  const signOutAction = useAction();
+    useIdentityContext()
+  const [copiedCard, copyCard] = useCopy()
+  const protectAction = useAction()
+  const signOutAction = useAction()
   // Footgun guard (OQ-B): nudge a backup before locking behind a device.
-  const [backedUp, setBackedUp] = React.useState(false);
+  const [backedUp, setBackedUp] = React.useState(false)
 
-  if (state.status !== 'unlocked') return null;
-  const { identity, protected: isProtected } = state;
-  const card = publicCard() ?? '';
+  if (state.status !== 'unlocked') return null
+  const { identity, protected: isProtected } = state
+  const card = publicCard() ?? ''
 
   return (
     <div className="space-y-5">
@@ -237,16 +237,16 @@ function UnlockedPanel() {
         <Button
           variant="ghost"
           size="sm"
-          className="shrink-0 text-muted"
+          className="shrink-0 text-muted-foreground"
           disabled={signOutAction.pending}
           onClick={() => {
             if (
               isProtected ||
               window.confirm(
-                'Sign out removes this unprotected identity from this browser. Make sure you’ve downloaded your secret first.',
+                'Sign out removes this unprotected identity from this browser. Make sure you’ve downloaded your secret first.'
               )
             ) {
-              void signOutAction.run(signOut);
+              void signOutAction.run(signOut)
             }
           }}
         >
@@ -256,7 +256,7 @@ function UnlockedPanel() {
 
       {/* Public key card - safe to post */}
       <section className="space-y-1.5">
-        <p className="text-label text-muted">
+        <p className="text-label text-muted-foreground">
           Your public key - give to friends, safe to post
         </p>
         <div className="flex items-stretch gap-2">
@@ -276,11 +276,11 @@ function UnlockedPanel() {
 
       {/* Fingerprint - read aloud to verify */}
       <section className="space-y-1.5">
-        <p className="flex items-center gap-1.5 text-label text-muted">
+        <p className="flex items-center gap-1.5 text-label text-muted-foreground">
           <FingerprintIcon className="size-3.5" /> Your fingerprint - read aloud to verify
         </p>
         <Fingerprint pub={identity.pub} />
-        <p className="text-label text-muted">
+        <p className="text-label text-muted-foreground">
           The name above is self-claimed. Trust comes from matching this
           fingerprint out of band.
         </p>
@@ -293,16 +293,16 @@ function UnlockedPanel() {
           size="sm"
           className="w-full"
           onClick={() => {
-            const secret = exportSecret();
+            const secret = exportSecret()
             if (secret) {
-              downloadText(`claudepad-identity-${identity.name}.txt`, secret);
-              setBackedUp(true);
+              downloadText(`claudepad-identity-${identity.name}.txt`, secret)
+              setBackedUp(true)
             }
           }}
         >
           <Download /> Download identity secret
         </Button>
-        <p className="flex items-start gap-1.5 text-label text-muted">
+        <p className="flex items-start gap-1.5 text-label text-muted-foreground">
           <TriangleAlert className="mt-0.5 size-3.5 shrink-0 text-warn" />
           This is your only key. No server can recover it - back it up.
         </p>
@@ -310,11 +310,11 @@ function UnlockedPanel() {
 
       {/* Device protection */}
       <section className="space-y-1.5 border-t border-border pt-4">
-        <p className="flex items-center gap-1.5 text-label text-muted">
+        <p className="flex items-center gap-1.5 text-label text-muted-foreground">
           <ShieldCheck className="size-3.5" /> Device protection
         </p>
         {!deviceAvailable ? (
-          <p className="text-label text-muted">
+          <p className="text-label text-muted-foreground">
             Needs a real origin with passkey support (works on localhost / a
             self-hosted site, not <code className="font-mono">file://</code>).
           </p>
@@ -326,7 +326,7 @@ function UnlockedPanel() {
             <Button
               variant="ghost"
               size="sm"
-              className="w-full text-muted"
+              className="w-full text-muted-foreground"
               disabled={protectAction.pending}
               onClick={() => void protectAction.run(removeProtection)}
             >
@@ -345,7 +345,7 @@ function UnlockedPanel() {
               Protect with this device
             </Button>
             {!backedUp && (
-              <p className="text-label text-muted">
+              <p className="text-label text-muted-foreground">
                 Download your secret first - if a device unlock ever fails, the
                 backup is the only way back in.
               </p>
@@ -357,5 +357,5 @@ function UnlockedPanel() {
 
       {signOutAction.error && <ErrorNote>{signOutAction.error}</ErrorNote>}
     </div>
-  );
+  )
 }

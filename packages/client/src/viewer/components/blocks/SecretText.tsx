@@ -1,10 +1,10 @@
-import * as React from 'react';
-import { Eye, EyeOff } from 'lucide-react';
-import { cn } from '../../../lib/cn';
-import { splitSecretTokens, type SecretPlaceholder } from '../../secret-token';
-import { useReveal } from '../../hooks/useReveal';
+import * as React from 'react'
+import { Eye, EyeOff } from 'lucide-react'
+import { cn } from '../../../lib/cn'
+import { splitSecretTokens, type SecretPlaceholder } from '../../secret-token'
+import { useReveal } from '../../hooks/useReveal'
 
-const FIXED_DOTS = '••••••••'; // cosmetic, always 8 - never reflects real length.
+const FIXED_DOTS = '••••••••' // cosmetic, always 8 - never reflects real length.
 
 /**
  * Renders a string, turning any embedded secret placeholder tokens into inline
@@ -13,9 +13,9 @@ const FIXED_DOTS = '••••••••'; // cosmetic, always 8 - never ref
  * chip and a revealed value can never be re-parsed as markdown/HTML.
  */
 export function SecretText({ children }: { children: string }) {
-  const segments = React.useMemo(() => splitSecretTokens(children), [children]);
+  const segments = React.useMemo(() => splitSecretTokens(children), [children])
   if (segments.length === 1 && segments[0]?.kind === 'text') {
-    return <>{children}</>;
+    return <>{children}</>
   }
   return (
     <>
@@ -24,17 +24,17 @@ export function SecretText({ children }: { children: string }) {
           <React.Fragment key={i}>{seg.text}</React.Fragment>
         ) : (
           <SecretChip key={i} placeholder={seg.placeholder} />
-        ),
+        )
       )}
     </>
-  );
+  )
 }
 
 export function SecretChip({ placeholder }: { placeholder: SecretPlaceholder }) {
-  const reveal = useReveal();
-  const entry = reveal.valueFor(placeholder.id);
-  const canReveal = reveal.hasMap && entry != null;
-  const isRevealed = canReveal && reveal.isRevealed(placeholder.id);
+  const reveal = useReveal()
+  const entry = reveal.valueFor(placeholder.id)
+  const canReveal = reveal.hasMap && entry != null
+  const isRevealed = canReveal && reveal.isRevealed(placeholder.id)
 
   if (isRevealed && entry) {
     // Distinct clay-bordered chip. Value is INERT text (never re-parsed).
@@ -43,7 +43,7 @@ export function SecretChip({ placeholder }: { placeholder: SecretPlaceholder }) 
         className={cn(
           'inline-flex max-w-full items-center gap-1 whitespace-nowrap rounded-sm',
           'border border-accent bg-accent-tint px-1.5 py-0.5 align-baseline',
-          'font-mono text-code text-text',
+          'font-mono text-code text-text'
         )}
         data-secret-revealed="true"
       >
@@ -57,7 +57,7 @@ export function SecretChip({ placeholder }: { placeholder: SecretPlaceholder }) 
           <EyeOff className="size-3" />
         </button>
       </span>
-    );
+    )
   }
 
   // Placeholder chip: type + fixed dots + real length. No value substring/hash.
@@ -65,7 +65,7 @@ export function SecretChip({ placeholder }: { placeholder: SecretPlaceholder }) 
     <span
       className={cn(
         'inline-flex items-center gap-1 whitespace-nowrap rounded-sm border border-border',
-        'bg-surface px-1.5 py-0.5 align-baseline font-mono text-code text-muted',
+        'bg-surface px-1.5 py-0.5 align-baseline font-mono text-code text-muted-foreground'
       )}
       data-secret-placeholder={placeholder.id}
       data-secret-type={placeholder.type}
@@ -84,5 +84,5 @@ export function SecretChip({ placeholder }: { placeholder: SecretPlaceholder }) 
         </button>
       )}
     </span>
-  );
+  )
 }

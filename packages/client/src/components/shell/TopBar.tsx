@@ -1,33 +1,33 @@
-import * as React from 'react';
-import { ChevronRight } from 'lucide-react';
+import * as React from 'react'
+import { ChevronRight } from 'lucide-react'
 
-export type Crumb = { label: string; onClick?: () => void };
+export interface Crumb { label: string; onClick?: () => void }
 
 /**
  * Declarative contents of the single top bar (one-surface principle, D-49):
  * breadcrumbs + labels + actions on line 1, a context/meta line + view switch on
  * line 2. App-chrome (mobile menu, theme toggle) is injected via leading/trailing.
  */
-export type TopBarContent = {
-  crumbs: Crumb[];
+export interface TopBarContent {
+  crumbs: Crumb[]
   /** Render the final crumb as the page <h1> (the session title). */
-  titleIsHeading?: boolean;
-  labels?: React.ReactNode;
-  actions?: React.ReactNode;
-  meta?: React.ReactNode;
-  viewSwitch?: React.ReactNode;
-};
+  titleIsHeading?: boolean
+  labels?: React.ReactNode
+  actions?: React.ReactNode
+  meta?: React.ReactNode
+  viewSwitch?: React.ReactNode
+}
 
 export function TopBar({
   content,
   leading,
-  trailing,
+  trailing
 }: {
-  content?: TopBarContent;
-  leading?: React.ReactNode;
-  trailing?: React.ReactNode;
+  content?: TopBarContent
+  leading?: React.ReactNode
+  trailing?: React.ReactNode
 }) {
-  const hasSecondLine = Boolean(content?.meta || content?.viewSwitch);
+  const hasSecondLine = Boolean(content?.meta || content?.viewSwitch)
   return (
     <header className="border-b border-border bg-bg/90 backdrop-blur supports-[backdrop-filter]:bg-bg/75">
       <div className="flex h-14 items-center gap-2 px-4">
@@ -52,15 +52,15 @@ export function TopBar({
         </div>
       )}
     </header>
-  );
+  )
 }
 
 function Breadcrumbs({
   crumbs,
-  titleIsHeading,
+  titleIsHeading
 }: {
-  crumbs: Crumb[];
-  titleIsHeading?: boolean;
+  crumbs: Crumb[]
+  titleIsHeading?: boolean
 }) {
   return (
     <nav
@@ -68,10 +68,10 @@ function Breadcrumbs({
       className="flex min-w-0 items-center gap-1.5 text-body-sm"
     >
       {crumbs.map((crumb, i) => {
-        const last = i === crumbs.length - 1;
+        const last = i === crumbs.length - 1
         return (
           <React.Fragment key={`${crumb.label}-${i}`}>
-            {i > 0 && <ChevronRight className="size-3.5 shrink-0 text-muted" />}
+            {i > 0 && <ChevronRight className="size-3.5 shrink-0 text-muted-foreground" />}
             {last ? (
               titleIsHeading ? (
                 <h1
@@ -89,16 +89,16 @@ function Breadcrumbs({
               <button
                 type="button"
                 onClick={crumb.onClick}
-                className="shrink-0 text-muted transition-colors hover:text-text"
+                className="shrink-0 text-muted-foreground transition-colors hover:text-text"
               >
                 {crumb.label}
               </button>
             ) : (
-              <span className="shrink-0 text-muted">{crumb.label}</span>
+              <span className="shrink-0 text-muted-foreground">{crumb.label}</span>
             )}
           </React.Fragment>
-        );
+        )
       })}
     </nav>
-  );
+  )
 }

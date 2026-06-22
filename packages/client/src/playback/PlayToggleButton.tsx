@@ -1,12 +1,12 @@
-import { Play, Square } from 'lucide-react';
-import { Button } from '../components/ui/button';
-import { usePlayback } from './PlaybackProvider';
+import { Play, Square } from 'lucide-react'
+import { Button } from '../components/ui/Button'
+import { usePlayback } from './PlaybackProvider'
 
 // The viewer's "Play" affordance (PRD-08 §4.1) - toggles the playback surface +
 // transport bar on/off. Lives in the unified top bar's session actions.
 export function PlayToggleButton() {
-  const pb = usePlayback();
-  if (!pb.available) return null;
+  const pb = usePlayback()
+  if (!pb.available) return null
   return (
     <Button
       size="sm"
@@ -18,5 +18,5 @@ export function PlayToggleButton() {
       {pb.active ? <Square /> : <Play />}
       {pb.active ? 'Stop' : 'Play'}
     </Button>
-  );
+  )
 }

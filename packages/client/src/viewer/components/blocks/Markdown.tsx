@@ -1,11 +1,11 @@
-import * as React from 'react';
-import ReactMarkdown, { type Components } from 'react-markdown';
-import remarkGfm from 'remark-gfm';
-import rehypeSanitize from 'rehype-sanitize';
-import { cn } from '../../../lib/cn';
-import { CodeBlock } from './CodeBlock';
-import { SecretText, SecretChip } from './SecretText';
-import { rehypeSecrets } from './rehype-secrets';
+import * as React from 'react'
+import ReactMarkdown, { type Components } from 'react-markdown'
+import rehypeSanitize from 'rehype-sanitize'
+import remarkGfm from 'remark-gfm'
+import { cn } from '../../../lib/cn'
+import { CodeBlock } from './CodeBlock'
+import { SecretChip, SecretText } from './SecretText'
+import { rehypeSecrets } from './rehype-secrets'
 
 /**
  * Sanitized GFM markdown. `rehype-sanitize` (strict default schema) strips any
@@ -19,41 +19,41 @@ import { rehypeSecrets } from './rehype-secrets';
  */
 const components = {
   'cp-secret': ({ node }: { node?: { properties?: Record<string, unknown> } }) => {
-    const p = node?.properties ?? {};
+    const p = node?.properties ?? {}
     return (
       <SecretChip
         placeholder={{
           id: String(p.secretId ?? ''),
           type: String(p.secretType ?? 'SECRET'),
-          len: Number(p.secretLen ?? 0),
+          len: Number(p.secretLen ?? 0)
         }}
       />
-    );
+    )
   },
   code({ className, children, node, ...props }) {
-    const text = String(children ?? '').replace(/\n$/, '');
+    const text = String(children ?? '').replace(/\n$/, '')
     const isBlock =
       // remark sets `data.meta`/position; a fenced block lives inside a <pre>.
       (node as { position?: { start: { line: number }; end: { line: number } } })
         ?.position != null && text.includes('\n')
         ? true
-        : /language-/.test(className ?? '');
-    if (isBlock || /language-/.test(className ?? '')) {
-      const match = /language-(\w[\w+-]*)/.exec(className ?? '');
-      return <CodeBlock code={text} lang={match?.[1]} />;
+        : (className ?? '').includes('language-')
+    if (isBlock || (className ?? '').includes('language-')) {
+      const match = /language-(\w[\w+-]*)/.exec(className ?? '')
+      return <CodeBlock code={text} lang={match?.[1]} />
     }
     // Inline code - still run through SecretText for embedded placeholders.
     return (
       <code
         className={cn(
           'rounded-sm bg-sidebar px-1 py-0.5 font-mono text-[0.9em]',
-          className,
+          className
         )}
         {...props}
       >
         <SecretText>{text}</SecretText>
       </code>
-    );
+    )
   },
   // A fenced block is rendered by `code` above; keep <pre> as a passthrough so
   // we don't double-wrap.
@@ -68,10 +68,10 @@ const components = {
     >
       {children}
     </a>
-  ),
-} satisfies Components & Record<'cp-secret', unknown>;
+  )
+} satisfies Components & Record<'cp-secret', unknown>
 
-export const Markdown = React.memo(function Markdown({ text }: { text: string }) {
+export const Markdown = React.memo(({ text }: { text: string }) => {
   return (
     <div className={proseClass}>
       <ReactMarkdown
@@ -83,8 +83,8 @@ export const Markdown = React.memo(function Markdown({ text }: { text: string })
         {text}
       </ReactMarkdown>
     </div>
-  );
-});
+  )
+})
 
 // Warm-minimal prose. Token utilities only (no raw hex).
 const proseClass = cn(
@@ -96,10 +96,10 @@ const proseClass = cn(
   '[&_ul]:my-2 [&_ul]:list-disc [&_ul]:pl-5',
   '[&_ol]:my-2 [&_ol]:list-decimal [&_ol]:pl-5',
   '[&_li]:my-0.5',
-  '[&_blockquote]:my-2 [&_blockquote]:border-l-2 [&_blockquote]:border-accent [&_blockquote]:pl-3 [&_blockquote]:text-muted',
+  '[&_blockquote]:my-2 [&_blockquote]:border-l-2 [&_blockquote]:border-accent [&_blockquote]:pl-3 [&_blockquote]:text-muted-foreground',
   '[&_table]:my-3 [&_table]:w-full [&_table]:border-collapse [&_table]:text-body-sm',
   '[&_th]:border [&_th]:border-border [&_th]:bg-sidebar [&_th]:px-2 [&_th]:py-1 [&_th]:text-left',
   '[&_td]:border [&_td]:border-border [&_td]:px-2 [&_td]:py-1',
   '[&_hr]:my-4 [&_hr]:border-border',
-  '[&_input[type=checkbox]]:mr-1.5',
-);
+  '[&_input[type=checkbox]]:mr-1.5'
+)

@@ -1,9 +1,9 @@
-import type { ContentBlock } from '@claudepad/schema';
-import { Markdown } from './Markdown';
-import { CodeBlock } from './CodeBlock';
-import { ImageBlock } from './ImageBlock';
-import { RawBlock } from './RawBlock';
-import { BlockErrorBoundary } from '../BlockErrorBoundary';
+import type { ContentBlock } from '@claudepad/schema'
+import { Markdown } from './Markdown'
+import { CodeBlock } from './CodeBlock'
+import { ImageBlock } from './ImageBlock'
+import { RawBlock } from './RawBlock'
+import { BlockErrorBoundary } from '../BlockErrorBoundary'
 
 /**
  * Render an ordered list of content blocks, each error-isolated.
@@ -15,13 +15,13 @@ import { BlockErrorBoundary } from '../BlockErrorBoundary';
  */
 export function ContentBlocks({
   blocks,
-  typingFraction,
+  typingFraction
 }: {
-  blocks: ContentBlock[];
-  typingFraction?: number;
+  blocks: ContentBlock[]
+  typingFraction?: number
 }) {
   if (typingFraction != null && typingFraction < 1) {
-    return <TypingBlocks blocks={blocks} fraction={typingFraction} />;
+    return <TypingBlocks blocks={blocks} fraction={typingFraction} />
   }
   return (
     <>
@@ -31,10 +31,10 @@ export function ContentBlocks({
         </BlockErrorBoundary>
       ))}
     </>
-  );
+  )
 }
 
-const SECRET_TOKEN = /⟦cp-secret:[^⟧]*⟧/g;
+const SECRET_TOKEN = /⟦cp-secret:[^⟧]*⟧/g
 
 /** Light inline-markdown strip so typed prose reads cleanly (no raw `**`/`#`). */
 function stripInlineMarkdown(text: string): string {
@@ -46,10 +46,10 @@ function stripInlineMarkdown(text: string): string {
     .replace(/__([^_]+)__/g, '$1')
     .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
     .replace(/^#{1,6}\s+/gm, '')
-    .replace(/^\s*[-*+]\s+/gm, '• ');
+    .replace(/^\s*[-*+]\s+/gm, '• ')
 }
 
-const typeable = (b: ContentBlock): b is { type: 'text'; text: string } => b.type === 'text';
+const typeable = (b: ContentBlock): b is { type: 'text'; text: string } => b.type === 'text'
 
 /**
  * Progressive prose reveal. Distributes `floor(fraction × total)` characters
@@ -57,8 +57,8 @@ const typeable = (b: ContentBlock): b is { type: 'text'; text: string } => b.typ
  * has passed them. Falls back to atomic render when there's no typeable prose.
  */
 function TypingBlocks({ blocks, fraction }: { blocks: ContentBlock[]; fraction: number }) {
-  const stripped = blocks.map((b) => (typeable(b) ? stripInlineMarkdown(b.text) : ''));
-  const total = stripped.reduce((n, s) => n + s.length, 0);
+  const stripped = blocks.map((b) => (typeable(b) ? stripInlineMarkdown(b.text) : ''))
+  const total = stripped.reduce((n, s) => n + s.length, 0)
   if (total === 0) {
     // Nothing to type (e.g. a code-only turn) - show it atomically.
     return (
@@ -69,22 +69,22 @@ function TypingBlocks({ blocks, fraction }: { blocks: ContentBlock[]; fraction: 
           </BlockErrorBoundary>
         ))}
       </>
-    );
+    )
   }
 
-  let budget = Math.floor(fraction * total);
-  let caretPlaced = false;
+  let budget = Math.floor(fraction * total)
+  let caretPlaced = false
   return (
     <>
       {blocks.map((block, i) => {
         if (typeable(block)) {
-          const s = stripped[i]!;
-          const shown = s.slice(0, Math.min(s.length, Math.max(0, budget)));
-          const partial = budget < s.length;
-          budget = Math.max(0, budget - s.length);
-          if (!shown && !(partial && !caretPlaced)) return null;
-          const caret = partial && !caretPlaced;
-          if (caret) caretPlaced = true;
+          const s = stripped[i]!
+          const shown = s.slice(0, Math.min(s.length, Math.max(0, budget)))
+          const partial = budget < s.length
+          budget = Math.max(0, budget - s.length)
+          if (!shown && !(partial && !caretPlaced)) return null
+          const caret = partial && !caretPlaced
+          if (caret) caretPlaced = true
           return (
             <p key={i} className="whitespace-pre-wrap leading-relaxed text-text">
               {shown}
@@ -94,26 +94,26 @@ function TypingBlocks({ blocks, fraction }: { blocks: ContentBlock[]; fraction: 
                 </span>
               )}
             </p>
-          );
+          )
         }
         // Non-text block: appears atomically once typing has reached it.
-        if (budget <= 0) return null;
+        if (budget <= 0) return null
         return (
           <BlockErrorBoundary key={i} fallbackValue={block}>
             <SingleBlock block={block} />
           </BlockErrorBoundary>
-        );
+        )
       })}
     </>
-  );
+  )
 }
 
 function SingleBlock({ block }: { block: ContentBlock }) {
   switch (block.type) {
     case 'text':
-      return <Markdown text={block.text} />;
+      return <Markdown text={block.text} />
     case 'code':
-      return <CodeBlock code={block.text} lang={block.lang} />;
+      return <CodeBlock code={block.text} lang={block.lang} />
     case 'image':
       return (
         <ImageBlock
@@ -121,11 +121,11 @@ function SingleBlock({ block }: { block: ContentBlock }) {
           mediaType={block.mediaType}
           encoding={block.encoding}
         />
-      );
+      )
     case 'raw':
-      return <RawBlock value={block.value} />;
+      return <RawBlock value={block.value} />
     default:
       // Exhaustiveness guard - unknown block shape degrades gracefully.
-      return <RawBlock value={block} />;
+      return <RawBlock value={block} />
   }
 }

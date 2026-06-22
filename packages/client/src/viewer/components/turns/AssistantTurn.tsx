@@ -1,20 +1,20 @@
-import * as React from 'react';
-import type { AssistantEvent } from '@claudepad/schema';
-import { Badge } from '../../../components/ui/badge';
-import { TurnShell } from './TurnShell';
-import { ContentBlocks } from '../blocks/ContentBlocks';
+import type { AssistantEvent } from '@claudepad/schema'
+import * as React from 'react'
+import { Badge } from '../../../components/ui/Badge'
+import { ContentBlocks } from '../blocks/ContentBlocks'
+import { TurnShell } from './TurnShell'
 
-export const AssistantTurn = React.memo(function AssistantTurn({
+export const AssistantTurn = React.memo(({
   event,
   anchorId,
   highlighted,
-  typingFraction,
+  typingFraction
 }: {
-  event: AssistantEvent;
-  anchorId: string;
-  highlighted?: boolean;
-  typingFraction?: number;
-}) {
+  event: AssistantEvent
+  anchorId: string
+  highlighted?: boolean
+  typingFraction?: number
+}) => {
   return (
     <TurnShell
       anchorId={anchorId}
@@ -24,7 +24,7 @@ export const AssistantTurn = React.memo(function AssistantTurn({
       highlighted={highlighted}
       headerExtra={
         event.model ? (
-          <Badge variant="neutral" className="font-mono normal-case">
+          <Badge variant="outline" className="bg-sidebar font-mono normal-case text-muted-foreground">
             {event.model}
           </Badge>
         ) : undefined
@@ -32,5 +32,5 @@ export const AssistantTurn = React.memo(function AssistantTurn({
     >
       <ContentBlocks blocks={event.content} typingFraction={typingFraction} />
     </TurnShell>
-  );
-});
+  )
+})

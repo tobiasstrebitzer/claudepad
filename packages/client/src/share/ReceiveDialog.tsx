@@ -3,80 +3,80 @@
 // name, trust only on a match), then hand the session to the viewer. A blob not
 // addressed to us fails closed - no partial render (FR-11).
 
-import * as React from 'react';
-import { Loader2, ShieldCheck, TriangleAlert, Upload } from 'lucide-react';
+import { Loader2, ShieldCheck, TriangleAlert, Upload } from 'lucide-react'
+import * as React from 'react'
+import { Button } from '../components/ui/Button'
 import {
   Dialog,
   DialogContent,
-  DialogTitle,
   DialogDescription,
   DialogFooter,
-} from '../components/ui/dialog';
-import { Button } from '../components/ui/button';
-import { Textarea } from '../components/ui/textarea';
-import { Fingerprint, useIdentityContext } from '../identity';
-import { openShare, type OpenShareResult } from './blob';
+  DialogTitle
+} from '../components/ui/Dialog'
+import { Textarea } from '../components/ui/Textarea'
+import { Fingerprint, useIdentityContext } from '../identity'
+import { openShare, type OpenShareResult } from './blob'
 
 export function ReceiveDialog({
   open,
   onOpenChange,
   onReceived,
-  initialBlob,
+  initialBlob
 }: {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onReceived: (result: OpenShareResult) => void;
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  onReceived: (result: OpenShareResult) => void
   /**
    * A `cp-blob-…` to seed the dialog with - set when a blob arrives via the
    * home drop/paste/file-picker surface. With an unlocked identity it decrypts
    * straight away; otherwise it's held in the field until unlock.
    */
-  initialBlob?: string;
+  initialBlob?: string
 }) {
-  const { state: idState } = useIdentityContext();
-  const [input, setInput] = React.useState('');
-  const [busy, setBusy] = React.useState(false);
-  const [error, setError] = React.useState<string | null>(null);
-  const [result, setResult] = React.useState<OpenShareResult | null>(null);
-  const unlocked = idState.status === 'unlocked';
+  const { state: idState } = useIdentityContext()
+  const [input, setInput] = React.useState('')
+  const [busy, setBusy] = React.useState(false)
+  const [error, setError] = React.useState<string | null>(null)
+  const [result, setResult] = React.useState<OpenShareResult | null>(null)
+  const unlocked = idState.status === 'unlocked'
 
   const decrypt = React.useCallback(
     async (text: string) => {
-      if (idState.status !== 'unlocked') return;
-      setBusy(true);
-      setError(null);
+      if (idState.status !== 'unlocked') return
+      setBusy(true)
+      setError(null)
       try {
-        setResult(await openShare(idState.identity, text));
+        setResult(await openShare(idState.identity, text))
       } catch {
         // Fail closed: don't distinguish "not for you" from "corrupt" beyond this.
         setError(
-          'This blob isn’t addressed to you, or it’s corrupt. Nothing was decrypted.',
-        );
+          'This blob isn’t addressed to you, or it’s corrupt. Nothing was decrypted.'
+        )
       } finally {
-        setBusy(false);
+        setBusy(false)
       }
     },
-    [idState],
-  );
+    [idState]
+  )
 
   // Reset on open; if a blob was handed in, seed the field and auto-decrypt it
   // (frictionless: a dropped/pasted share opens already-decrypting).
   React.useEffect(() => {
-    if (!open) return;
-    setError(null);
-    setResult(null);
-    const seed = initialBlob?.trim() ?? '';
-    setInput(seed);
-    if (seed && unlocked) void decrypt(seed);
-  }, [open, initialBlob, unlocked, decrypt]);
+    if (!open) return
+    setError(null)
+    setResult(null)
+    const seed = initialBlob?.trim() ?? ''
+    setInput(seed)
+    if (seed && unlocked) void decrypt(seed)
+  }, [open, initialBlob, unlocked, decrypt])
 
   const onUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const text = await file.text();
-    setInput(text);
-    void decrypt(text);
-  };
+    const file = e.target.files?.[0]
+    if (!file) return
+    const text = await file.text()
+    setInput(text)
+    void decrypt(text)
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -137,15 +137,15 @@ export function ReceiveDialog({
         )}
       </DialogContent>
     </Dialog>
-  );
+  )
 }
 
 function Received({
   result,
-  onView,
+  onView
 }: {
-  result: OpenShareResult;
-  onView: () => void;
+  result: OpenShareResult
+  onView: () => void
 }) {
   return (
     <>
@@ -161,7 +161,7 @@ function Received({
 
       <div className="mt-3 rounded-md border border-border bg-bg p-3">
         <Fingerprint pub={result.from.pub} size="sm" />
-        <p className="mt-2 text-label text-muted">
+        <p className="mt-2 text-label text-muted-foreground">
           Granted: {result.tier === 'body+secret' ? 'body + secrets' : 'body only'}
           {result.tier === 'body' && ' - secrets show as placeholders.'}
         </p>
@@ -171,5 +171,5 @@ function Received({
         <Button onClick={onView}>View session</Button>
       </DialogFooter>
     </>
-  );
+  )
 }

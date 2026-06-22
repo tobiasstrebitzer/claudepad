@@ -1,4 +1,4 @@
-import type { SessionEvent } from '@claudepad/schema';
+import type { SessionEvent } from '@claudepad/schema'
 
 /**
  * Pure session-metadata and UI-internal telemetry that only adds noise when
@@ -25,8 +25,8 @@ const HIDDEN_META_SUBTYPES = new Set<string>([
   'summary',
   // System telemetry subtypes.
   'turn_duration',
-  'bridge_status',
-]);
+  'bridge_status'
+])
 
 /** Attachment payload types that are tooling chatter, not conversation. */
 const HIDDEN_ATTACHMENT_TYPES = new Set<string>([
@@ -39,29 +39,29 @@ const HIDDEN_ATTACHMENT_TYPES = new Set<string>([
   'queued_command',
   'hook_non_blocking_error',
   'hook_success',
-  'hook_additional_context',
-]);
+  'hook_additional_context'
+])
 
 function isRecord(v: unknown): v is Record<string, unknown> {
-  return typeof v === 'object' && v !== null;
+  return typeof v === 'object' && v !== null
 }
 
 /** The `attachment.type` of an attachment-derived meta event, if any. */
 export function attachmentType(event: SessionEvent): string | undefined {
-  if (event.kind !== 'meta') return undefined;
-  const raw = event.raw;
-  if (!isRecord(raw)) return undefined;
-  const att = raw['attachment'];
-  if (!isRecord(att)) return undefined;
-  const t = att['type'];
-  return typeof t === 'string' ? t : undefined;
+  if (event.kind !== 'meta') return undefined
+  const raw = event.raw
+  if (!isRecord(raw)) return undefined
+  const att = raw['attachment']
+  if (!isRecord(att)) return undefined
+  const t = att['type']
+  return typeof t === 'string' ? t : undefined
 }
 
 /** True when an event is pure metadata/telemetry that should not render inline. */
 export function isHiddenEvent(event: SessionEvent): boolean {
-  if (event.kind !== 'meta') return false;
-  if (event.subtype && HIDDEN_META_SUBTYPES.has(event.subtype)) return true;
-  const att = attachmentType(event);
-  if (att && HIDDEN_ATTACHMENT_TYPES.has(att)) return true;
-  return false;
+  if (event.kind !== 'meta') return false
+  if (event.subtype && HIDDEN_META_SUBTYPES.has(event.subtype)) return true
+  const att = attachmentType(event)
+  if (att && HIDDEN_ATTACHMENT_TYPES.has(att)) return true
+  return false
 }

@@ -1,21 +1,21 @@
-import { SlidersHorizontal } from 'lucide-react';
-import { Button } from '../../components/ui/button';
-import { Checkbox } from '../../components/ui/checkbox';
+import { SlidersHorizontal } from 'lucide-react'
+import { Button } from '../../components/ui/Button'
+import { Checkbox } from '../../components/ui/Checkbox'
 import {
   Popover,
-  PopoverTrigger,
   PopoverContent,
-} from '../../components/ui/popover';
-import { EVENT_GROUPS, DEFAULT_VISIBILITY } from '../hooks/eventFilter';
-import { useEventFilter } from '../hooks/useEventFilter';
+  PopoverTrigger
+} from '../../components/ui/Popover'
+import { DEFAULT_VISIBILITY, EVENT_GROUPS } from '../hooks/eventFilter'
+import { useEventFilter } from '../hooks/useEventFilter'
 
 /**
  * Top-bar control to toggle which event groups appear in the transcript. Choices
  * persist and are honored by playback too (filtered events are ignored entirely).
  */
 export function EventFilterControl() {
-  const { visibility, setGroup, reset } = useEventFilter();
-  const hiddenCount = EVENT_GROUPS.filter((g) => !visibility[g.key]).length;
+  const { visibility, setGroup, reset } = useEventFilter()
+  const hiddenCount = EVENT_GROUPS.filter((g) => !visibility[g.key]).length
 
   return (
     <Popover>
@@ -34,18 +34,18 @@ export function EventFilterControl() {
       />
       <PopoverContent align="end" side="bottom" className="w-64 p-2">
         <div className="flex items-center justify-between px-1 pb-1.5">
-          <span className="text-label uppercase tracking-[0.02em] text-muted">Show events</span>
+          <span className="text-label uppercase tracking-[0.02em] text-muted-foreground">Show events</span>
           <button
             type="button"
             onClick={reset}
-            className="text-label text-muted hover:text-accent"
+            className="text-label text-muted-foreground hover:text-accent"
           >
             Reset
           </button>
         </div>
         <ul>
           {EVENT_GROUPS.map((g) => {
-            const id = `evt-filter-${g.key}`;
+            const id = `evt-filter-${g.key}`
             return (
               <li key={g.key}>
                 <label
@@ -60,17 +60,17 @@ export function EventFilterControl() {
                   />
                   <span className="min-w-0">
                     <span className="block text-body-sm text-text">{g.label}</span>
-                    <span className="block text-label text-muted">{g.hint}</span>
+                    <span className="block text-label text-muted-foreground">{g.hint}</span>
                   </span>
                 </label>
               </li>
-            );
+            )
           })}
         </ul>
         {visibility.system === DEFAULT_VISIBILITY.system && (
-          <p className="px-1 pt-1 text-label text-muted">System events are hidden by default.</p>
+          <p className="px-1 pt-1 text-label text-muted-foreground">System events are hidden by default.</p>
         )}
       </PopoverContent>
     </Popover>
-  );
+  )
 }

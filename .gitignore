@@ -18,8 +18,6 @@ build/
 .DS_Store
 .idea/
 *.swp
-.vscode/*
-!.vscode/extensions.json
 
 # Logs / coverage
 *.log

@@ -1,19 +1,19 @@
-import * as React from 'react';
-import type { UserEvent } from '@claudepad/schema';
-import { TurnShell } from './TurnShell';
-import { ContentBlocks } from '../blocks/ContentBlocks';
+import type { UserEvent } from '@claudepad/schema'
+import * as React from 'react'
+import { ContentBlocks } from '../blocks/ContentBlocks'
+import { TurnShell } from './TurnShell'
 
-export const UserTurn = React.memo(function UserTurn({
+export const UserTurn = React.memo(({
   event,
   anchorId,
   highlighted,
-  typingFraction,
+  typingFraction
 }: {
-  event: UserEvent;
-  anchorId: string;
-  highlighted?: boolean;
-  typingFraction?: number;
-}) {
+  event: UserEvent
+  anchorId: string
+  highlighted?: boolean
+  typingFraction?: number
+}) => {
   return (
     <TurnShell
       anchorId={anchorId}
@@ -24,5 +24,5 @@ export const UserTurn = React.memo(function UserTurn({
     >
       <ContentBlocks blocks={event.content} typingFraction={typingFraction} />
     </TurnShell>
-  );
-});
+  )
+})

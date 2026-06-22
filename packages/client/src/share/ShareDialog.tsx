@@ -6,7 +6,14 @@
 //
 // All crypto + redaction is local; nothing is uploaded (PRD-11 FR-17).
 
-import * as React from 'react';
+import type { Session } from '@claudepad/schema'
+import {
+  findLeakedValues,
+  redact,
+  scanSession,
+  type Detection
+} from '@claudepad/secrets'
+import { decodePublicCard, type Tier } from '@claudepad/shared'
 import {
   Check,
   Copy,
@@ -14,104 +21,97 @@ import {
   Loader2,
   Plus,
   ShieldAlert,
-  TriangleAlert,
-} from 'lucide-react';
-import type { Session } from '@claudepad/schema';
-import {
-  scanSession,
-  redact,
-  findLeakedValues,
-  type Detection,
-} from '@claudepad/secrets';
-import { decodePublicCard, type Tier } from '@claudepad/shared';
+  TriangleAlert
+} from 'lucide-react'
+import * as React from 'react'
+import { Button } from '../components/ui/Button'
+import { Checkbox } from '../components/ui/Checkbox'
 import {
   Dialog,
   DialogContent,
-  DialogTitle,
   DialogDescription,
   DialogFooter,
-} from '../components/ui/dialog';
-import { Button } from '../components/ui/button';
-import { Input } from '../components/ui/input';
-import { Checkbox } from '../components/ui/checkbox';
-import { useCopy } from '../ingest/useCopy';
-import { cn } from '../lib/cn';
-import { Fingerprint, useIdentityContext } from '../identity';
-import { createShare } from './blob';
+  DialogTitle
+} from '../components/ui/Dialog'
+import { Input } from '../components/ui/Input'
+import { Fingerprint, useIdentityContext } from '../identity'
+import { useCopy } from '../ingest/useCopy'
+import { cn } from '../lib/cn'
+import { createShare } from './blob'
 
-type Step = 'review' | 'recipient' | 'grant' | 'result';
+type Step = 'review' | 'recipient' | 'grant' | 'result'
 
-const PUB_PREFIX = 'cp-pub-';
+const PUB_PREFIX = 'cp-pub-'
 
 export function ShareDialog({
   session,
   open,
-  onOpenChange,
+  onOpenChange
 }: {
-  session: Session;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+  session: Session
+  open: boolean
+  onOpenChange: (open: boolean) => void
 }) {
-  const { state: idState } = useIdentityContext();
-  const [step, setStep] = React.useState<Step>('review');
-  const [detections, setDetections] = React.useState<Detection[]>([]);
-  const [scanning, setScanning] = React.useState(true);
-  const [ack, setAck] = React.useState(false);
-  const [literal, setLiteral] = React.useState('');
+  const { state: idState } = useIdentityContext()
+  const [step, setStep] = React.useState<Step>('review')
+  const [detections, setDetections] = React.useState<Detection[]>([])
+  const [scanning, setScanning] = React.useState(true)
+  const [ack, setAck] = React.useState(false)
+  const [literal, setLiteral] = React.useState('')
 
-  const [recipientInput, setRecipientInput] = React.useState('');
-  const [recipientConfirmed, setRecipientConfirmed] = React.useState(false);
+  const [recipientInput, setRecipientInput] = React.useState('')
+  const [recipientConfirmed, setRecipientConfirmed] = React.useState(false)
 
-  const [tier, setTier] = React.useState<Tier>('body');
-  const [blob, setBlob] = React.useState('');
-  const [busy, setBusy] = React.useState(false);
-  const [error, setError] = React.useState<string | null>(null);
+  const [tier, setTier] = React.useState<Tier>('body')
+  const [blob, setBlob] = React.useState('')
+  const [busy, setBusy] = React.useState(false)
+  const [error, setError] = React.useState<string | null>(null)
 
   // Scan once when the dialog opens (main thread; a worker is a documented
   // follow-up). Reset everything on close so re-share starts clean.
   React.useEffect(() => {
-    if (!open) return;
-    setScanning(true);
-    setStep('review');
-    setAck(false);
-    setRecipientInput('');
-    setRecipientConfirmed(false);
-    setTier('body');
-    setBlob('');
-    setError(null);
+    if (!open) return
+    setScanning(true)
+    setStep('review')
+    setAck(false)
+    setRecipientInput('')
+    setRecipientConfirmed(false)
+    setTier('body')
+    setBlob('')
+    setError(null)
     // Defer so the dialog paints before a large scan.
     const handle = setTimeout(() => {
-      setDetections(scanSession(session));
-      setScanning(false);
-    }, 0);
-    return () => clearTimeout(handle);
-  }, [open, session]);
+      setDetections(scanSession(session))
+      setScanning(false)
+    }, 0)
+    return () => clearTimeout(handle)
+  }, [open, session])
 
-  const redactedCount = detections.filter((d) => d.state === 'redact').length;
+  const redactedCount = detections.filter((d) => d.state === 'redact').length
 
   const recipient = React.useMemo(() => {
-    const raw = recipientInput.trim();
-    if (!raw) return null;
-    const body = raw.startsWith(PUB_PREFIX) ? raw.slice(PUB_PREFIX.length) : raw;
+    const raw = recipientInput.trim()
+    if (!raw) return null
+    const body = raw.startsWith(PUB_PREFIX) ? raw.slice(PUB_PREFIX.length) : raw
     try {
-      return decodePublicCard(body);
+      return decodePublicCard(body)
     } catch {
-      return null;
+      return null
     }
-  }, [recipientInput]);
+  }, [recipientInput])
 
   const toggle = (id: string) =>
     setDetections((prev) =>
       prev.map((d) =>
-        d.id === id ? { ...d, state: d.state === 'redact' ? 'dismissed' : 'redact' } : d,
-      ),
-    );
+        d.id === id ? { ...d, state: d.state === 'redact' ? 'dismissed' : 'redact' } : d
+      )
+    )
 
   const addLiteral = () => {
-    const value = literal.trim();
-    if (!value) return;
+    const value = literal.trim()
+    if (!value) return
     setDetections((prev) => {
-      if (prev.some((d) => d.value === value)) return prev;
+      if (prev.some((d) => d.value === value)) return prev
       const det: Detection = {
         id: 'm' + Math.abs(hashString(value)).toString(36),
         type: 'MANUAL',
@@ -121,38 +121,38 @@ export function ShareDialog({
         snippet: value.slice(0, 4) + '••••',
         signals: ['env-exact'],
         confidence: 1,
-        state: 'redact',
-      };
-      return [det, ...prev];
-    });
-    setLiteral('');
-  };
+        state: 'redact'
+      }
+      return [det, ...prev]
+    })
+    setLiteral('')
+  }
 
   const encrypt = async () => {
-    if (idState.status !== 'unlocked' || !recipient) return;
-    setBusy(true);
-    setError(null);
+    if (idState.status !== 'unlocked' || !recipient) return
+    setBusy(true)
+    setError(null)
     try {
-      const { body, secretMap } = redact(session, detections);
+      const { body, secretMap } = redact(session, detections)
       // Defensive hard gate (PRD-06 FR-25): never ship a body that still contains
       // a confirmed secret value.
-      const leaked = findLeakedValues(body, secretMap);
-      if (leaked.length > 0) throw new Error('Redaction failed an integrity check - not sharing.');
+      const leaked = findLeakedValues(body, secretMap)
+      if (leaked.length > 0) throw new Error('Redaction failed an integrity check - not sharing.')
       const cpblob = await createShare({
         sender: idState.identity,
         recipientCard: recipientInput,
         body,
         secretMap,
-        tier,
-      });
-      setBlob(cpblob);
-      setStep('result');
+        tier
+      })
+      setBlob(cpblob)
+      setStep('result')
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not encrypt this session.');
+      setError(e instanceof Error ? e.message : 'Could not encrypt this session.')
     } finally {
-      setBusy(false);
+      setBusy(false)
     }
-  };
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -203,7 +203,7 @@ export function ShareDialog({
         )}
       </DialogContent>
     </Dialog>
-  );
+  )
 }
 
 function NeedsIdentity() {
@@ -215,7 +215,7 @@ function NeedsIdentity() {
         unlock your identity from the sidebar, then try again.
       </DialogDescription>
     </>
-  );
+  )
 }
 
 function ReviewStep({
@@ -229,19 +229,19 @@ function ReviewStep({
   addLiteral,
   toggle,
   onCancel,
-  onNext,
+  onNext
 }: {
-  scanning: boolean;
-  detections: Detection[];
-  redactedCount: number;
-  ack: boolean;
-  setAck: (v: boolean) => void;
-  literal: string;
-  setLiteral: (v: string) => void;
-  addLiteral: () => void;
-  toggle: (id: string) => void;
-  onCancel: () => void;
-  onNext: () => void;
+  scanning: boolean
+  detections: Detection[]
+  redactedCount: number
+  ack: boolean
+  setAck: (v: boolean) => void
+  literal: string
+  setLiteral: (v: string) => void
+  addLiteral: () => void
+  toggle: (id: string) => void
+  onCancel: () => void
+  onNext: () => void
 }) {
   return (
     <>
@@ -257,11 +257,11 @@ function ReviewStep({
 
       <div className="mt-3 max-h-[40vh] overflow-y-auto rounded-md border border-border">
         {scanning ? (
-          <p className="flex items-center gap-2 p-3 text-body-sm text-muted">
+          <p className="flex items-center gap-2 p-3 text-body-sm text-muted-foreground">
             <Loader2 className="size-4 animate-spin" /> Scanning for secrets…
           </p>
         ) : detections.length === 0 ? (
-          <p className="p-3 text-body-sm text-muted">
+          <p className="p-3 text-body-sm text-muted-foreground">
             No secrets detected. Add any the scanner missed below.
           </p>
         ) : (
@@ -277,12 +277,12 @@ function ReviewStep({
                 <span className="min-w-0 flex-1">
                   <span className="flex items-center gap-1.5">
                     <code className="text-body-sm font-medium text-text">{d.type}</code>
-                    <span className="text-label text-muted">({d.length})</span>
+                    <span className="text-label text-muted-foreground">({d.length})</span>
                     {d.suppressedReason && (
-                      <span className="text-label text-muted">· {d.suppressedReason}</span>
+                      <span className="text-label text-muted-foreground">· {d.suppressedReason}</span>
                     )}
                   </span>
-                  <span className="block truncate font-mono text-label text-muted">
+                  <span className="block truncate font-mono text-label text-muted-foreground">
                     {d.snippet} · {d.signals.join(', ')}
                     {d.occurrences > 1 && ` · ×${d.occurrences}`}
                   </span>
@@ -301,8 +301,8 @@ function ReviewStep({
           className="font-mono text-body-sm"
           onKeyDown={(e) => {
             if (e.key === 'Enter') {
-              e.preventDefault();
-              addLiteral();
+              e.preventDefault()
+              addLiteral()
             }
           }}
         />
@@ -320,7 +320,7 @@ function ReviewStep({
       </label>
 
       <DialogFooter>
-        <span className="mr-auto text-label text-muted">{redactedCount} will be redacted</span>
+        <span className="mr-auto text-label text-muted-foreground">{redactedCount} will be redacted</span>
         <Button variant="ghost" onClick={onCancel}>
           Cancel
         </Button>
@@ -329,7 +329,7 @@ function ReviewStep({
         </Button>
       </DialogFooter>
     </>
-  );
+  )
 }
 
 function RecipientStep({
@@ -339,17 +339,17 @@ function RecipientStep({
   confirmed,
   setConfirmed,
   onBack,
-  onNext,
+  onNext
 }: {
-  recipientInput: string;
-  setRecipientInput: (v: string) => void;
-  recipient: { name: string; pub: string } | null;
-  confirmed: boolean;
-  setConfirmed: (v: boolean) => void;
-  onBack: () => void;
-  onNext: () => void;
+  recipientInput: string
+  setRecipientInput: (v: string) => void
+  recipient: { name: string; pub: string } | null
+  confirmed: boolean
+  setConfirmed: (v: boolean) => void
+  onBack: () => void
+  onNext: () => void
 }) {
-  const invalid = recipientInput.trim().length > 0 && !recipient;
+  const invalid = recipientInput.trim().length > 0 && !recipient
   return (
     <>
       <DialogTitle>Share with…</DialogTitle>
@@ -400,7 +400,7 @@ function RecipientStep({
         </Button>
       </DialogFooter>
     </>
-  );
+  )
 }
 
 function GrantStep({
@@ -411,18 +411,18 @@ function GrantStep({
   busy,
   error,
   onBack,
-  onEncrypt,
+  onEncrypt
 }: {
-  recipientName: string;
-  redactedCount: number;
-  tier: Tier;
-  setTier: (t: Tier) => void;
-  busy: boolean;
-  error: string | null;
-  onBack: () => void;
-  onEncrypt: () => void;
+  recipientName: string
+  redactedCount: number
+  tier: Tier
+  setTier: (t: Tier) => void
+  busy: boolean
+  error: string | null
+  onBack: () => void
+  onEncrypt: () => void
 }) {
-  const hasSecrets = redactedCount > 0;
+  const hasSecrets = redactedCount > 0
   return (
     <>
       <DialogTitle>Grant</DialogTitle>
@@ -467,7 +467,7 @@ function GrantStep({
         </Button>
       </DialogFooter>
     </>
-  );
+  )
 }
 
 function TierOption({
@@ -475,13 +475,13 @@ function TierOption({
   desc,
   selected,
   disabled,
-  onSelect,
+  onSelect
 }: {
-  label: string;
-  desc: string;
-  selected: boolean;
-  disabled?: boolean;
-  onSelect: () => void;
+  label: string
+  desc: string
+  selected: boolean
+  disabled?: boolean
+  onSelect: () => void
 }) {
   return (
     <button
@@ -491,48 +491,48 @@ function TierOption({
       className={cn(
         'flex w-full items-start gap-3 rounded-md border p-3 text-left transition-colors',
         selected ? 'border-accent bg-accent-tint' : 'border-border hover:bg-accent-tint',
-        disabled && 'cursor-not-allowed opacity-50 hover:bg-transparent',
+        disabled && 'cursor-not-allowed opacity-50 hover:bg-transparent'
       )}
     >
       <span
         className={cn(
           'mt-0.5 grid size-4 shrink-0 place-items-center rounded-full border',
-          selected ? 'border-accent' : 'border-muted',
+          selected ? 'border-accent' : 'border-muted'
         )}
       >
         {selected && <span className="size-2 rounded-full bg-accent" />}
       </span>
       <span>
         <span className="block text-body-sm font-medium text-text">{label}</span>
-        <span className="block text-label text-muted">{desc}</span>
+        <span className="block text-label text-muted-foreground">{desc}</span>
       </span>
     </button>
-  );
+  )
 }
 
 function ResultStep({
   blob,
   recipientName,
-  onDone,
+  onDone
 }: {
-  blob: string;
-  recipientName: string;
-  onDone: () => void;
+  blob: string
+  recipientName: string
+  onDone: () => void
 }) {
-  const [copied, copy] = useCopy();
+  const [copied, copy] = useCopy()
   // Auto-copy on success (PRD-11 FR-6).
   React.useEffect(() => {
-    if (blob) copy(blob);
-  }, [blob, copy]);
+    if (blob) copy(blob)
+  }, [blob, copy])
 
   const download = () => {
-    const url = URL.createObjectURL(new Blob([blob], { type: 'text/plain' }));
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `claudepad-share-${recipientName}.cpad`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
+    const url = URL.createObjectURL(new Blob([blob], { type: 'text/plain' }))
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `claudepad-share-${recipientName}.cpad`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
 
   return (
     <>
@@ -557,7 +557,7 @@ function ResultStep({
         </Button>
       </div>
 
-      <div className="mt-3 flex items-start gap-2 rounded-md border border-border bg-bg p-2.5 text-label text-muted">
+      <div className="mt-3 flex items-start gap-2 rounded-md border border-border bg-bg p-2.5 text-label text-muted-foreground">
         <ShieldAlert className="mt-0.5 size-4 shrink-0 text-warn" />
         <span>
           No server holds this. If it’s lost, it’s gone - it can’t be expired,
@@ -569,11 +569,11 @@ function ResultStep({
         <Button onClick={onDone}>Done</Button>
       </DialogFooter>
     </>
-  );
+  )
 }
 
 function hashString(s: string): number {
-  let h = 0;
-  for (let i = 0; i < s.length; i++) h = (Math.imul(31, h) + s.charCodeAt(i)) | 0;
-  return h;
+  let h = 0
+  for (let i = 0; i < s.length; i++) h = (Math.imul(31, h) + s.charCodeAt(i)) | 0
+  return h
 }

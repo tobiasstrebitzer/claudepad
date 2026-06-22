@@ -1,98 +1,99 @@
-import * as React from 'react';
 import {
-  Upload,
+  Check,
   Clipboard,
-  ShieldCheck,
-  Lock,
   Eye,
   EyeOff,
-  Share2,
-  Check,
-  X,
-  Sun,
+  Lock,
   Moon,
   Plus,
   Search,
   Settings,
+  Share2,
+  ShieldCheck,
+  Sun,
   Trash2,
-} from 'lucide-react';
-import { ReadingColumn } from '../components/shell/AppShell';
-import { Button } from '../components/ui/button';
-import { Badge } from '../components/ui/badge';
-import { Input } from '../components/ui/input';
-import { Switch } from '../components/ui/switch';
-import { Separator } from '../components/ui/separator';
-import { Textarea } from '../components/ui/textarea';
-import { Checkbox } from '../components/ui/checkbox';
-import { Tabs, TabsList, TabsTab, TabsPanel } from '../components/ui/tabs';
-import {
-  TooltipProvider,
-  Tooltip,
-  TooltipTrigger,
-  TooltipContent,
-} from '../components/ui/tooltip';
-import {
-  Popover,
-  PopoverTrigger,
-  PopoverContent,
-  PopoverTitle,
-  PopoverDescription,
-} from '../components/ui/popover';
-import {
-  Dialog,
-  DialogTrigger,
-  DialogContent,
-  DialogTitle,
-  DialogDescription,
-  DialogClose,
-  DialogFooter,
-} from '../components/ui/dialog';
-import {
-  Drawer,
-  DrawerTrigger,
-  DrawerContent,
-  DrawerTitle,
-  DrawerDescription,
-  DrawerClose,
-} from '../components/ui/drawer';
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuLabel,
-} from '../components/ui/dropdown-menu';
-import { ScrollArea } from '../components/ui/scroll-area';
-import { ToastProvider, Toaster, toast } from '../components/ui/toast';
-import { Skeleton } from '../components/ui/skeleton';
+  Upload,
+  X
+} from 'lucide-react'
+import * as React from 'react'
+import { Wordmark } from '../components/brand/Wordmark'
+import { ReadingColumn } from '../components/shell/AppShell'
+import { Button } from '../components/ui/Button'
+import { Avatar, AvatarFallback, AvatarImage } from '../components/ui/Avatar'
+import { Badge } from '../components/ui/Badge'
+import { Checkbox } from '../components/ui/Checkbox'
 import {
   Collapsible,
-  CollapsibleTrigger,
-  CollapsiblePanel,
-} from '../components/ui/collapsible';
-import { Avatar, AvatarImage, AvatarFallback } from '../components/ui/avatar';
-import { Wordmark } from '../components/brand/Wordmark';
-import { contrastRatio, ratioLabel } from '../lib/contrast';
-import { getTheme, setTheme, type ResolvedTheme } from '../lib/theme';
+  CollapsibleContent,
+  CollapsibleTrigger
+} from '../components/ui/Collapsible'
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogTitle,
+  DialogTrigger
+} from '../components/ui/Dialog'
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerDescription,
+  DrawerTitle,
+  DrawerTrigger
+} from '../components/ui/Drawer'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger
+} from '../components/ui/DropdownMenu'
+import { Input } from '../components/ui/Input'
+import {
+  Popover,
+  PopoverContent,
+  PopoverDescription,
+  PopoverTitle,
+  PopoverTrigger
+} from '../components/ui/Popover'
+import { ScrollArea } from '../components/ui/ScrollArea'
+import { Separator } from '../components/ui/Separator'
+import { Skeleton } from '../components/ui/Skeleton'
+import { Switch } from '../components/ui/Switch'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/Tabs'
+import { Textarea } from '../components/ui/Textarea'
+import { Toaster } from '../components/ui/Sonner'
+import { toast } from 'sonner'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger
+} from '../components/ui/Tooltip'
+import { contrastRatio, ratioLabel } from '../lib/contrast'
+import { getTheme, setTheme, type ResolvedTheme } from '../lib/theme'
 
 // Read a set of CSS custom properties off <html> for the current theme.
 function useCssVars(names: string[], dep: unknown): Record<string, string> {
   return React.useMemo(() => {
-    const out: Record<string, string> = {};
+    const out: Record<string, string> = {}
     if (typeof document !== 'undefined') {
-      const cs = getComputedStyle(document.documentElement);
-      for (const n of names) out[n] = cs.getPropertyValue(n).trim();
+      const cs = getComputedStyle(document.documentElement)
+      for (const n of names) out[n] = cs.getPropertyValue(n).trim()
     }
-    return out;
+    return out
     // `names` is a stable module constant; re-read only when the theme (`dep`) changes.
-  }, [dep]);
+  }, [dep])
 }
 
-const SURFACE_TOKENS = ['--bg', '--surface', '--sidebar', '--border'];
-const TEXT_TOKENS = ['--text', '--text-muted', '--accent', '--accent-hover'];
-const STATUS_TOKENS = ['--success', '--warn', '--danger', '--ring'];
-const ALL_TOKENS = [...SURFACE_TOKENS, ...TEXT_TOKENS, ...STATUS_TOKENS, '--accent-fg'];
+const SURFACE_TOKENS = ['--bg', '--surface', '--sidebar', '--border']
+const TEXT_TOKENS = ['--text', '--text-muted', '--accent', '--accent-hover']
+const STATUS_TOKENS = ['--success', '--warn', '--danger', '--ring']
+const ALL_TOKENS = [...SURFACE_TOKENS, ...TEXT_TOKENS, ...STATUS_TOKENS, '--accent-fg']
 
 // Documented contrast pairings (mirrors §7.1 targets) - also asserted by CI
 // (scripts/check-contrast.mjs). NOTE: text-on-accent is held to AA-large (3:1):
@@ -103,8 +104,8 @@ const PAIRINGS: { fg: string; bg: string; min: number; note: string }[] = [
   { fg: '--text', bg: '--surface', min: 4.5, note: 'body on surface' },
   { fg: '--text-muted', bg: '--bg', min: 4.5, note: 'muted on canvas' },
   { fg: '--accent-fg', bg: '--accent', min: 3, note: 'bold label on accent (AA-large)' },
-  { fg: '--accent', bg: '--bg', min: 3, note: 'accent on canvas (UI)' },
-];
+  { fg: '--accent', bg: '--bg', min: 3, note: 'accent on canvas (UI)' }
+]
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -112,7 +113,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
       <h2 className="font-sans text-heading-2 font-semibold text-text">{title}</h2>
       <div className="mt-4">{children}</div>
     </section>
-  );
+  )
 }
 
 function Swatch({ name, value }: { name: string; value: string }) {
@@ -124,23 +125,23 @@ function Swatch({ name, value }: { name: string; value: string }) {
       />
       <span className="flex flex-col">
         <code className="font-mono text-code text-text">{name}</code>
-        <span className="text-label text-muted">{value || '-'}</span>
+        <span className="text-label text-muted-foreground">{value || '-'}</span>
       </span>
     </div>
-  );
+  )
 }
 
 export function Gallery() {
   const [resolved, setResolved] = React.useState<ResolvedTheme>(
     () =>
-      (document.documentElement.getAttribute('data-theme') as ResolvedTheme) ?? 'light',
-  );
-  const vars = useCssVars(ALL_TOKENS, resolved);
+      (document.documentElement.getAttribute('data-theme') as ResolvedTheme) ?? 'light'
+  )
+  const vars = useCssVars(ALL_TOKENS, resolved)
 
   const setMode = (mode: 'light' | 'dark') => {
-    setTheme(mode);
-    setResolved(mode);
-  };
+    setTheme(mode)
+    setResolved(mode)
+  }
 
   const icons = [
     Upload,
@@ -157,15 +158,15 @@ export function Gallery() {
     Plus,
     Search,
     Settings,
-    Trash2,
-  ];
+    Trash2
+  ]
 
   return (
-    <ToastProvider>
+    <>
       <ReadingColumn className="max-w-4xl">
         <div className="flex items-end justify-between">
           <div>
-            <p className="text-body-sm text-muted">Design system</p>
+            <p className="text-body-sm text-muted-foreground">Design system</p>
             <h1 className="mt-1 font-serif text-display-lg text-text">Gallery</h1>
           </div>
           {/* Light/dark switch at the top (FR-23). */}
@@ -179,7 +180,7 @@ export function Gallery() {
                   'rounded-[5px] px-3 py-1 text-body-sm capitalize transition-colors ' +
                   (resolved === m
                     ? 'bg-accent text-accent-fg'
-                    : 'text-muted hover:text-text')
+                    : 'text-muted-foreground hover:text-text')
                 }
               >
                 {m}
@@ -187,7 +188,7 @@ export function Gallery() {
             ))}
           </div>
         </div>
-        <p className="mt-2 text-body-sm text-muted">
+        <p className="mt-2 text-body-sm text-muted-foreground">
           Current preference: <code className="font-mono text-code">{getTheme()}</code> ·
           resolved <code className="font-mono text-code">{resolved}</code>
         </p>
@@ -203,7 +204,7 @@ export function Gallery() {
         <Section title="Contrast (WCAG)">
           <div className="overflow-hidden rounded-lg border border-border">
             <table className="w-full text-body-sm">
-              <thead className="bg-sidebar text-muted">
+              <thead className="bg-sidebar text-muted-foreground">
                 <tr>
                   <th className="px-3 py-2 text-left font-medium">Pairing</th>
                   <th className="px-3 py-2 text-left font-medium">Ratio</th>
@@ -213,8 +214,8 @@ export function Gallery() {
               </thead>
               <tbody>
                 {PAIRINGS.map((p) => {
-                  const ratio = contrastRatio(vars[p.fg] ?? '', vars[p.bg] ?? '');
-                  const pass = ratio >= p.min;
+                  const ratio = contrastRatio(vars[p.fg] ?? '', vars[p.bg] ?? '')
+                  const pass = ratio >= p.min
                   return (
                     <tr key={p.note} className="border-t border-border">
                       <td className="px-3 py-2 text-text">
@@ -229,14 +230,19 @@ export function Gallery() {
                       <td className="px-3 py-2 font-mono text-code text-text">
                         {ratioLabel(ratio)}
                       </td>
-                      <td className="px-3 py-2 text-muted">≥ {p.min}</td>
+                      <td className="px-3 py-2 text-muted-foreground">≥ {p.min}</td>
                       <td className="px-3 py-2">
-                        <Badge variant={pass ? 'success' : 'danger'}>
+                        <Badge
+                          variant={pass ? 'outline' : 'destructive'}
+                          className={
+                            pass ? 'border-transparent bg-success/15 text-success' : undefined
+                          }
+                        >
                           {pass ? 'pass' : 'fail'}
                         </Badge>
                       </td>
                     </tr>
-                  );
+                  )
                 })}
               </tbody>
             </table>
@@ -257,10 +263,10 @@ export function Gallery() {
             <p className="text-body text-text">
               Body - the default for UI and transcript reading.
             </p>
-            <p className="text-body-sm text-muted">
+            <p className="text-body-sm text-muted-foreground">
               Body small - secondary text and captions.
             </p>
-            <p className="text-label uppercase tracking-[0.02em] text-muted">
+            <p className="text-label uppercase tracking-[0.02em] text-muted-foreground">
               Label · sidebar sections
             </p>
             <p className="font-mono text-code text-text">
@@ -294,10 +300,10 @@ export function Gallery() {
         <Section title="Buttons">
           <div className="space-y-4 rounded-lg border border-border bg-surface p-6">
             <div className="flex flex-wrap items-center gap-3">
-              <Button variant="primary">Primary</Button>
+              <Button variant="default">Primary</Button>
               <Button variant="secondary">Secondary</Button>
               <Button variant="ghost">Ghost</Button>
-              <Button variant="danger">Danger</Button>
+              <Button variant="destructive">Danger</Button>
               <Button variant="link">Link</Button>
             </div>
             <div className="flex flex-wrap items-center gap-3">
@@ -305,7 +311,7 @@ export function Gallery() {
                 <Share2 />
                 Small
               </Button>
-              <Button size="md">Medium</Button>
+              <Button size="default">Medium</Button>
               <Button size="lg">Large</Button>
               <Button size="icon" aria-label="Settings">
                 <Settings />
@@ -317,12 +323,12 @@ export function Gallery() {
 
         <Section title="Badges">
           <div className="flex flex-wrap items-center gap-2 rounded-lg border border-border bg-surface p-6">
-            <Badge>neutral</Badge>
-            <Badge variant="accent">accent</Badge>
-            <Badge variant="success">success</Badge>
-            <Badge variant="warn">caution</Badge>
-            <Badge variant="danger">danger</Badge>
-            <Badge variant="mono">AWS_KEY ••••••••(20)</Badge>
+            <Badge variant="outline" className="bg-sidebar text-muted-foreground">neutral</Badge>
+            <Badge variant="outline" className="border-transparent bg-accent-tint text-accent">accent</Badge>
+            <Badge variant="outline" className="border-transparent bg-success/15 text-success">success</Badge>
+            <Badge variant="outline" className="border-transparent bg-warn/15 text-warn">caution</Badge>
+            <Badge variant="destructive">danger</Badge>
+            <Badge variant="outline" className="bg-surface font-mono text-muted-foreground">AWS_KEY ••••••••(20)</Badge>
           </div>
         </Section>
 
@@ -358,11 +364,11 @@ export function Gallery() {
               <Checkbox />
               Unchecked
             </label>
-            <label className="flex items-center gap-2 text-body-sm text-muted">
+            <label className="flex items-center gap-2 text-body-sm text-muted-foreground">
               <Checkbox disabled />
               Disabled
             </label>
-            <label className="flex items-center gap-2 text-body-sm text-muted">
+            <label className="flex items-center gap-2 text-body-sm text-muted-foreground">
               <Checkbox defaultChecked disabled />
               Disabled checked
             </label>
@@ -373,17 +379,17 @@ export function Gallery() {
           <div className="rounded-lg border border-border bg-surface p-6">
             <Tabs defaultValue="prettify">
               <TabsList>
-                <TabsTab value="prettify">Prettify</TabsTab>
-                <TabsTab value="share">Share</TabsTab>
-                <TabsTab value="playback">Playback</TabsTab>
+                <TabsTrigger value="prettify">Prettify</TabsTrigger>
+                <TabsTrigger value="share">Share</TabsTrigger>
+                <TabsTrigger value="playback">Playback</TabsTrigger>
               </TabsList>
-              <TabsPanel value="prettify">
+              <TabsContent value="prettify">
                 Drop a raw session and see it cleaned up.
-              </TabsPanel>
-              <TabsPanel value="share">
+              </TabsContent>
+              <TabsContent value="share">
                 Encrypt the transcript to a recipient&apos;s public key.
-              </TabsPanel>
-              <TabsPanel value="playback">Replay the session turn by turn.</TabsPanel>
+              </TabsContent>
+              <TabsContent value="playback">Replay the session turn by turn.</TabsContent>
             </Tabs>
           </div>
         </Section>
@@ -409,7 +415,7 @@ export function Gallery() {
                 <PopoverTitle className="text-heading-3 font-semibold text-text">
                   Key fingerprint
                 </PopoverTitle>
-                <PopoverDescription className="mt-1 text-body-sm text-muted">
+                <PopoverDescription className="mt-1 text-body-sm text-muted-foreground">
                   Compare these emoji + hex out of band to verify the recipient.
                 </PopoverDescription>
                 <p className="mt-2 font-mono text-code text-text">
@@ -437,15 +443,17 @@ export function Gallery() {
               </DialogContent>
             </Dialog>
 
-            <Drawer>
-              <DrawerTrigger
-                render={<Button variant="secondary">Open drawer (right)</Button>}
-              />
-              <DrawerContent side="right">
+            <Drawer direction="right">
+              <DrawerTrigger asChild>
+                <Button variant="secondary">Open drawer (right)</Button>
+              </DrawerTrigger>
+              <DrawerContent>
                 <DrawerTitle>Recipients</DrawerTitle>
                 <DrawerDescription>Manage who can decrypt this blob.</DrawerDescription>
                 <div className="mt-4 flex-1" />
-                <DrawerClose render={<Button variant="secondary">Close</Button>} />
+                <DrawerClose asChild>
+                  <Button variant="secondary">Close</Button>
+                </DrawerClose>
               </DrawerContent>
             </Drawer>
           </div>
@@ -496,9 +504,8 @@ export function Gallery() {
             <Button
               variant="secondary"
               onClick={() =>
-                toast({
-                  title: 'Blob copied',
-                  description: 'The encrypted share is on your clipboard.',
+                toast('Blob copied', {
+                  description: 'The encrypted share is on your clipboard.'
                 })
               }
             >
@@ -526,11 +533,11 @@ export function Gallery() {
               <CollapsibleTrigger
                 render={<Button variant="ghost">Show tool output</Button>}
               />
-              <CollapsiblePanel>
+              <CollapsibleContent>
                 <pre className="mt-2 rounded-md bg-sidebar p-3 font-mono text-code text-text">
                   $ node poc/verify.mjs{'\n'}16/16 checks passed
                 </pre>
-              </CollapsiblePanel>
+              </CollapsibleContent>
             </Collapsible>
           </div>
         </Section>
@@ -552,6 +559,6 @@ export function Gallery() {
         </Section>
       </ReadingColumn>
       <Toaster />
-    </ToastProvider>
-  );
+    </>
+  )
 }

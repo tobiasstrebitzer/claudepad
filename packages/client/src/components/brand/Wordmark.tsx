@@ -1,4 +1,4 @@
-import { cn } from '../../lib/cn';
+import { cn } from '../../lib/cn'
 
 /**
  * claudepad mark (PRD-01 FR-17/FR-18, Q-A leaning): a notepad/page glyph whose
@@ -7,19 +7,19 @@ import { cn } from '../../lib/cn';
  * accent only in the `spark` variant. NOT Anthropic's asterisk/logo/typefaces.
  */
 
-type MarkProps = {
-  size?: number;
+interface MarkProps {
+  size?: number
   /** `spark` paints the corner dot with the accent; otherwise it inherits currentColor. */
-  variant?: 'mono' | 'spark';
-  className?: string;
-  title?: string;
-};
+  variant?: 'mono' | 'spark'
+  className?: string
+  title?: string
+}
 
 export function Mark({
   size = 24,
   variant = 'mono',
   className,
-  title = 'claudepad',
+  title = 'claudepad'
 }: MarkProps) {
   return (
     <svg
@@ -77,7 +77,7 @@ export function Mark({
         fill={variant === 'spark' ? 'var(--accent)' : 'currentColor'}
       />
     </svg>
-  );
+  )
 }
 
 /**
@@ -89,7 +89,7 @@ export function MarkLines({
   size = 24,
   variant = 'mono',
   className,
-  title = 'claudepad',
+  title = 'claudepad'
 }: MarkProps) {
   return (
     <svg
@@ -135,30 +135,30 @@ export function MarkLines({
         fill={variant === 'spark' ? 'var(--accent)' : 'currentColor'}
       />
     </svg>
-  );
+  )
 }
 
-type WordmarkProps = {
+interface WordmarkProps {
   /** `full` = mark + wordmark; `small` = compact mark + wordmark; `mark` = glyph only. */
-  size?: 'full' | 'small' | 'mark';
-  variant?: 'mono' | 'spark';
-  className?: string;
-};
+  size?: 'full' | 'small' | 'mark'
+  variant?: 'mono' | 'spark'
+  className?: string
+}
 
 export function Wordmark({ size = 'full', variant = 'spark', className }: WordmarkProps) {
-  if (size === 'mark') return <Mark variant={variant} className={className} />;
-  const markSize = size === 'small' ? 20 : 24;
+  if (size === 'mark') return <Mark variant={variant} className={className} />
+  const markSize = size === 'small' ? 20 : 24
   return (
     <span className={cn('inline-flex items-center gap-2 text-text', className)}>
       <Mark size={markSize} variant={variant} />
       <span
         className={cn(
           'font-sans font-semibold tracking-tight lowercase',
-          size === 'small' ? 'text-body' : 'text-heading-3',
+          size === 'small' ? 'text-body' : 'text-heading-3'
         )}
       >
         claudepad
       </span>
     </span>
-  );
+  )
 }

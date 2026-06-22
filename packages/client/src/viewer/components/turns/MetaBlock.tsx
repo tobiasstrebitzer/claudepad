@@ -1,20 +1,20 @@
-import * as React from 'react';
-import { Info } from 'lucide-react';
-import type { MetaEvent } from '@claudepad/schema';
-import { RawBlock } from '../blocks/RawBlock';
-import { attachmentType } from '../../hooks/eventVisibility';
+import type { MetaEvent } from '@claudepad/schema'
+import { Info } from 'lucide-react'
+import * as React from 'react'
+import { attachmentType } from '../../hooks/eventVisibility'
+import { RawBlock } from '../blocks/RawBlock'
 
 /**
  * Graceful fallback for `meta` / unrecognized events (FR-7). Shows the note and
  * offers the raw payload; never crashes.
  */
-export const MetaBlock = React.memo(function MetaBlock({
+export const MetaBlock = React.memo(({
   event,
-  anchorId,
+  anchorId
 }: {
-  event: MetaEvent;
-  anchorId: string;
-}) {
+  event: MetaEvent
+  anchorId: string
+}) => {
   return (
     <div
       id={anchorId}
@@ -23,11 +23,11 @@ export const MetaBlock = React.memo(function MetaBlock({
       aria-label="Session note"
       className="my-1.5"
     >
-      <div className="mb-1 flex items-center gap-2 text-body-sm text-muted">
+      <div className="mb-1 flex items-center gap-2 text-body-sm text-muted-foreground">
         <Info className="size-3.5 shrink-0" />
         <span>{attachmentType(event) || event.note || event.subtype || 'Note'}</span>
       </div>
       {event.raw != null && <RawBlock value={event.raw} label="Raw event" />}
     </div>
-  );
-});
+  )
+})

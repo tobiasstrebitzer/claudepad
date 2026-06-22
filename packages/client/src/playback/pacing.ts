@@ -5,42 +5,42 @@
 // on exactly what the audience sees - and on the *rendered, tier-appropriate*
 // content (secret placeholders count as their label only, FR-19).
 
-import type { ContentBlock } from '@claudepad/schema';
-import type { RenderRow } from '../viewer/hooks/useCorrelateTools';
+import type { ContentBlock } from '@claudepad/schema'
+import type { RenderRow } from '../viewer/hooks/useCorrelateTools'
 
 export interface PacingWeights {
-  text: number;
-  thinking: number;
-  code: number;
-  toolIo: number;
-  image: number;
+  text: number
+  thinking: number
+  code: number
+  toolIo: number
+  image: number
 }
 
 export interface PacingConfig {
   /** chars / second - the dominant reading-speed knob (≈ presentation skim). */
-  readingSpeed: number;
+  readingSpeed: number
   /** seconds floor so even a tiny event registers. */
-  baseDwell: number;
-  minDwell: number;
-  maxDwell: number;
+  baseDwell: number
+  minDwell: number
+  maxDwell: number
   /** seconds added per image (converted to char-equivalent reading cost). */
-  imageCost: number;
+  imageCost: number
   /** weighted-char cap per tool I/O field - don't read a 5k-line file aloud. */
-  toolIoCap: number;
+  toolIoCap: number
   /** seconds: an original inter-event gap above this is "idle" and collapses. */
-  idleThreshold: number;
+  idleThreshold: number
   /** seconds: the compressed beat a collapsed idle gap becomes. */
-  idleCollapsed: number;
+  idleCollapsed: number
   /** seconds: real-time-mode clamp so a human thinking-pause can't stall playback. */
-  maxRealtimeGap: number;
+  maxRealtimeGap: number
   /** ≥ this many same-name tool rows in a row ⇒ fold into one beat. */
-  toolSpamRun: number;
+  toolSpamRun: number
   /** Row kinds that are de-emphasised in the viewer (e.g. collapsed thinking)
    * and so get fast-tracked in presentation mode - capped to a short beat. */
-  fastTrackKinds: string[];
+  fastTrackKinds: string[]
   /** seconds: dwell cap applied to `fastTrackKinds` rows in presentation mode. */
-  fastTrackMaxDwell: number;
-  weights: PacingWeights;
+  fastTrackMaxDwell: number
+  weights: PacingWeights
 }
 
 // Defaults (PRD-08 §6.3). Treated as a tunable starting point, not contract.
@@ -61,61 +61,61 @@ export const DEFAULT_PACING: PacingConfig = {
   // don't make the audience wait on them; cap to a brief beat.
   fastTrackKinds: ['thinking', 'meta'],
   fastTrackMaxDwell: 0.7,
-  weights: { text: 1, thinking: 0.6, code: 0.35, toolIo: 0.25, image: 0 },
-};
+  weights: { text: 1, thinking: 0.6, code: 0.35, toolIo: 0.25, image: 0 }
+}
 
 /** Discrete transport speeds (FR-5). */
-export const SPEEDS = [0.5, 0.75, 1, 1.5, 2, 4, 8] as const;
-export type Speed = (typeof SPEEDS)[number];
+export const SPEEDS = [0.5, 0.75, 1, 1.5, 2, 4, 8] as const
+export type Speed = (typeof SPEEDS)[number]
 
 /** Seek-by-step for ←/→ (FR-23), in ms of virtual time. */
-export const SEEK_STEP_MS = 5000;
+export const SEEK_STEP_MS = 5000
 
 /** Reveal style for a turn during playback (PRD-08 FR-17). */
-export type AppearMode = 'instant' | 'type';
+export type AppearMode = 'instant' | 'type'
 
 /** Fraction of a typed turn's dwell reserved as a pause after the text finishes
  * (feels more natural than starting the next turn the instant typing ends). */
-export const TYPING_BUFFER_RATIO = 0.18;
+export const TYPING_BUFFER_RATIO = 0.18
 
 export const clamp = (v: number, lo: number, hi: number): number =>
-  Math.min(hi, Math.max(lo, v));
+  Math.min(hi, Math.max(lo, v))
 
 export const mergePacing = (partial?: Partial<PacingConfig>): PacingConfig =>
   partial
     ? { ...DEFAULT_PACING, ...partial, weights: { ...DEFAULT_PACING.weights, ...partial.weights } }
-    : DEFAULT_PACING;
+    : DEFAULT_PACING
 
 function jsonLen(v: unknown): number {
-  if (v == null) return 0;
-  if (typeof v === 'string') return v.length;
+  if (v == null) return 0
+  if (typeof v === 'string') return v.length
   try {
-    return JSON.stringify(v).length;
+    return JSON.stringify(v).length
   } catch {
-    return 0;
+    return 0
   }
 }
 
 function blocksCost(blocks: ContentBlock[], cfg: PacingConfig, thinking: boolean): number {
-  let cost = 0;
+  let cost = 0
   for (const block of blocks) {
     switch (block.type) {
       case 'text':
-        cost += block.text.length * (thinking ? cfg.weights.thinking : cfg.weights.text);
-        break;
+        cost += block.text.length * (thinking ? cfg.weights.thinking : cfg.weights.text)
+        break
       case 'code':
-        cost += block.text.length * cfg.weights.code;
-        break;
+        cost += block.text.length * cfg.weights.code
+        break
       case 'image':
         // Convert a flat per-image cost into char-equivalent reading cost.
-        cost += cfg.imageCost * cfg.readingSpeed;
-        break;
+        cost += cfg.imageCost * cfg.readingSpeed
+        break
       case 'raw':
-        cost += Math.min(jsonLen(block.value), cfg.toolIoCap) * cfg.weights.toolIo;
-        break;
+        cost += Math.min(jsonLen(block.value), cfg.toolIoCap) * cfg.weights.toolIo
+        break
     }
   }
-  return cost;
+  return cost
 }
 
 /**
@@ -124,24 +124,24 @@ function blocksCost(blocks: ContentBlock[], cfg: PacingConfig, thinking: boolean
  */
 export function weightedCharCount(row: RenderRow, cfg: PacingConfig): number {
   if (row.kind === 'tool') {
-    const input = Math.min(jsonLen(row.event.input), cfg.toolIoCap);
-    const output = row.result ? Math.min(jsonLen(row.result.output), cfg.toolIoCap) : 0;
-    return (input + output) * cfg.weights.toolIo;
+    const input = Math.min(jsonLen(row.event.input), cfg.toolIoCap)
+    const output = row.result ? Math.min(jsonLen(row.result.output), cfg.toolIoCap) : 0
+    return (input + output) * cfg.weights.toolIo
   }
   if (row.kind === 'orphan-result') {
-    return Math.min(jsonLen(row.event.output), cfg.toolIoCap) * cfg.weights.toolIo;
+    return Math.min(jsonLen(row.event.output), cfg.toolIoCap) * cfg.weights.toolIo
   }
-  const event = row.event;
+  const event = row.event
   switch (event.kind) {
     case 'user':
     case 'assistant':
-      return blocksCost(event.content, cfg, false);
+      return blocksCost(event.content, cfg, false)
     case 'thinking':
-      return blocksCost(event.content, cfg, true);
+      return blocksCost(event.content, cfg, true)
     case 'meta':
-      return event.note.length * cfg.weights.text;
+      return event.note.length * cfg.weights.text
     default:
-      return 0;
+      return 0
   }
 }
 
@@ -150,12 +150,12 @@ export function dwellPresentMs(row: RenderRow, cfg: PacingConfig): number {
   const seconds = clamp(
     cfg.baseDwell + weightedCharCount(row, cfg) / cfg.readingSpeed,
     cfg.minDwell,
-    cfg.maxDwell,
-  );
-  return Math.round(seconds * 1000);
+    cfg.maxDwell
+  )
+  return Math.round(seconds * 1000)
 }
 
 /** Sublinear dwell for a folded tool-spam run of length k, in ms (FR-12). */
 export function spamDwellMs(k: number, cfg: PacingConfig): number {
-  return Math.round((cfg.baseDwell + 0.5 * Math.log2(k)) * 1000);
+  return Math.round((cfg.baseDwell + 0.5 * Math.log2(k)) * 1000)
 }

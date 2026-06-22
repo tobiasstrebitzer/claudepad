@@ -1,37 +1,37 @@
-import * as React from 'react';
-import { BlockErrorBoundary } from '../BlockErrorBoundary';
-import type { RenderRow } from '../../hooks/useCorrelateTools';
-import { anchorIdFor } from '../../hooks/useAnchor';
-import { matchTurn } from './registry';
+import * as React from 'react'
+import { anchorIdFor } from '../../hooks/useAnchor'
+import type { RenderRow } from '../../hooks/useCorrelateTools'
+import { BlockErrorBoundary } from '../BlockErrorBoundary'
+import { matchTurn } from './registry'
 
 /** Render one top-level transcript row, error-isolated (FR-7). */
-export const TurnRenderer = React.memo(function TurnRenderer({
+export const TurnRenderer = React.memo(({
   row,
   highlightId,
-  typingFraction,
+  typingFraction
 }: {
-  row: RenderRow;
-  highlightId?: string;
+  row: RenderRow
+  highlightId?: string
   /** PRD-08 typing reveal - only set for the active playback turn. */
-  typingFraction?: number;
-}) {
+  typingFraction?: number
+}) => {
   return (
     <BlockErrorBoundary fallbackValue={row.event}>
       <Row row={row} highlightId={highlightId} typingFraction={typingFraction} />
     </BlockErrorBoundary>
-  );
-});
+  )
+})
 
 function Row({
   row,
   highlightId,
-  typingFraction,
+  typingFraction
 }: {
-  row: RenderRow;
-  highlightId?: string;
-  typingFraction?: number;
+  row: RenderRow
+  highlightId?: string
+  typingFraction?: number
 }) {
-  const anchorId = anchorIdFor(row.event, row.index);
-  const highlighted = highlightId === anchorId;
-  return <>{matchTurn(row).render(row, { anchorId, highlighted, typingFraction })}</>;
+  const anchorId = anchorIdFor(row.event, row.index)
+  const highlighted = highlightId === anchorId
+  return <>{matchTurn(row).render(row, { anchorId, highlighted, typingFraction })}</>
 }

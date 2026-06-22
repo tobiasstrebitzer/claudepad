@@ -1,4 +1,4 @@
-import { splitSecretTokens } from '../../secret-token';
+import { splitSecretTokens } from '../../secret-token'
 
 // A rehype transform that turns secret placeholder tokens embedded in markdown
 // TEXT nodes into atomic `<cp-secret>` elements, which the Markdown renderer maps
@@ -12,62 +12,62 @@ import { splitSecretTokens } from '../../secret-token';
 // placeholders; fenced code is rendered verbatim by CodeBlock).
 
 interface HastText {
-  type: 'text';
-  value: string;
+  type: 'text'
+  value: string
 }
 interface HastElement {
-  type: 'element';
-  tagName: string;
-  properties?: Record<string, unknown>;
-  children: HastNode[];
+  type: 'element'
+  tagName: string
+  properties?: Record<string, unknown>
+  children: HastNode[]
 }
 type HastNode =
   | HastText
   | HastElement
-  | { type: string; children?: HastNode[]; value?: string };
+  | { type: string; children?: HastNode[]; value?: string }
 
-const isElement = (n: HastNode): n is HastElement => n.type === 'element';
-const isText = (n: HastNode): n is HastText => n.type === 'text';
+const isElement = (n: HastNode): n is HastElement => n.type === 'element'
+const isText = (n: HastNode): n is HastText => n.type === 'text'
 
 function splitTextNode(value: string): HastNode[] {
-  const segments = splitSecretTokens(value);
+  const segments = splitSecretTokens(value)
   if (segments.length === 1 && segments[0]?.kind === 'text') {
-    return [{ type: 'text', value }];
+    return [{ type: 'text', value }]
   }
   return segments.map((seg) =>
     seg.kind === 'text'
       ? ({ type: 'text', value: seg.text } satisfies HastText)
       : ({
-          type: 'element',
-          tagName: 'cp-secret',
-          properties: {
-            secretId: seg.placeholder.id,
-            secretType: seg.placeholder.type,
-            secretLen: String(seg.placeholder.len),
-          },
-          children: [],
-        } satisfies HastElement),
-  );
+        type: 'element',
+        tagName: 'cp-secret',
+        properties: {
+          secretId: seg.placeholder.id,
+          secretType: seg.placeholder.type,
+          secretLen: String(seg.placeholder.len)
+        },
+        children: []
+      } satisfies HastElement)
+  )
 }
 
 function transform(node: HastNode, inCode: boolean): void {
-  const children = (node as { children?: HastNode[] }).children;
-  if (!children) return;
-  const out: HastNode[] = [];
+  const children = (node as { children?: HastNode[] }).children
+  if (!children) return
+  const out: HastNode[] = []
   for (const child of children) {
     if (isText(child) && !inCode) {
-      out.push(...splitTextNode(child.value));
+      out.push(...splitTextNode(child.value))
     } else {
       if (isElement(child)) {
-        transform(child, inCode || child.tagName === 'code' || child.tagName === 'pre');
+        transform(child, inCode || child.tagName === 'code' || child.tagName === 'pre')
       }
-      out.push(child);
+      out.push(child)
     }
   }
-  (node as { children: HastNode[] }).children = out;
+  (node as { children: HastNode[] }).children = out
 }
 
 /** rehype plugin: inject `<cp-secret>` chip elements for placeholder tokens. */
 export function rehypeSecrets() {
-  return (tree: HastNode): void => transform(tree, false);
+  return (tree: HastNode): void => transform(tree, false)
 }

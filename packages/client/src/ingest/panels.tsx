@@ -1,7 +1,7 @@
-import { AlertTriangle, FileWarning, RotateCcw } from 'lucide-react';
-import { ReadingColumn } from '../components/shell/AppShell';
-import { Button } from '../components/ui/button';
-import { formatBytes } from '@claudepad/ingest';
+import { formatBytes } from '@claudepad/ingest'
+import { AlertTriangle, FileWarning, RotateCcw } from 'lucide-react'
+import { ReadingColumn } from '../components/shell/AppShell'
+import { Button } from '../components/ui/Button'
 
 // Friendly, non-crashing ingest outcomes (PRD-04 §4.6, FR-6/FR-16).
 
@@ -9,12 +9,12 @@ function Panel({
   icon,
   title,
   children,
-  actions,
+  actions
 }: {
-  icon: React.ReactNode;
-  title: string;
-  children: React.ReactNode;
-  actions: React.ReactNode;
+  icon: React.ReactNode
+  title: string
+  children: React.ReactNode
+  actions: React.ReactNode
 }) {
   return (
     <ReadingColumn>
@@ -23,21 +23,21 @@ function Panel({
           <div className="mt-0.5 shrink-0 text-warn">{icon}</div>
           <div className="min-w-0 flex-1">
             <h2 className="text-heading-3 font-semibold text-text">{title}</h2>
-            <div className="mt-1 text-body-sm text-muted">{children}</div>
+            <div className="mt-1 text-body-sm text-muted-foreground">{children}</div>
             <div className="mt-4 flex gap-2">{actions}</div>
           </div>
         </div>
       </div>
     </ReadingColumn>
-  );
+  )
 }
 
 export function RejectionPanel({
   reason,
-  onRetry,
+  onRetry
 }: {
-  reason: string;
-  onRetry: () => void;
+  reason: string
+  onRetry: () => void
 }) {
   return (
     <Panel
@@ -56,17 +56,17 @@ export function RejectionPanel({
         <code className="font-mono text-code">~/.claude/projects/…</code>
       </p>
     </Panel>
-  );
+  )
 }
 
 export function OversizePanel({
   bytes,
   onContinue,
-  onCancel,
+  onCancel
 }: {
-  bytes: number;
-  onContinue: () => void;
-  onCancel: () => void;
+  bytes: number
+  onContinue: () => void
+  onCancel: () => void
 }) {
   return (
     <Panel
@@ -74,7 +74,7 @@ export function OversizePanel({
       title="That’s a large session"
       actions={
         <>
-          <Button variant="primary" onClick={onContinue}>
+          <Button variant="default" onClick={onContinue}>
             Continue anyway
           </Button>
           <Button variant="secondary" onClick={onCancel}>
@@ -88,15 +88,15 @@ export function OversizePanel({
         memory. Continue?
       </p>
     </Panel>
-  );
+  )
 }
 
 export function TooLargePanel({
   bytes,
-  onRetry,
+  onRetry
 }: {
-  bytes: number;
-  onRetry: () => void;
+  bytes: number
+  onRetry: () => void
 }) {
   return (
     <Panel
@@ -114,15 +114,15 @@ export function TooLargePanel({
         splitting the session.
       </p>
     </Panel>
-  );
+  )
 }
 
 export function ErrorPanel({
   message,
-  onRetry,
+  onRetry
 }: {
-  message: string;
-  onRetry: () => void;
+  message: string
+  onRetry: () => void
 }) {
   return (
     <Panel
@@ -137,5 +137,5 @@ export function ErrorPanel({
     >
       <p>{message}</p>
     </Panel>
-  );
+  )
 }

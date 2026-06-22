@@ -5,7 +5,7 @@ import { SessionViewer, EventFilterProvider, DEFAULT_VISIBILITY } from '../src/v
 import { ContentBlocks } from '../src/viewer/components/blocks/ContentBlocks';
 import { TopBar } from '../src/components/shell/TopBar';
 import { sessionTopBar } from '../src/ingest';
-import { TooltipProvider } from '../src/components/ui/tooltip';
+import { TooltipProvider } from '../src/components/ui/Tooltip';
 
 function session(events: SessionEvent[]): Session {
   return {

@@ -1,20 +1,20 @@
-import * as React from 'react';
-import { Link2, Check, UserRound, Sparkles, Info } from 'lucide-react';
-import { cn } from '../../../lib/cn';
-import { formatClock, formatAbsolute } from '../../format';
-import { Tooltip, TooltipContent, TooltipTrigger } from '../../../components/ui/tooltip';
+import * as React from 'react'
+import { Link2, Check, UserRound, Sparkles, Info } from 'lucide-react'
+import { cn } from '../../../lib/cn'
+import { formatClock, formatAbsolute } from '../../format'
+import { Tooltip, TooltipContent, TooltipTrigger } from '../../../components/ui/Tooltip'
 
 interface TurnShellProps {
-  anchorId: string;
-  ts?: string;
+  anchorId: string
+  ts?: string
   /** Visual variant: user (sidebar surface) vs assistant (surface + ◆ marker). */
-  variant: 'user' | 'assistant' | 'system';
-  roleLabel: string;
+  variant: 'user' | 'assistant' | 'system'
+  roleLabel: string
   /** Extra header detail (e.g. model badge). */
-  headerExtra?: React.ReactNode;
+  headerExtra?: React.ReactNode
   /** Briefly highlighted (deep-link target). */
-  highlighted?: boolean;
-  children: React.ReactNode;
+  highlighted?: boolean
+  children: React.ReactNode
 }
 
 /**
@@ -28,7 +28,7 @@ export function TurnShell({
   roleLabel,
   headerExtra,
   highlighted,
-  children,
+  children
 }: TurnShellProps) {
   return (
     <section
@@ -44,10 +44,10 @@ export function TurnShell({
             ? 'border-border bg-surface'
             : 'border-dashed border-border bg-bg',
         highlighted &&
-          'ring-2 ring-accent transition-shadow duration-[var(--motion-slow)]',
+          'ring-2 ring-accent transition-shadow duration-[var(--motion-slow)]'
       )}
     >
-      <header className="mb-2 flex items-center gap-2 text-label text-muted">
+      <header className="mb-2 flex items-center gap-2 text-label text-muted-foreground">
         <Avatar variant={variant} />
         <span className="font-medium uppercase tracking-[0.02em]">{roleLabel}</span>
         {headerExtra}
@@ -69,7 +69,7 @@ export function TurnShell({
       </header>
       <div className="min-w-0">{children}</div>
     </section>
-  );
+  )
 }
 
 /** A small role marker so user / agent / system turns read as distinct at a glance. */
@@ -79,7 +79,7 @@ function Avatar({ variant }: { variant: 'user' | 'assistant' | 'system' }) {
       aria-hidden
       className={cn(
         'grid size-5 shrink-0 place-items-center rounded-full',
-        variant === 'assistant' ? 'bg-accent-tint text-accent' : 'bg-sidebar text-muted',
+        variant === 'assistant' ? 'bg-accent-tint text-accent' : 'bg-sidebar text-muted-foreground'
       )}
     >
       {variant === 'assistant' ? (
@@ -90,29 +90,29 @@ function Avatar({ variant }: { variant: 'user' | 'assistant' | 'system' }) {
         <Info className="size-3" />
       )}
     </span>
-  );
+  )
 }
 
 function CopyLinkButton({ anchorId }: { anchorId: string }) {
-  const [copied, setCopied] = React.useState(false);
-  const timer = React.useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-  React.useEffect(() => () => clearTimeout(timer.current), []);
+  const [copied, setCopied] = React.useState(false)
+  const timer = React.useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  React.useEffect(() => () => clearTimeout(timer.current), [])
 
   const onCopy = React.useCallback(async () => {
     const base =
       typeof window !== 'undefined'
         ? (window.location.href.split('#')[0]?.split('?')[0] ?? '')
-        : '';
-    const link = `${base}#msg=${anchorId}`;
+        : ''
+    const link = `${base}#msg=${anchorId}`
     try {
-      await navigator.clipboard?.writeText(link);
+      await navigator.clipboard?.writeText(link)
     } catch {
       /* best effort */
     }
-    setCopied(true);
-    clearTimeout(timer.current);
-    timer.current = setTimeout(() => setCopied(false), 1500);
-  }, [anchorId]);
+    setCopied(true)
+    clearTimeout(timer.current)
+    timer.current = setTimeout(() => setCopied(false), 1500)
+  }, [anchorId])
 
   return (
     <button
@@ -120,8 +120,8 @@ function CopyLinkButton({ anchorId }: { anchorId: string }) {
       onClick={onCopy}
       aria-label={`Copy link to ${anchorId}`}
       className={cn(
-        'rounded-sm p-0.5 text-muted opacity-0 transition-opacity hover:text-accent',
-        'focus-visible:opacity-100 group-hover/turn:opacity-100',
+        'rounded-sm p-0.5 text-muted-foreground opacity-0 transition-opacity hover:text-accent',
+        'focus-visible:opacity-100 group-hover/turn:opacity-100'
       )}
     >
       {copied ? (
@@ -130,5 +130,5 @@ function CopyLinkButton({ anchorId }: { anchorId: string }) {
         <Link2 className="size-3.5" />
       )}
     </button>
-  );
+  )
 }

@@ -6,29 +6,29 @@
 // methods. We declare only what the vault uses. Chromium-only at runtime; every
 // call site feature-detects before reaching for these.
 
-export {};
+export {}
 
 declare global {
-  type FileSystemPermissionMode = 'read' | 'readwrite';
+  type FileSystemPermissionMode = 'read' | 'readwrite'
 
   interface FileSystemHandlePermissionDescriptor {
-    mode?: FileSystemPermissionMode;
+    mode?: FileSystemPermissionMode
   }
 
   interface FileSystemHandle {
     queryPermission?(
       descriptor?: FileSystemHandlePermissionDescriptor,
-    ): Promise<PermissionState>;
+    ): Promise<PermissionState>
     requestPermission?(
       descriptor?: FileSystemHandlePermissionDescriptor,
-    ): Promise<PermissionState>;
+    ): Promise<PermissionState>
   }
 
   interface FileSystemDirectoryHandle {
-    values(): AsyncIterableIterator<FileSystemFileHandle | FileSystemDirectoryHandle>;
+    values(): AsyncIterableIterator<FileSystemFileHandle | FileSystemDirectoryHandle>
     entries(): AsyncIterableIterator<
       [string, FileSystemFileHandle | FileSystemDirectoryHandle]
-    >;
+    >
   }
 
   type WellKnownDirectory =
@@ -37,17 +37,17 @@ declare global {
     | 'downloads'
     | 'music'
     | 'pictures'
-    | 'videos';
+    | 'videos'
 
   interface DirectoryPickerOptions {
-    id?: string;
-    mode?: FileSystemPermissionMode;
-    startIn?: WellKnownDirectory | FileSystemHandle;
+    id?: string
+    mode?: FileSystemPermissionMode
+    startIn?: WellKnownDirectory | FileSystemHandle
   }
 
   interface Window {
     showDirectoryPicker?(
       options?: DirectoryPickerOptions,
-    ): Promise<FileSystemDirectoryHandle>;
+    ): Promise<FileSystemDirectoryHandle>
   }
 }

@@ -18,7 +18,7 @@ claudepad turns a raw Claude Code session file (`~/.claude/projects/*.jsonl`) in
 ## 3. Tech stack & conventions
 
 - **Language:** TypeScript (strict).
-- **Build/Runtime:** Vite + React 18.
+- **Build/Runtime:** Vite + React 19.
 - **UI:** shadcn/ui built on **base-ui** primitives (Base UI, the unstyled primitives), Tailwind for styling. Prefer composing shadcn components over hand-rolled ones.
 - **Crypto (v1, zero-dependency WebCrypto):** `crypto.subtle` only - **AES-256-GCM** content/wrap encryption, **ECDH P-256** identity + key agreement, **HKDF-SHA256** derivation, **SHA-256** fingerprints. No custom primitives, no `crypto-js`. `@noble/curves` enters *only* for the opt-in pattern-B deterministic identity (X25519). See `../TRUSTLESS-MODEL.md`.
 - **Identity & device keys:** keypair minted client-side, stored in IndexedDB, exportable; optional **WebAuthn PRF** device protection (no server). Needs a real origin (not `file://`).

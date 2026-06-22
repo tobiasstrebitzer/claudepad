@@ -1,16 +1,16 @@
-import { Upload, Clipboard, ShieldCheck, ArrowRight } from 'lucide-react';
-import { ReadingColumn } from '../components/shell/AppShell';
-import { Button } from '../components/ui/button';
-import { Badge } from '../components/ui/badge';
+import { ArrowRight, Clipboard, ShieldCheck, Upload } from 'lucide-react'
+import { ReadingColumn } from '../components/shell/AppShell'
+import { Button } from '../components/ui/Button'
+import { Badge } from '../components/ui/Badge'
 
 // Home / empty-state (scaffold). The real ingest surface is PRD-04; this is the
 // design-foundation demo: serif greeting, value line, and a drop/paste affordance.
 export function Home() {
   return (
     <ReadingColumn>
-      <p className="text-body-sm text-muted">Afternoon</p>
+      <p className="text-body-sm text-muted-foreground">Afternoon</p>
       <h1 className="mt-1 font-serif text-display-xl text-text">Welcome back, Toby</h1>
-      <p className="mt-4 max-w-prose text-body text-muted">
+      <p className="mt-4 max-w-prose text-body text-muted-foreground">
         Drop a Claude Code session to see it beautifully - then share it encrypted to one
         person, with no server in the middle.
       </p>
@@ -22,15 +22,15 @@ export function Home() {
         <p className="mt-4 text-body text-text">
           Drop a <code className="font-mono text-code">.jsonl</code> session here
         </p>
-        <p className="mt-1 text-body-sm text-muted">
+        <p className="mt-1 text-body-sm text-muted-foreground">
           or paste a transcript from your clipboard
         </p>
         <div className="mt-5 flex items-center justify-center gap-2">
-          <Button variant="primary" size="md">
+          <Button variant="default" size="default">
             <Upload />
             Open a session
           </Button>
-          <Button variant="secondary" size="md">
+          <Button variant="secondary" size="default">
             <Clipboard />
             Paste
           </Button>
@@ -42,11 +42,11 @@ export function Home() {
         <div>
           <p className="text-body-sm text-text">
             Trustless by design{' '}
-            <Badge variant="success" className="ml-1">
+            <Badge variant="outline" className="ml-1 border-transparent bg-success/15 text-success">
               no server
             </Badge>
           </p>
-          <p className="mt-1 text-body-sm text-muted">
+          <p className="mt-1 text-body-sm text-muted-foreground">
             Parsing, identity, and encryption all happen in your browser. Sharing encrypts
             to a recipient&rsquo;s public key - the blob is inert to everyone else.
           </p>
@@ -61,5 +61,5 @@ export function Home() {
         <ArrowRight className="size-4" />
       </a>
     </ReadingColumn>
-  );
+  )
 }

@@ -14,28 +14,28 @@ import {
   utf8ToBytes,
   bytesToUtf8,
   type Identity,
-  type Tier,
-} from '@claudepad/shared';
-import type { Session } from '@claudepad/schema';
-import type { SecretMap } from '@claudepad/secrets';
-import { CP_BLOB_PREFIX } from './detect';
+  type Tier
+} from '@claudepad/shared'
+import type { Session } from '@claudepad/schema'
+import type { SecretMap } from '@claudepad/secrets'
+import { CP_BLOB_PREFIX } from './detect'
 
 export interface CreateShareOpts {
-  sender: Identity;
+  sender: Identity
   /** Recipient public card (`cp-pub-…`) or its prefix-free base64url body. */
-  recipientCard: string;
-  body: Session;
-  secretMap: SecretMap;
-  tier: Tier;
+  recipientCard: string
+  body: Session
+  secretMap: SecretMap
+  tier: Tier
 }
 
-const PUB_PREFIX = 'cp-pub-';
+const PUB_PREFIX = 'cp-pub-'
 
 /** Build a `cp-blob-…` string addressed to the recipient at the chosen tier. */
 export async function createShare(opts: CreateShareOpts): Promise<string> {
   const card = opts.recipientCard.trim().startsWith(PUB_PREFIX)
     ? opts.recipientCard.trim().slice(PUB_PREFIX.length)
-    : opts.recipientCard.trim();
+    : opts.recipientCard.trim()
 
   const blob = await createBlob({
     sender: opts.sender,
@@ -45,17 +45,17 @@ export async function createShare(opts: CreateShareOpts): Promise<string> {
       opts.tier === 'body+secret'
         ? utf8ToBytes(JSON.stringify(opts.secretMap))
         : undefined,
-    tier: opts.tier,
-  });
+    tier: opts.tier
+  })
 
-  return CP_BLOB_PREFIX + bytesToB64url(utf8ToBytes(encodeBlob(blob)));
+  return CP_BLOB_PREFIX + bytesToB64url(utf8ToBytes(encodeBlob(blob)))
 }
 
 export interface OpenShareResult {
-  from: { name: string; pub: string };
-  tier: Tier;
-  session: Session;
-  secretMap: SecretMap | null;
+  from: { name: string; pub: string }
+  tier: Tier
+  session: Session
+  secretMap: SecretMap | null
 }
 
 /**
@@ -64,29 +64,29 @@ export interface OpenShareResult {
  * render (PRD-11 FR-11).
  */
 export async function openShare(me: Identity, encoded: string): Promise<OpenShareResult> {
-  const trimmed = encoded.trim();
+  const trimmed = encoded.trim()
   const b64 = trimmed.startsWith(CP_BLOB_PREFIX)
     ? trimmed.slice(CP_BLOB_PREFIX.length)
-    : trimmed;
-  const blob = decodeBlob(bytesToUtf8(b64urlToBytes(b64)));
+    : trimmed
+  const blob = decodeBlob(bytesToUtf8(b64urlToBytes(b64)))
 
-  const opened = await openBlob({ me, blob });
+  const opened = await openBlob({ me, blob })
 
   // The body is a serialized normalized Session - re-parse defensively so a
   // hostile/corrupt blob can't smuggle a non-conforming object into the viewer.
-  const session = sessionFromBytes(opened.bodyBytes);
+  const session = sessionFromBytes(opened.bodyBytes)
   const secretMap =
     opened.secretBytes != null
       ? (JSON.parse(bytesToUtf8(opened.secretBytes)) as SecretMap)
-      : null;
+      : null
 
-  return { from: opened.from, tier: opened.tier, session, secretMap };
+  return { from: opened.from, tier: opened.tier, session, secretMap }
 }
 
 function sessionFromBytes(bytes: Uint8Array): Session {
-  const obj = JSON.parse(bytesToUtf8(bytes)) as unknown;
+  const obj = JSON.parse(bytesToUtf8(bytes)) as unknown
   if (typeof obj !== 'object' || obj === null || !Array.isArray((obj as Session).events)) {
-    throw new Error('Decrypted payload is not a session.');
+    throw new Error('Decrypted payload is not a session.')
   }
-  return obj as Session;
+  return obj as Session
 }

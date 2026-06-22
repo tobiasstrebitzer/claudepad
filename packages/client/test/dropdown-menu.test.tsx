@@ -7,7 +7,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
-} from '../src/components/ui/dropdown-menu';
+} from '../src/components/ui/DropdownMenu';
 
 afterEach(cleanup);
 

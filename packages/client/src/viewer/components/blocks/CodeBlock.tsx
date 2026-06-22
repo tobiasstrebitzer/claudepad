@@ -1,15 +1,15 @@
-import * as React from 'react';
-import { Check, Copy } from 'lucide-react';
-import { cn } from '../../../lib/cn';
-import { highlightToHtml, resolveLang } from '../../highlighter';
-import { hasSecretToken } from '../../secret-token';
-import { SecretText } from './SecretText';
+import { Check, Copy } from 'lucide-react'
+import * as React from 'react'
+import { cn } from '../../../lib/cn'
+import { highlightToHtml, resolveLang } from '../../highlighter'
+import { hasSecretToken } from '../../secret-token'
+import { SecretText } from './SecretText'
 
 interface CodeBlockProps {
   /** Exact original source - what the copy button writes. */
-  code: string;
-  lang?: string;
-  className?: string;
+  code: string
+  lang?: string
+  className?: string
 }
 
 /**
@@ -20,60 +20,60 @@ interface CodeBlockProps {
  * block is on/near screen. Copy always writes the EXACT original `code`, never
  * the highlighted markup (FR-5).
  */
-export const CodeBlock = React.memo(function CodeBlock({
+export const CodeBlock = React.memo(({
   code,
   lang,
-  className,
-}: CodeBlockProps) {
-  const [html, setHtml] = React.useState<string | null>(null);
-  const [visible, setVisible] = React.useState(false);
-  const containerRef = React.useRef<HTMLDivElement>(null);
-  const label = lang && resolveLang(lang) ? lang : lang ? lang : 'text';
+  className
+}: CodeBlockProps) => {
+  const [html, setHtml] = React.useState<string | null>(null)
+  const [visible, setVisible] = React.useState(false)
+  const containerRef = React.useRef<HTMLDivElement>(null)
+  const label = lang && resolveLang(lang) ? lang : lang ? lang : 'text'
   // Redacted code carries placeholder tokens; skip Shiki (it would render the
   // sentinel as plain text) and split into secret chips instead.
-  const redacted = React.useMemo(() => hasSecretToken(code), [code]);
+  const redacted = React.useMemo(() => hasSecretToken(code), [code])
 
   // Highlight only once the block is near the viewport (lazy, on-visible).
   React.useEffect(() => {
-    const node = containerRef.current;
+    const node = containerRef.current
     if (!node || typeof IntersectionObserver === 'undefined') {
-      setVisible(true);
-      return;
+      setVisible(true)
+      return
     }
     const obs = new IntersectionObserver(
       (entries) => {
         if (entries.some((e) => e.isIntersecting)) {
-          setVisible(true);
-          obs.disconnect();
+          setVisible(true)
+          obs.disconnect()
         }
       },
-      { rootMargin: '200px' },
-    );
-    obs.observe(node);
-    return () => obs.disconnect();
-  }, []);
+      { rootMargin: '200px' }
+    )
+    obs.observe(node)
+    return () => obs.disconnect()
+  }, [])
 
   React.useEffect(() => {
-    if (!visible || redacted) return;
-    let cancelled = false;
+    if (!visible || redacted) return
+    let cancelled = false
     highlightToHtml(code, lang).then((result) => {
-      if (!cancelled) setHtml(result);
-    });
+      if (!cancelled) setHtml(result)
+    })
     return () => {
-      cancelled = true;
-    };
-  }, [visible, code, lang, redacted]);
+      cancelled = true
+    }
+  }, [visible, code, lang, redacted])
 
   return (
     <div
       ref={containerRef}
       className={cn(
         'group relative my-3 overflow-hidden rounded-md border border-border bg-sidebar',
-        className,
+        className
       )}
     >
       <div className="flex items-center justify-between border-b border-border px-3 py-1">
-        <span className="font-mono text-label uppercase tracking-[0.02em] text-muted">
+        <span className="font-mono text-label uppercase tracking-[0.02em] text-muted-foreground">
           {label}
         </span>
         <CopyButton text={code} />
@@ -93,33 +93,33 @@ export const CodeBlock = React.memo(function CodeBlock({
         )}
       </div>
     </div>
-  );
-});
+  )
+})
 
 export function CopyButton({
   text,
   className,
-  label = 'Copy code',
+  label = 'Copy code'
 }: {
-  text: string;
-  className?: string;
-  label?: string;
+  text: string
+  className?: string
+  label?: string
 }) {
-  const [copied, setCopied] = React.useState(false);
-  const timer = React.useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const [copied, setCopied] = React.useState(false)
+  const timer = React.useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
 
-  React.useEffect(() => () => clearTimeout(timer.current), []);
+  React.useEffect(() => () => clearTimeout(timer.current), [])
 
   const onCopy = React.useCallback(async () => {
     try {
-      await navigator.clipboard?.writeText(text);
+      await navigator.clipboard?.writeText(text)
     } catch {
       // Best-effort; clipboard may be unavailable (e.g. jsdom).
     }
-    setCopied(true);
-    clearTimeout(timer.current);
-    timer.current = setTimeout(() => setCopied(false), 1500);
-  }, [text]);
+    setCopied(true)
+    clearTimeout(timer.current)
+    timer.current = setTimeout(() => setCopied(false), 1500)
+  }, [text])
 
   return (
     <button
@@ -127,9 +127,9 @@ export function CopyButton({
       onClick={onCopy}
       aria-label={copied ? 'Copied' : label}
       className={cn(
-        'inline-flex items-center gap-1 rounded-sm px-1.5 py-0.5 text-label text-muted',
+        'inline-flex items-center gap-1 rounded-sm px-1.5 py-0.5 text-label text-muted-foreground',
         'transition-colors duration-[120ms] ease-[var(--ease-standard)] hover:text-accent',
-        className,
+        className
       )}
     >
       {copied ? (
@@ -144,5 +144,5 @@ export function CopyButton({
         </>
       )}
     </button>
-  );
+  )
 }

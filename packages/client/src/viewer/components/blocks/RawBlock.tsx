@@ -1,11 +1,11 @@
-import * as React from 'react';
-import { ChevronRight, FileQuestion } from 'lucide-react';
-import { cn } from '../../../lib/cn';
+import * as React from 'react'
+import { ChevronRight, FileQuestion } from 'lucide-react'
+import { cn } from '../../../lib/cn'
 import {
   Collapsible,
   CollapsibleTrigger,
-  CollapsiblePanel,
-} from '../../../components/ui/collapsible';
+  CollapsibleContent
+} from '../../../components/ui/Collapsible'
 
 /**
  * Graceful fallback for `raw` / unrecognized content (FR-7). Collapsed by
@@ -13,13 +13,13 @@ import {
  */
 export function RawBlock({
   value,
-  label = 'Unrecognized content',
+  label = 'Unrecognized content'
 }: {
-  value: unknown;
-  label?: string;
+  value: unknown
+  label?: string
 }) {
-  const [open, setOpen] = React.useState(false);
-  const json = React.useMemo(() => safeStringify(value), [value]);
+  const [open, setOpen] = React.useState(false)
+  const json = React.useMemo(() => safeStringify(value), [value])
 
   return (
     <Collapsible
@@ -29,32 +29,32 @@ export function RawBlock({
     >
       <CollapsibleTrigger
         className={cn(
-          'flex w-full items-center gap-2 px-3 py-2 text-left text-body-sm text-muted',
-          'hover:text-text',
+          'flex w-full items-center gap-2 px-3 py-2 text-left text-body-sm text-muted-foreground',
+          'hover:text-text'
         )}
       >
         <ChevronRight
           className={cn(
             'size-3.5 shrink-0 transition-transform duration-[120ms]',
-            open && 'rotate-90',
+            open && 'rotate-90'
           )}
         />
         <FileQuestion className="size-3.5 shrink-0" />
         <span>{label} - show raw JSON</span>
       </CollapsibleTrigger>
-      <CollapsiblePanel>
+      <CollapsibleContent>
         <pre className="overflow-x-auto px-3 py-2 font-mono text-code text-text">
           <code>{json}</code>
         </pre>
-      </CollapsiblePanel>
+      </CollapsibleContent>
     </Collapsible>
-  );
+  )
 }
 
 function safeStringify(value: unknown): string {
   try {
-    return JSON.stringify(value, null, 2) ?? String(value);
+    return JSON.stringify(value, null, 2) ?? String(value)
   } catch {
-    return String(value);
+    return String(value)
   }
 }

@@ -1,51 +1,51 @@
-import * as React from 'react';
 import {
-  Play,
-  Pause,
-  SkipBack,
-  SkipForward,
-  Presentation,
   Clock,
   Keyboard,
-  X,
+  Pause,
+  Play,
+  Presentation,
   RotateCcw,
   Settings,
-  Zap,
+  SkipBack,
+  SkipForward,
   Type,
-} from 'lucide-react';
-import { cn } from '../lib/cn';
-import { Button } from '../components/ui/button';
-import {
-  Popover,
-  PopoverTrigger,
-  PopoverContent,
-} from '../components/ui/popover';
+  X,
+  Zap
+} from 'lucide-react'
+import * as React from 'react'
+import { Button } from '../components/ui/Button'
 import {
   Dialog,
   DialogContent,
-  DialogTitle,
   DialogDescription,
-} from '../components/ui/dialog';
-import { usePlayback, type PlaybackContextValue } from './PlaybackProvider';
-import { usePlaybackKeymap } from './keymap';
-import { Scrubber } from './Scrubber';
-import { formatClock } from './format';
-import { SPEEDS } from './pacing';
+  DialogTitle
+} from '../components/ui/Dialog'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger
+} from '../components/ui/Popover'
+import { cn } from '../lib/cn'
+import { usePlayback, type PlaybackContextValue } from './PlaybackProvider'
+import { Scrubber } from './Scrubber'
+import { formatClock } from './format'
+import { usePlaybackKeymap } from './keymap'
+import { SPEEDS } from './pacing'
 
 // The transport bar (PRD-08 §4.2), pinned below the scrolling canvas (inside the
 // content column, right of the sidebar). All controls keyboard-operable
 // (FR-22/23); restrained motion, token-driven surface. Pacing/speed/appear live
 // behind a single settings popover.
 export function TransportBar() {
-  const pb = usePlayback();
-  const [helpOpen, setHelpOpen] = React.useState(false);
-  usePlaybackKeymap(pb, () => setHelpOpen((v) => !v));
+  const pb = usePlayback()
+  const [helpOpen, setHelpOpen] = React.useState(false)
+  usePlaybackKeymap(pb, () => setHelpOpen((v) => !v))
 
-  if (!pb.active || !pb.timeline) return null;
+  if (!pb.active || !pb.timeline) return null
 
-  const playing = pb.status === 'playing';
-  const ended = pb.status === 'ended';
-  const totalMs = pb.timeline.totalMs;
+  const playing = pb.status === 'playing'
+  const ended = pb.status === 'ended'
+  const totalMs = pb.timeline.totalMs
 
   return (
     <>
@@ -67,7 +67,7 @@ export function TransportBar() {
               <SkipBack />
             </Button>
             <Button
-              variant="primary"
+              variant="default"
               size="icon"
               className="size-9"
               aria-label={playing ? 'Pause' : ended ? 'Replay' : 'Play'}
@@ -87,7 +87,7 @@ export function TransportBar() {
           </div>
 
           {/* center: clock + scrubber */}
-          <span className="shrink-0 font-mono text-label tabular-nums text-muted">
+          <span className="shrink-0 font-mono text-label tabular-nums text-muted-foreground">
             {formatClock(pb.playheadMs)} / {formatClock(totalMs)}
           </span>
           <Scrubber
@@ -123,7 +123,7 @@ export function TransportBar() {
 
       <HelpDialog open={helpOpen} onOpenChange={setHelpOpen} />
     </>
-  );
+  )
 }
 
 // A small segmented control built from buttons (token-driven, no new primitive).
@@ -131,16 +131,16 @@ function Segmented<T extends string | number>({
   label,
   value,
   options,
-  onChange,
+  onChange
 }: {
-  label: string;
-  value: T;
-  options: Array<{ value: T; label: React.ReactNode; title?: string }>;
-  onChange: (v: T) => void;
+  label: string
+  value: T
+  options: Array<{ value: T; label: React.ReactNode; title?: string }>
+  onChange: (v: T) => void
 }) {
   return (
     <div role="group" aria-label={label} className="flex flex-col gap-1.5">
-      <span className="text-label uppercase tracking-[0.02em] text-muted">{label}</span>
+      <span className="text-label uppercase tracking-[0.02em] text-muted-foreground">{label}</span>
       <div className="flex flex-wrap gap-1">
         {options.map((o) => (
           <button
@@ -153,7 +153,7 @@ function Segmented<T extends string | number>({
               'inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-body-sm transition-colors',
               o.value === value
                 ? 'border-accent bg-accent-tint text-accent'
-                : 'border-border text-text hover:bg-accent-tint',
+                : 'border-border text-text hover:bg-accent-tint'
             )}
           >
             {o.label}
@@ -161,7 +161,7 @@ function Segmented<T extends string | number>({
         ))}
       </div>
     </div>
-  );
+  )
 }
 
 function SettingsPopover({ pb }: { pb: PlaybackContextValue }) {
@@ -193,7 +193,7 @@ function SettingsPopover({ pb }: { pb: PlaybackContextValue }) {
                 <>
                   <Presentation className="size-3.5" /> Presentation
                 </>
-              ),
+              )
             },
             {
               value: 'realtime',
@@ -202,8 +202,8 @@ function SettingsPopover({ pb }: { pb: PlaybackContextValue }) {
                 <>
                   <Clock className="size-3.5" /> Real-time
                 </>
-              ),
-            },
+              )
+            }
           ]}
         />
 
@@ -226,7 +226,7 @@ function SettingsPopover({ pb }: { pb: PlaybackContextValue }) {
                 <>
                   <Zap className="size-3.5" /> Instant
                 </>
-              ),
+              )
             },
             {
               value: 'type',
@@ -235,13 +235,13 @@ function SettingsPopover({ pb }: { pb: PlaybackContextValue }) {
                 <>
                   <Type className="size-3.5" /> Type
                 </>
-              ),
-            },
+              )
+            }
           ]}
         />
 
         {pb.mode === 'present' && (
-          <label className="flex flex-col gap-1 text-label text-muted">
+          <label className="flex flex-col gap-1 text-label text-muted-foreground">
             <span>Reading speed · {pb.pacingConfig.readingSpeed} ch/s</span>
             <input
               type="range"
@@ -257,7 +257,7 @@ function SettingsPopover({ pb }: { pb: PlaybackContextValue }) {
         )}
       </PopoverContent>
     </Popover>
-  );
+  )
 }
 
 const SHORTCUTS: Array<[string, string]> = [
@@ -268,15 +268,15 @@ const SHORTCUTS: Array<[string, string]> = [
   ['↑ / ↓', 'Speed up / down'],
   ['Home / End', 'Jump to start / end'],
   ['Esc', 'Exit playback'],
-  ['?', 'This help'],
-];
+  ['?', 'This help']
+]
 
 function HelpDialog({
   open,
-  onOpenChange,
+  onOpenChange
 }: {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+  open: boolean
+  onOpenChange: (open: boolean) => void
 }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -286,7 +286,7 @@ function HelpDialog({
         <dl className="mt-3 space-y-1.5">
           {SHORTCUTS.map(([keys, label]) => (
             <div key={keys} className="flex items-center justify-between gap-4 text-body-sm">
-              <dt className="text-muted">{label}</dt>
+              <dt className="text-muted-foreground">{label}</dt>
               <dd>
                 <kbd className="rounded border border-border bg-bg px-1.5 py-0.5 font-mono text-label text-text">
                   {keys}
@@ -297,5 +297,5 @@ function HelpDialog({
         </dl>
       </DialogContent>
     </Dialog>
-  );
+  )
 }

@@ -3,9 +3,9 @@
 // of the parser. Kept import-free on purpose: useSession imports this without
 // pulling in the crypto/UI of the rest of share/**.
 
-export const CP_BLOB_PREFIX = 'cp-blob-';
+export const CP_BLOB_PREFIX = 'cp-blob-'
 
 /** True when `text` looks like a serialized trustless share (a `cp-blob-…`). */
 export function isShareBlob(text: string): boolean {
-  return text.trimStart().startsWith(CP_BLOB_PREFIX);
+  return text.trimStart().startsWith(CP_BLOB_PREFIX)
 }

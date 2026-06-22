@@ -1,27 +1,27 @@
-import * as React from 'react';
-import { Menu, PanelLeftOpen } from 'lucide-react';
-import { cn } from '../../lib/cn';
-import { Wordmark } from '../brand/Wordmark';
-import { Button } from '../ui/button';
-import { ThemeToggle } from './ThemeToggle';
-import { TopBar, type TopBarContent } from './TopBar';
-import { Sidebar, type RecentItem, type VaultNav } from './Sidebar';
-import { usePersistedState } from '../../lib/usePersistedState';
+import { Menu, PanelLeftOpen } from 'lucide-react'
+import * as React from 'react'
+import { cn } from '../../lib/cn'
+import { usePersistedState } from '../../lib/usePersistedState'
+import { Wordmark } from '../brand/Wordmark'
+import { Button } from '../ui/Button'
+import { Sidebar, type RecentItem, type VaultNav } from './Sidebar'
+import { ThemeToggle } from './ThemeToggle'
+import { TopBar, type TopBarContent } from './TopBar'
 
-type AppShellProps = {
-  recent: RecentItem[];
-  activeId?: string;
-  onSelect?: (id: string) => void;
+interface AppShellProps {
+  recent: RecentItem[]
+  activeId?: string
+  onSelect?: (id: string) => void
   /** Folder-backed navigation (Chromium only). */
-  vault?: VaultNav;
-  route: string;
+  vault?: VaultNav
+  route: string
   /** The single top bar's contents (breadcrumbs + context + actions). */
-  topbar?: TopBarContent;
+  topbar?: TopBarContent
   /** Pinned below the scrolling canvas, inside the content column (e.g. the
    * playback transport bar) - sits right of the sidebar and never overlaps. */
-  footer?: React.ReactNode;
-  children: React.ReactNode;
-};
+  footer?: React.ReactNode
+  children: React.ReactNode
+}
 
 // App shell (PRD-01 §4.1, FR-14/FR-15): sidebar + canvas on desktop; below md the
 // sidebar collapses to an off-canvas drawer toggled from the topbar, canvas goes
@@ -34,23 +34,23 @@ export function AppShell({
   route,
   topbar,
   footer,
-  children,
+  children
 }: AppShellProps) {
-  const [drawerOpen, setDrawerOpen] = React.useState(false);
+  const [drawerOpen, setDrawerOpen] = React.useState(false)
   // Desktop sidebar starts hidden and remembers the user's choice across reloads.
   const [collapsed, setCollapsed] = usePersistedState(
     'claudepad.sidebar.collapsed',
     true,
-    (v) => typeof v === 'boolean',
-  );
+    (v) => typeof v === 'boolean'
+  )
 
   // Close the drawer on route change / Escape.
-  React.useEffect(() => setDrawerOpen(false), [route]);
+  React.useEffect(() => setDrawerOpen(false), [route])
   React.useEffect(() => {
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setDrawerOpen(false);
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, []);
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setDrawerOpen(false)
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
 
   return (
     <div className="flex h-dvh w-full overflow-hidden bg-bg text-text">
@@ -75,7 +75,7 @@ export function AppShell({
             className="absolute inset-0 bg-text/30"
             onClick={() => setDrawerOpen(false)}
           />
-          <div className="absolute inset-y-0 left-0 shadow-[var(--shadow-md)]">
+          <div className="absolute inset-y-0 left-0 shadow-(--shadow-md)">
             <Sidebar
               recent={recent}
               activeId={activeId}
@@ -130,20 +130,20 @@ export function AppShell({
         {footer}
       </div>
     </div>
-  );
+  )
 }
 
 /** Centered reading column capped at max-w (FR-16). Reusable by PRD-03. */
 export function ReadingColumn({
   className,
-  children,
+  children
 }: {
-  className?: string;
-  children: React.ReactNode;
+  className?: string
+  children: React.ReactNode
 }) {
   return (
     <div className={cn('mx-auto w-full max-w-reading px-4 py-10 md:px-6', className)}>
       {children}
     </div>
-  );
+  )
 }

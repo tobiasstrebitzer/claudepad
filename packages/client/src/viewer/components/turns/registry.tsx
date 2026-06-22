@@ -1,23 +1,23 @@
-import * as React from 'react';
-import type { RenderRow } from '../../hooks/useCorrelateTools';
-import { UserTurn } from './UserTurn';
-import { AssistantTurn } from './AssistantTurn';
-import { ThinkingBlock } from './ThinkingBlock';
-import { ToolCall } from './ToolCall';
-import { ToolResult } from './ToolResult';
-import { MetaBlock } from './MetaBlock';
-import { SlashCommandTurn } from './SlashCommandTurn';
-import { TaskListTurn, isTaskTool } from './TaskListTurn';
-import { CommandOutputTurn } from './CommandOutputTurn';
-import { AskUserQuestionTurn, isAskUserQuestion } from './AskUserQuestionTurn';
-import { isSlashCommandEvent, isLocalCommandEvent } from '../../hooks/eventFilter';
+import * as React from 'react'
+import type { RenderRow } from '../../hooks/useCorrelateTools'
+import { UserTurn } from './UserTurn'
+import { AssistantTurn } from './AssistantTurn'
+import { ThinkingBlock } from './ThinkingBlock'
+import { ToolCall } from './ToolCall'
+import { ToolResult } from './ToolResult'
+import { MetaBlock } from './MetaBlock'
+import { SlashCommandTurn } from './SlashCommandTurn'
+import { TaskListTurn, isTaskTool } from './TaskListTurn'
+import { CommandOutputTurn } from './CommandOutputTurn'
+import { AskUserQuestionTurn, isAskUserQuestion } from './AskUserQuestionTurn'
+import { isSlashCommandEvent, isLocalCommandEvent } from '../../hooks/eventFilter'
 
 /** Per-render context passed to every matched turn component. */
 export interface TurnContext {
-  anchorId: string;
-  highlighted: boolean;
+  anchorId: string
+  highlighted: boolean
   /** PRD-08 typing reveal - only set for the active playback turn. */
-  typingFraction?: number;
+  typingFraction?: number
 }
 
 /**
@@ -27,9 +27,9 @@ export interface TurnContext {
  * generic user/assistant/tool/meta entries stay as fallbacks.
  */
 export interface TurnMatcher {
-  id: string;
-  match: (row: RenderRow) => boolean;
-  render: (row: RenderRow, ctx: TurnContext) => React.ReactNode;
+  id: string
+  match: (row: RenderRow) => boolean
+  render: (row: RenderRow, ctx: TurnContext) => React.ReactNode
 }
 
 export const TURN_MATCHERS: TurnMatcher[] = [
@@ -40,7 +40,7 @@ export const TURN_MATCHERS: TurnMatcher[] = [
     render: (row, ctx) =>
       row.kind === 'event' && row.event.kind === 'user' ? (
         <SlashCommandTurn event={row.event} anchorId={ctx.anchorId} highlighted={ctx.highlighted} />
-      ) : null,
+      ) : null
   },
   {
     id: 'task-list',
@@ -53,7 +53,7 @@ export const TURN_MATCHERS: TurnMatcher[] = [
           anchorId={ctx.anchorId}
           highlighted={ctx.highlighted}
         />
-      ) : null,
+      ) : null
   },
   {
     id: 'ask-user-question',
@@ -66,7 +66,7 @@ export const TURN_MATCHERS: TurnMatcher[] = [
           anchorId={ctx.anchorId}
           highlighted={ctx.highlighted}
         />
-      ) : null,
+      ) : null
   },
   {
     id: 'tool',
@@ -79,7 +79,7 @@ export const TURN_MATCHERS: TurnMatcher[] = [
           anchorId={ctx.anchorId}
           highlighted={ctx.highlighted}
         />
-      ) : null,
+      ) : null
   },
   {
     id: 'orphan-result',
@@ -87,7 +87,7 @@ export const TURN_MATCHERS: TurnMatcher[] = [
     render: (row, ctx) =>
       row.kind === 'orphan-result' ? (
         <ToolResult event={row.event} standalone anchorId={ctx.anchorId} />
-      ) : null,
+      ) : null
   },
   {
     id: 'local-command',
@@ -96,7 +96,7 @@ export const TURN_MATCHERS: TurnMatcher[] = [
     render: (row, ctx) =>
       row.kind === 'event' && row.event.kind === 'meta' ? (
         <CommandOutputTurn event={row.event} anchorId={ctx.anchorId} highlighted={ctx.highlighted} />
-      ) : null,
+      ) : null
   },
   {
     id: 'user',
@@ -109,7 +109,7 @@ export const TURN_MATCHERS: TurnMatcher[] = [
           highlighted={ctx.highlighted}
           typingFraction={ctx.typingFraction}
         />
-      ) : null,
+      ) : null
   },
   {
     id: 'assistant',
@@ -122,7 +122,7 @@ export const TURN_MATCHERS: TurnMatcher[] = [
           highlighted={ctx.highlighted}
           typingFraction={ctx.typingFraction}
         />
-      ) : null,
+      ) : null
   },
   {
     id: 'thinking',
@@ -130,7 +130,7 @@ export const TURN_MATCHERS: TurnMatcher[] = [
     render: (row, ctx) =>
       row.kind === 'event' && row.event.kind === 'thinking' ? (
         <ThinkingBlock event={row.event} anchorId={ctx.anchorId} />
-      ) : null,
+      ) : null
   },
   {
     id: 'meta',
@@ -138,13 +138,13 @@ export const TURN_MATCHERS: TurnMatcher[] = [
     render: (row, ctx) =>
       row.kind === 'event' && row.event.kind === 'meta' ? (
         <MetaBlock event={row.event} anchorId={ctx.anchorId} />
-      ) : null,
-  },
-];
+      ) : null
+  }
+]
 
-const FALLBACK: TurnMatcher = { id: 'fallback', match: () => true, render: () => null };
+const FALLBACK: TurnMatcher = { id: 'fallback', match: () => true, render: () => null }
 
 /** Find the first matching turn renderer for a row (always returns one). */
 export function matchTurn(row: RenderRow): TurnMatcher {
-  return TURN_MATCHERS.find((m) => m.match(row)) ?? FALLBACK;
+  return TURN_MATCHERS.find((m) => m.match(row)) ?? FALLBACK
 }

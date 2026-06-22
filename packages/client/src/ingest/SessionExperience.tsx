@@ -1,13 +1,13 @@
-import * as React from 'react';
-import { Sparkles } from 'lucide-react';
-import { Skeleton } from '../components/ui/skeleton';
-import { ReadingColumn } from '../components/shell/AppShell';
-import type { ViewMode } from '../components/shell/ViewSwitch';
-import { SessionViewer, RawSessionView, demoSession } from '../viewer';
-import { type SessionApi } from './useSession';
-import { usePasteCapture } from './usePasteCapture';
-import { EmptyState } from './EmptyState';
-import { RejectionPanel, OversizePanel, TooLargePanel, ErrorPanel } from './panels';
+import * as React from 'react'
+import { Sparkles } from 'lucide-react'
+import { Skeleton } from '../components/ui/Skeleton'
+import { ReadingColumn } from '../components/shell/AppShell'
+import type { ViewMode } from '../components/shell/ViewSwitch'
+import { SessionViewer, RawSessionView, demoSession } from '../viewer'
+import { type SessionApi } from './useSession'
+import { usePasteCapture } from './usePasteCapture'
+import { EmptyState } from './EmptyState'
+import { RejectionPanel, OversizePanel, TooLargePanel, ErrorPanel } from './panels'
 
 // The P1 (MVP-0) experience body: drop/paste a session → see it beautifully, fully
 // offline. The session's chrome (title, meta, actions, view switch) lives in the
@@ -15,23 +15,23 @@ import { RejectionPanel, OversizePanel, TooLargePanel, ErrorPanel } from './pane
 export function SessionExperience({
   api,
   viewMode,
-  onAnchorChange,
+  onAnchorChange
 }: {
-  api: SessionApi;
-  viewMode: ViewMode;
-  onAnchorChange?: (id: string) => void;
+  api: SessionApi
+  viewMode: ViewMode
+  onAnchorChange?: (id: string) => void
 }) {
-  const [note, setNote] = React.useState<string | null>(null);
+  const [note, setNote] = React.useState<string | null>(null)
 
   // Capture window pastes only when there's nothing loaded yet (FR-5).
   const pasteEnabled =
     api.state.status === 'idle' ||
     api.state.status === 'rejected' ||
-    api.state.status === 'error';
-  usePasteCapture(pasteEnabled, (text) => void api.loadText(text, 'paste'));
+    api.state.status === 'error'
+  usePasteCapture(pasteEnabled, (text) => void api.loadText(text, 'paste'))
 
   const onMultiple = (count: number) =>
-    setNote(`Loaded the first of ${count} files - one session is shown at a time.`);
+    setNote(`Loaded the first of ${count} files - one session is shown at a time.`)
 
   switch (api.state.status) {
     case 'idle':
@@ -53,7 +53,7 @@ export function SessionExperience({
             </button>
           </ReadingColumn>
         </>
-      );
+      )
 
     case 'parsing':
       return (
@@ -64,17 +64,17 @@ export function SessionExperience({
             <Skeleton className="h-24 w-2/3" />
           </div>
         </ReadingColumn>
-      );
+      )
 
     case 'loaded':
       return viewMode === 'raw' ? (
         <RawSessionView session={api.state.session} />
       ) : (
         <SessionViewer session={api.state.session} options={{ onAnchorChange }} />
-      );
+      )
 
     case 'rejected':
-      return <RejectionPanel reason={api.state.reason} onRetry={api.clear} />;
+      return <RejectionPanel reason={api.state.reason} onRetry={api.clear} />
 
     case 'oversize':
       return (
@@ -83,12 +83,12 @@ export function SessionExperience({
           onContinue={() => void api.confirmOversize()}
           onCancel={api.clear}
         />
-      );
+      )
 
     case 'too-large':
-      return <TooLargePanel bytes={api.state.bytes} onRetry={api.clear} />;
+      return <TooLargePanel bytes={api.state.bytes} onRetry={api.clear} />
 
     case 'error':
-      return <ErrorPanel message={api.state.message} onRetry={api.clear} />;
+      return <ErrorPanel message={api.state.message} onRetry={api.clear} />
   }
 }

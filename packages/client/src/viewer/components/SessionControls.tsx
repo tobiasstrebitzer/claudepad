@@ -2,19 +2,19 @@ import {
   ChevronsDownUp,
   ChevronsUpDown,
   Eye,
-  EyeOff,
-} from 'lucide-react';
-import { Button } from '../../components/ui/button';
+  EyeOff
+} from 'lucide-react'
+import { Button } from '../../components/ui/Button'
 import {
   DropdownMenu,
-  DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-} from '../../components/ui/dropdown-menu';
-import { useExpandSignal } from '../hooks/useExpand';
-import { useReveal } from '../hooks/useReveal';
+  DropdownMenuTrigger
+} from '../../components/ui/DropdownMenu'
+import { useExpandSignal } from '../hooks/useExpand'
+import { useReveal } from '../hooks/useReveal'
 
 // Session view controls, hosted in the unified top bar (D-49). Each reads its own
 // viewer context and self-hides when not applicable, so the bar can render them
@@ -22,8 +22,8 @@ import { useReveal } from '../hooks/useReveal';
 
 /** Reveal/hide all redacted secrets - only shown when a secret map is present. */
 export function SecretsControl() {
-  const reveal = useReveal();
-  if (!reveal.hasMap) return null;
+  const reveal = useReveal()
+  if (!reveal.hasMap) return null
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
@@ -46,13 +46,13 @@ export function SecretsControl() {
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
-  );
+  )
 }
 
 /** Bulk expand/collapse of thinking + tool I/O blocks. */
 export function ExpandControl() {
-  const expand = useExpandSignal();
-  if (!expand) return null;
+  const expand = useExpandSignal()
+  if (!expand) return null
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
@@ -82,5 +82,5 @@ export function ExpandControl() {
         <DropdownMenuItem onClick={() => expand.collapseAll('toolIO')}>Collapse</DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
-  );
+  )
 }

@@ -1,30 +1,30 @@
-import { X, Info, Cpu, FolderOpen, Clock } from 'lucide-react';
-import type { Session, DiagnosticRecord } from '@claudepad/schema';
-import { Badge } from '../components/ui/badge';
-import { Button } from '../components/ui/button';
-import { Tooltip, TooltipTrigger, TooltipContent } from '../components/ui/tooltip';
-import { ViewSwitch, type ViewMode } from '../components/shell/ViewSwitch';
-import type { TopBarContent } from '../components/shell/TopBar';
-import { SecretsControl, ExpandControl, EventFilterControl } from '../viewer';
-import { ShareButton } from '../share';
-import { PlayToggleButton } from '../playback';
-import { formatAbsolute, formatRelative } from '../viewer/format';
+import type { DiagnosticRecord, Session } from '@claudepad/schema'
+import { Clock, Cpu, FolderOpen, Info, X } from 'lucide-react'
+import type { TopBarContent } from '../components/shell/TopBar'
+import { ViewSwitch, type ViewMode } from '../components/shell/ViewSwitch'
+import { Badge } from '../components/ui/Badge'
+import { Button } from '../components/ui/Button'
+import { Tooltip, TooltipContent, TooltipTrigger } from '../components/ui/Tooltip'
+import { PlayToggleButton } from '../playback'
+import { ShareButton } from '../share'
+import { EventFilterControl, ExpandControl, SecretsControl } from '../viewer'
+import { formatAbsolute, formatRelative } from '../viewer/format'
 
 // The unified top bar's contents for a loaded session (D-49): breadcrumbs +
 // labels/actions on line 1, model/folder/time + view switch on line 2. This is
 // the single home for what used to be the naked topbar, the LoadedBanner, and the
 // viewer's SessionHeader.
 export function sessionTopBar(args: {
-  session: Session;
-  diagnostics: DiagnosticRecord[];
-  fileName?: string;
-  viewMode: ViewMode;
-  onViewMode: (mode: ViewMode) => void;
-  onClear: () => void;
-  onHome: () => void;
+  session: Session
+  diagnostics: DiagnosticRecord[]
+  fileName?: string
+  viewMode: ViewMode
+  onViewMode: (mode: ViewMode) => void
+  onClear: () => void
+  onHome: () => void
 }): TopBarContent {
-  const { session, diagnostics, fileName, viewMode, onViewMode, onClear, onHome } = args;
-  const title = session.meta.title ?? fileName ?? 'Untitled session';
+  const { session, diagnostics, fileName, viewMode, onViewMode, onClear, onHome } = args
+  const title = session.meta.title ?? fileName ?? 'Untitled session'
   return {
     crumbs: [{ label: 'Overview', onClick: onHome }, { label: title }],
     titleIsHeading: true,
@@ -38,19 +38,19 @@ export function sessionTopBar(args: {
       />
     ),
     meta: <SessionMetaLine session={session} />,
-    viewSwitch: <ViewSwitch value={viewMode} onChange={onViewMode} />,
-  };
+    viewSwitch: <ViewSwitch value={viewMode} onChange={onViewMode} />
+  }
 }
 
 function SessionLabels({ diagnostics }: { diagnostics: DiagnosticRecord[] }) {
-  const notes = diagnostics.length;
+  const notes = diagnostics.length
   return (
     <>
       {notes > 0 && (
         <Tooltip>
           <TooltipTrigger
             render={
-              <Badge variant="warn" className="cursor-default">
+              <Badge variant="outline" className="cursor-default border-transparent bg-warn/15 text-warn">
                 <Info className="size-3" />
                 {notes} {notes === 1 ? 'note' : 'notes'}
               </Badge>
@@ -62,19 +62,19 @@ function SessionLabels({ diagnostics }: { diagnostics: DiagnosticRecord[] }) {
           </TooltipContent>
         </Tooltip>
       )}
-      <Badge variant="success">local only</Badge>
+      <Badge variant="outline" className="border-transparent bg-success/15 text-success">local only</Badge>
     </>
-  );
+  )
 }
 
 function SessionActions({
   session,
   onClear,
-  showViewerControls,
+  showViewerControls
 }: {
-  session: Session;
-  onClear: () => void;
-  showViewerControls: boolean;
+  session: Session
+  onClear: () => void
+  showViewerControls: boolean
 }) {
   return (
     <>
@@ -92,15 +92,15 @@ function SessionActions({
         Clear
       </Button>
     </>
-  );
+  )
 }
 
 function SessionMetaLine({ session }: { session: Session }) {
-  const { meta } = session;
-  const started = formatAbsolute(meta.startedAt);
-  const relative = formatRelative(meta.startedAt);
+  const { meta } = session
+  const started = formatAbsolute(meta.startedAt)
+  const relative = formatRelative(meta.startedAt)
   return (
-    <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-0.5 text-body-sm text-muted">
+    <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-0.5 text-body-sm text-muted-foreground">
       {meta.model && (
         <span className="inline-flex items-center gap-1">
           <Cpu className="size-3.5 text-accent" />
@@ -121,5 +121,5 @@ function SessionMetaLine({ session }: { session: Session }) {
         </span>
       )}
     </div>
-  );
+  )
 }

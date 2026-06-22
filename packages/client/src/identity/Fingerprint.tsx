@@ -4,46 +4,46 @@
 // (FR-11): your own identity, a pasted recipient key (PRD-11), and a decrypted
 // blob's sender (PRD-11).
 
-import * as React from 'react';
-import { fingerprint } from '@claudepad/shared';
-import { cn } from '../lib/cn';
+import * as React from 'react'
+import { fingerprint } from '@claudepad/shared'
+import { cn } from '../lib/cn'
 
 /** Compute a key's fingerprint, recomputing only when the raw key changes. */
 export function useFingerprint(pub: string | undefined): {
-  emoji: string;
-  code: string;
+  emoji: string
+  code: string
 } | null {
-  const [fp, setFp] = React.useState<{ emoji: string; code: string } | null>(null);
+  const [fp, setFp] = React.useState<{ emoji: string; code: string } | null>(null)
   React.useEffect(() => {
     if (!pub) {
-      setFp(null);
-      return;
+      setFp(null)
+      return
     }
-    let live = true;
-    void fingerprint(pub).then((f) => live && setFp(f));
+    let live = true
+    void fingerprint(pub).then((f) => live && setFp(f))
     return () => {
-      live = false;
-    };
-  }, [pub]);
-  return fp;
+      live = false
+    }
+  }, [pub])
+  return fp
 }
 
 export function Fingerprint({
   pub,
   className,
-  size = 'md',
+  size = 'md'
 }: {
-  pub: string | undefined;
-  className?: string;
-  size?: 'sm' | 'md';
+  pub: string | undefined
+  className?: string
+  size?: 'sm' | 'md'
 }) {
-  const fp = useFingerprint(pub);
+  const fp = useFingerprint(pub)
   if (!fp) {
     return (
-      <span className={cn('text-body-sm text-muted', className)} aria-hidden>
+      <span className={cn('text-body-sm text-muted-foreground', className)} aria-hidden>
         computing…
       </span>
-    );
+    )
   }
   return (
     <span
@@ -57,12 +57,12 @@ export function Fingerprint({
       </span>
       <span
         className={cn(
-          'font-mono tabular-nums text-muted',
-          size === 'sm' ? 'text-label' : 'text-body-sm',
+          'font-mono tabular-nums text-muted-foreground',
+          size === 'sm' ? 'text-label' : 'text-body-sm'
         )}
       >
         {fp.code}
       </span>
     </span>
-  );
+  )
 }

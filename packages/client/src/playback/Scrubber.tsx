@@ -1,7 +1,7 @@
-import * as React from 'react';
-import { cn } from '../lib/cn';
-import type { Timeline, SegKind } from './buildTimeline';
-import { formatClock, formatIdle } from './format';
+import * as React from 'react'
+import { cn } from '../lib/cn'
+import type { Timeline, SegKind } from './buildTimeline'
+import { formatClock, formatIdle } from './format'
 
 // The timeline scrubber (PRD-08 §4.2, FR-7/22): an ARIA slider with per-event
 // tick marks coloured by kind and collapsed idle gaps shown as a compressed
@@ -12,59 +12,59 @@ import { formatClock, formatIdle } from './format';
 const TICK_COLOR: Record<Exclude<SegKind, 'idle'>, string> = {
   user: 'bg-accent',
   assistant: 'bg-text',
-  thinking: 'bg-muted',
-  tool: 'bg-muted/60',
-  meta: 'bg-border',
-};
+  thinking: 'bg-muted-foreground',
+  tool: 'bg-muted-foreground/60',
+  meta: 'bg-border'
+}
 
 // Skip per-event ticks past this count so the bar stays light on huge sessions
 // (the fill + playhead still work; FR-20 spirit).
-const MAX_TICKS = 250;
+const MAX_TICKS = 250
 
 export function Scrubber({
   timeline,
   playheadMs,
   fraction,
   activeRowIndex,
-  onSeekFraction,
+  onSeekFraction
 }: {
-  timeline: Timeline;
-  playheadMs: number;
-  fraction: number;
-  activeRowIndex: number;
-  onSeekFraction: (f: number) => void;
+  timeline: Timeline
+  playheadMs: number
+  fraction: number
+  activeRowIndex: number
+  onSeekFraction: (f: number) => void
 }) {
-  const trackRef = React.useRef<HTMLDivElement>(null);
-  const [dragging, setDragging] = React.useState(false);
-  const total = timeline.totalMs || 1;
+  const trackRef = React.useRef<HTMLDivElement>(null)
+  const [dragging, setDragging] = React.useState(false)
+  const total = timeline.totalMs || 1
 
   const seekFromClientX = React.useCallback(
     (clientX: number) => {
-      const el = trackRef.current;
-      if (!el) return;
-      const rect = el.getBoundingClientRect();
-      const f = (clientX - rect.left) / rect.width;
-      onSeekFraction(Math.min(1, Math.max(0, f)));
+      const el = trackRef.current
+      if (!el) return
+      const rect = el.getBoundingClientRect()
+      const f = (clientX - rect.left) / rect.width
+      onSeekFraction(Math.min(1, Math.max(0, f)))
     },
-    [onSeekFraction],
-  );
+    [onSeekFraction]
+  )
 
   React.useEffect(() => {
-    if (!dragging) return;
-    const onMove = (e: PointerEvent) => seekFromClientX(e.clientX);
-    const onUp = () => setDragging(false);
-    window.addEventListener('pointermove', onMove);
-    window.addEventListener('pointerup', onUp);
+    if (!dragging) return
+    const onMove = (e: PointerEvent) => seekFromClientX(e.clientX)
+    const onUp = () => setDragging(false)
+    window.addEventListener('pointermove', onMove)
+    window.addEventListener('pointerup', onUp)
     return () => {
-      window.removeEventListener('pointermove', onMove);
-      window.removeEventListener('pointerup', onUp);
-    };
-  }, [dragging, seekFromClientX]);
+      window.removeEventListener('pointermove', onMove)
+      window.removeEventListener('pointerup', onUp)
+    }
+  }, [dragging, seekFromClientX])
 
-  const showTicks = timeline.segs.length <= MAX_TICKS;
+  const showTicks = timeline.segs.length <= MAX_TICKS
   const valueText = `event ${Math.max(1, activeRowIndex + 1)} of ${timeline.rowCount}, ${formatClock(
-    playheadMs,
-  )}`;
+    playheadMs
+  )}`
 
   return (
     <div
@@ -77,9 +77,9 @@ export function Scrubber({
       aria-valuenow={activeRowIndex + 1}
       aria-valuetext={valueText}
       onPointerDown={(e) => {
-        e.preventDefault();
-        setDragging(true);
-        seekFromClientX(e.clientX);
+        e.preventDefault()
+        setDragging(true)
+        seekFromClientX(e.clientX)
       }}
       className="group relative h-6 flex-1 cursor-pointer touch-none select-none"
     >
@@ -91,13 +91,13 @@ export function Scrubber({
           <div
             key={`idle-${i}`}
             title={formatIdle(seg.idleSeconds ?? 0, seg.dwellMs / 1000)}
-            className="absolute top-1/2 h-1 -translate-y-1/2 rounded-full bg-muted/40 [background-image:repeating-linear-gradient(90deg,transparent,transparent_2px,currentColor_2px,currentColor_3px)]"
+            className="absolute top-1/2 h-1 -translate-y-1/2 rounded-full bg-muted-foreground/40 [background-image:repeating-linear-gradient(90deg,transparent,transparent_2px,currentColor_2px,currentColor_3px)]"
             style={{
               left: `${(seg.startMs / total) * 100}%`,
-              width: `${Math.max(0.4, (seg.dwellMs / total) * 100)}%`,
+              width: `${Math.max(0.4, (seg.dwellMs / total) * 100)}%`
             }}
           />
-        ) : null,
+        ) : null
       )}
       {/* elapsed fill */}
       <div
@@ -113,21 +113,21 @@ export function Scrubber({
               aria-hidden
               className={cn(
                 'absolute top-1/2 h-2.5 w-px -translate-y-1/2 opacity-70',
-                TICK_COLOR[seg.kind as Exclude<SegKind, 'idle'>],
+                TICK_COLOR[seg.kind as Exclude<SegKind, 'idle'>]
               )}
               style={{ left: `${(seg.startMs / total) * 100}%` }}
             />
-          ),
+          )
         )}
       {/* playhead */}
       <div
         aria-hidden
         className={cn(
           'absolute top-1/2 size-3 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-bg bg-accent shadow-[var(--shadow-sm)]',
-          dragging && 'scale-110',
+          dragging && 'scale-110'
         )}
         style={{ left: `${fraction * 100}%` }}
       />
     </div>
-  );
+  )
 }

@@ -1,12 +1,12 @@
-import * as React from 'react';
-import { ImageOff } from 'lucide-react';
-import { cn } from '../../../lib/cn';
-import { Dialog, DialogContent, DialogTrigger } from '../../../components/ui/dialog';
+import * as React from 'react'
+import { ImageOff } from 'lucide-react'
+import { cn } from '../../../lib/cn'
+import { Dialog, DialogContent, DialogTrigger } from '../../../components/ui/Dialog'
 
 interface ImageBlockProps {
-  ref_: string;
-  mediaType?: string;
-  encoding?: 'base64' | 'url' | 'file';
+  ref_: string
+  mediaType?: string
+  encoding?: 'base64' | 'url' | 'file'
 }
 
 /**
@@ -15,21 +15,21 @@ interface ImageBlockProps {
  * unresolvable ref renders a non-crashing placeholder (FR-6).
  */
 export function ImageBlock({ ref_, mediaType, encoding }: ImageBlockProps) {
-  const [broken, setBroken] = React.useState(false);
-  const src = resolveLocalSrc(ref_, mediaType, encoding);
+  const [broken, setBroken] = React.useState(false)
+  const src = resolveLocalSrc(ref_, mediaType, encoding)
 
   if (!src || broken) {
     return (
       <div
         className={cn(
           'my-3 flex items-center gap-2 rounded-md border border-dashed border-border',
-          'bg-sidebar px-3 py-2 text-body-sm text-muted',
+          'bg-sidebar px-3 py-2 text-body-sm text-muted-foreground'
         )}
       >
         <ImageOff className="size-4 shrink-0" />
         <span>Image unavailable</span>
       </div>
-    );
+    )
   }
 
   return (
@@ -54,28 +54,28 @@ export function ImageBlock({ ref_, mediaType, encoding }: ImageBlockProps) {
         />
       </DialogContent>
     </Dialog>
-  );
+  )
 }
 
 /** Build a safe local src. Remote http(s) refs are refused (offline guarantee). */
 function resolveLocalSrc(
   ref: string,
   mediaType: string | undefined,
-  encoding: 'base64' | 'url' | 'file' | undefined,
+  encoding: 'base64' | 'url' | 'file' | undefined
 ): string | null {
-  if (!ref) return null;
+  if (!ref) return null
   // Already a usable local source.
-  if (ref.startsWith('data:') || ref.startsWith('blob:')) return ref;
+  if (ref.startsWith('data:') || ref.startsWith('blob:')) return ref
   // 'url' encoding pointing at a remote resource is refused.
-  if (/^https?:/i.test(ref)) return null;
+  if (/^https?:/i.test(ref)) return null
   if (encoding === 'url') {
     // A non-http url encoding we don't recognize → refuse rather than guess.
-    return null;
+    return null
   }
   // base64 payload without the data: prefix.
   if (encoding === 'base64' || /^[A-Za-z0-9+/=\s]+$/.test(ref.slice(0, 64))) {
-    const mt = mediaType || 'image/png';
-    return `data:${mt};base64,${ref.replace(/\s+/g, '')}`;
+    const mt = mediaType || 'image/png'
+    return `data:${mt};base64,${ref.replace(/\s+/g, '')}`
   }
-  return null;
+  return null
 }

@@ -37,7 +37,7 @@ If a name describes plumbing, rename it after the user-facing intent - and if yo
 
 - **P4 (Playback - the delight layer, PRD-08):** a pure timeline engine in **`@claudepad/client` `client/src/playback/**`** - `buildTimeline(session, mode, cfg)` over the viewer's render rows (realtime + presentation pacing, idle-collapse, tool-spam fold, **fast-track of thinking/meta**; FR-1/2/9–13), with a rAF clock (`PlaybackProvider`, single monotonic virtual playhead) and pure `resolveFrame`/seek/step derivations. UI = an **in-flow transport bar** (AppShell footer, right of the sidebar - play/pause, prev/next, ARIA-slider **scrubber** with kind-colored ticks + collapsed-gap bands) with a **settings popover** (pacing mode, speed, **appear: instant/type**, reading-speed), a **keyboard map** + help, and **deep-link** query params (`?play=1&mode=present&speed=1.5&appear=type`, never the key fragment). Integrates into the viewer with **progressive reveal + active highlight (reuses PRD-03's `highlighted` ring) + scroll-to-active + opt-in typing reveal** (only the active turn types, paced to its dwell), reduced-motion-aware - no render fork. Pure client-side, zero network. **Deferred (D-59/D-60, IDEAS.md):** in-transcript "ran X ×k"/"N min later" affordances (folding/idle are in the timeline + scrubber), ghosted previews, pacing tuning + ≥5k-event perf smoke.
 
-**As-built stack** (deviations from the intended-stack sketch are recorded in `docs/DECISIONS.md` D-34…D-44): pnpm workspaces · TS strict · React 18 · **Vite 8 + Tailwind v4 (CSS-first)** · **Vitest 4** · Playwright · shadcn-style primitives hand-composed on Base UI · self-hosted fonts via `@fontsource` · Shiki fine-grained core (no wasm). Gate: `pnpm check` (typecheck + lint + no-raw-hex + WCAG contrast + tests + `poc/verify.mjs`).
+**As-built stack** (deviations from the intended-stack sketch are recorded in `docs/DECISIONS.md` D-34…D-44): pnpm workspaces · TS strict · React 19 · **Vite 8 + Tailwind v4 (CSS-first)** · **Vitest 4** · Playwright · shadcn-style primitives hand-composed on Base UI · self-hosted fonts via `@fontsource` · Shiki fine-grained core (no wasm). Gate: `pnpm check` (typecheck + lint + no-raw-hex + WCAG contrast + tests + `poc/verify.mjs`).
 
 **Next:** P5 (Self-Hosting & Launch, PRD-09 → v1.0).
 
@@ -92,7 +92,7 @@ poc/
 
 ## Intended tech stack (for the monorepo, next session)
 
-TypeScript (strict) · Vite + React 18 · shadcn/ui on base-ui + Tailwind · WebCrypto (zero-dep core; `@noble/curves` only if the opt-in multi-device "pattern B" identity ships) · Vitest + Playwright. Target a **single static bundle** (self-host = serve files). Planned layout: `packages/{client, shared, cli}` (no `server` in v1).
+TypeScript (strict) · Vite + React 19 · shadcn/ui on base-ui + Tailwind · WebCrypto (zero-dep core; `@noble/curves` only if the opt-in multi-device "pattern B" identity ships) · Vitest + Playwright. Target a **single static bundle** (self-host = serve files). Planned layout: `packages/{client, shared, cli}` (no `server` in v1).
 
 ## Working conventions
 

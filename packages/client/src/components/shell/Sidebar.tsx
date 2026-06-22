@@ -1,49 +1,49 @@
-import * as React from 'react';
+import { formatBytes } from '@claudepad/ingest'
 import {
-  PanelLeftClose,
-  Unlink,
-  Palette,
-  Folder,
-  FileText,
-  FolderInput,
-  RefreshCw,
-  ChevronRight,
-  Loader2,
   AlertTriangle,
+  ChevronRight,
   Code2,
-} from 'lucide-react';
-import { formatBytes } from '@claudepad/ingest';
-import { cn } from '../../lib/cn';
-import { Wordmark } from '../brand/Wordmark';
-import { Button } from '../ui/button';
-import { IdentityControl } from '../../identity';
+  FileText,
+  Folder,
+  FolderInput,
+  Loader2,
+  Palette,
+  PanelLeftClose,
+  RefreshCw,
+  Unlink
+} from 'lucide-react'
+import * as React from 'react'
 import {
   formatRelativeTime,
   type Vault,
   type VaultProject,
-  type VaultSession,
-} from '../../fs';
+  type VaultSession
+} from '../../fs'
+import { IdentityControl } from '../../identity'
+import { cn } from '../../lib/cn'
+import { Wordmark } from '../brand/Wordmark'
+import { Button } from '../ui/Button'
 
-export type RecentItem = { id: string; title: string };
+export interface RecentItem { id: string; title: string }
 
 /** What the sidebar needs from the connected ~/.claude folder. */
 export type VaultNav = Vault & {
-  activeSessionId?: string;
-  onSelectSession: (session: VaultSession) => void;
-};
+  activeSessionId?: string
+  onSelectSession: (session: VaultSession) => void
+}
 
-type SidebarProps = {
-  recent: RecentItem[];
-  activeId?: string;
-  onSelect?: (id: string) => void;
+interface SidebarProps {
+  recent: RecentItem[]
+  activeId?: string
+  onSelect?: (id: string) => void
   /** Collapse the sidebar (desktop); omitted in the mobile drawer. */
-  onCollapse?: () => void;
+  onCollapse?: () => void
   /** current hash route, to mark the gallery link active */
-  route: string;
+  route: string
   /** Folder-backed navigation (Chromium only); falls back to `recent` when absent. */
-  vault?: VaultNav;
-  className?: string;
-};
+  vault?: VaultNav
+  className?: string
+}
 
 // Session-centric sidebar (PRD-01 §4.1): wordmark, primary New/Open, then either
 // the connected ~/.claude folder tree (Chromium) or the recent list (fallback),
@@ -55,13 +55,13 @@ export function Sidebar({
   onCollapse,
   route,
   vault,
-  className,
+  className
 }: SidebarProps) {
   return (
     <nav
       className={cn(
         'flex h-full w-[260px] flex-col bg-sidebar border-r border-border',
-        className,
+        className
       )}
       aria-label="Sessions"
     >
@@ -95,22 +95,22 @@ export function Sidebar({
 
       <SidebarFooter route={route} />
     </nav>
-  );
+  )
 }
 
 function RecentList({
   recent,
   activeId,
-  onSelect,
+  onSelect
 }: Pick<SidebarProps, 'recent' | 'activeId' | 'onSelect'>) {
   return (
     <>
       <div className="px-3 pt-2">
-        <p className="px-2 text-label uppercase tracking-[0.02em] text-muted">Recent</p>
+        <p className="px-2 text-label uppercase tracking-[0.02em] text-muted-foreground">Recent</p>
       </div>
       <ul className="flex-1 overflow-y-auto px-2 py-1 space-y-0.5">
         {recent.length === 0 && (
-          <li className="px-3 py-2 text-body-sm text-muted">No recent sessions yet.</li>
+          <li className="px-3 py-2 text-body-sm text-muted-foreground">No recent sessions yet.</li>
         )}
         {recent.map((item) => (
           <li key={item.id}>
@@ -121,7 +121,7 @@ function RecentList({
                 'relative w-full rounded-md px-3 py-2 text-left text-body-sm text-text',
                 'transition-colors duration-[120ms] ease-[var(--ease-standard)]',
                 'hover:bg-accent-tint',
-                item.id === activeId && 'bg-accent-tint font-medium',
+                item.id === activeId && 'bg-accent-tint font-medium'
               )}
             >
               {item.id === activeId && (
@@ -133,20 +133,20 @@ function RecentList({
         ))}
       </ul>
     </>
-  );
+  )
 }
 
 function VaultTree({ vault }: { vault: VaultNav }) {
   return (
     <>
       <div className="px-3 pt-2 flex items-center justify-between">
-        <p className="px-2 text-label uppercase tracking-[0.02em] text-muted">Projects</p>
+        <p className="px-2 text-label uppercase tracking-[0.02em] text-muted-foreground">Projects</p>
         {vault.status === 'connected' && (
           <div className="flex items-center gap-0.5">
             <button
               type="button"
               onClick={() => void vault.refresh()}
-              className="grid size-6 place-items-center rounded-md text-muted hover:bg-accent-tint hover:text-text transition-colors"
+              className="grid size-6 place-items-center rounded-md text-muted-foreground hover:bg-accent-tint hover:text-text transition-colors"
               aria-label="Rescan folder"
               title="Rescan folder"
             >
@@ -155,7 +155,7 @@ function VaultTree({ vault }: { vault: VaultNav }) {
             <button
               type="button"
               onClick={() => void vault.disconnect()}
-              className="grid size-6 place-items-center rounded-md text-muted hover:bg-accent-tint hover:text-text transition-colors"
+              className="grid size-6 place-items-center rounded-md text-muted-foreground hover:bg-accent-tint hover:text-text transition-colors"
               aria-label="Unlink folder"
               title="Unlink folder"
             >
@@ -168,16 +168,16 @@ function VaultTree({ vault }: { vault: VaultNav }) {
         <VaultBody vault={vault} />
       </div>
     </>
-  );
+  )
 }
 
 function VaultBody({ vault }: { vault: VaultNav }) {
   switch (vault.status) {
     case 'restoring':
-      return <Hint icon={<Loader2 className="size-4 animate-spin" />}>Reconnecting…</Hint>;
+      return <Hint icon={<Loader2 className="size-4 animate-spin" />}>Reconnecting…</Hint>
 
     case 'connecting':
-      return <Hint icon={<Loader2 className="size-4 animate-spin" />}>Reading folder…</Hint>;
+      return <Hint icon={<Loader2 className="size-4 animate-spin" />}>Reading folder…</Hint>
 
     case 'idle':
       return (
@@ -186,7 +186,7 @@ function VaultBody({ vault }: { vault: VaultNav }) {
           label="Connect ~/.claude"
           blurb="Browse and open sessions straight from disk - granted once, read-only, never uploaded."
         />
-      );
+      )
 
     case 'needs-permission':
       return (
@@ -195,7 +195,7 @@ function VaultBody({ vault }: { vault: VaultNav }) {
           label="Reconnect folder"
           blurb="Your earlier grant lapsed - one click restores access."
         />
-      );
+      )
 
     case 'error':
       return (
@@ -212,11 +212,11 @@ function VaultBody({ vault }: { vault: VaultNav }) {
             Try again
           </Button>
         </div>
-      );
+      )
 
     case 'connected':
       if (vault.projects.length === 0) {
-        return <Hint>No sessions found in this folder.</Hint>;
+        return <Hint>No sessions found in this folder.</Hint>
       }
       return (
         <ul className="space-y-0.5">
@@ -230,52 +230,52 @@ function VaultBody({ vault }: { vault: VaultNav }) {
             />
           ))}
         </ul>
-      );
+      )
 
     default:
-      return null;
+      return null
   }
 }
 
 /** `vscode://file/<abs-path>` deep link that the OS hands to VS Code. */
 function vscodeUrl(path: string): string {
-  const abs = path.startsWith('/') ? path : `/${path}`;
-  return `vscode://file${encodeURI(abs)}`;
+  const abs = path.startsWith('/') ? path : `/${path}`
+  return `vscode://file${encodeURI(abs)}`
 }
 
 /** Hover-revealed "open this folder in VS Code" affordance. The caller supplies
  * the `group-hover/*` variant matching its row's hover group. */
 function LaunchInEditor({ path, className }: { path?: string; className?: string }) {
-  if (!path) return null;
+  if (!path) return null
   return (
     <a
       href={vscodeUrl(path)}
       onClick={(e) => e.stopPropagation()}
       className={cn(
-        'mr-1 grid size-6 shrink-0 place-items-center rounded-md text-muted opacity-0 transition hover:text-accent focus-visible:opacity-100',
-        className,
+        'mr-1 grid size-6 shrink-0 place-items-center rounded-md text-muted-foreground opacity-0 transition hover:text-accent focus-visible:opacity-100',
+        className
       )}
       aria-label="Open in VS Code"
       title="Open in VS Code"
     >
       <Code2 className="size-3.5" />
     </a>
-  );
+  )
 }
 
 function ProjectRow({
   project,
   defaultOpen,
   activeSessionId,
-  onSelectSession,
+  onSelectSession
 }: {
-  project: VaultProject;
-  defaultOpen: boolean;
-  activeSessionId?: string;
-  onSelectSession: (session: VaultSession) => void;
+  project: VaultProject
+  defaultOpen: boolean
+  activeSessionId?: string
+  onSelectSession: (session: VaultSession) => void
 }) {
-  const hasActive = project.sessions.some((s) => s.id === activeSessionId);
-  const [open, setOpen] = React.useState(defaultOpen || hasActive);
+  const hasActive = project.sessions.some((s) => s.id === activeSessionId)
+  const [open, setOpen] = React.useState(defaultOpen || hasActive)
 
   return (
     <li>
@@ -289,15 +289,15 @@ function ProjectRow({
         >
           <ChevronRight
             className={cn(
-              'size-3.5 shrink-0 text-muted transition-transform',
-              open && 'rotate-90',
+              'size-3.5 shrink-0 text-muted-foreground transition-transform',
+              open && 'rotate-90'
             )}
           />
-          <Folder className="size-3.5 shrink-0 text-muted" />
+          <Folder className="size-3.5 shrink-0 text-muted-foreground" />
           <span className="line-clamp-1 flex-1 font-medium">{project.label}</span>
         </button>
         <LaunchInEditor path={project.path} className="group-hover/proj:opacity-100" />
-        <span className="text-label text-muted tabular-nums">
+        <span className="text-label text-muted-foreground tabular-nums">
           {project.sessions.length}
         </span>
       </div>
@@ -315,24 +315,24 @@ function ProjectRow({
         </ul>
       )}
     </li>
-  );
+  )
 }
 
 function SessionRow({
   session,
   active,
-  onSelect,
+  onSelect
 }: {
-  session: VaultSession;
-  active: boolean;
-  onSelect: (session: VaultSession) => void;
+  session: VaultSession
+  active: boolean
+  onSelect: (session: VaultSession) => void
 }) {
   return (
     <li>
       <div
         className={cn(
           'group/sess relative flex items-center rounded-md transition-colors hover:bg-accent-tint',
-          active && 'bg-accent-tint',
+          active && 'bg-accent-tint'
         )}
       >
         {active && (
@@ -344,18 +344,18 @@ function SessionRow({
           className="relative flex min-w-0 flex-1 items-start gap-1.5 rounded-md px-2 py-1.5 text-left"
           title={session.fileName}
         >
-          <FileText className="mt-0.5 size-3.5 shrink-0 text-muted" />
+          <FileText className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />
           <span className="min-w-0 flex-1">
             <span
               className={cn(
                 'mb-[3px] block truncate text-body-sm leading-[18px] text-text',
-                active && 'font-medium',
+                active && 'font-medium'
               )}
               title={session.title}
             >
               {session.title}
             </span>
-            <span className="block truncate text-label text-muted">
+            <span className="block truncate text-label text-muted-foreground">
               {formatRelativeTime(session.lastModified)}
               {session.branch && ` · ${session.branch}`} · {formatBytes(session.size)}
             </span>
@@ -363,41 +363,41 @@ function SessionRow({
         </button>
       </div>
     </li>
-  );
+  )
 }
 
 function ConnectCard({
   onConnect,
   label,
-  blurb,
+  blurb
 }: {
-  onConnect: () => void;
-  label: string;
-  blurb: string;
+  onConnect: () => void
+  label: string
+  blurb: string
 }) {
   return (
     <div className="px-1 py-1 space-y-2">
       <Button
         variant="secondary"
-        size="md"
+        size='default'
         className="w-full justify-start"
         onClick={onConnect}
       >
         <FolderInput />
         {label}
       </Button>
-      <p className="px-1 text-label leading-relaxed text-muted">{blurb}</p>
+      <p className="px-1 text-label leading-relaxed text-muted-foreground">{blurb}</p>
     </div>
-  );
+  )
 }
 
 function Hint({ icon, children }: { icon?: React.ReactNode; children: React.ReactNode }) {
   return (
-    <div className="flex items-center gap-2 px-3 py-2 text-body-sm text-muted">
+    <div className="flex items-center gap-2 px-3 py-2 text-body-sm text-muted-foreground">
       {icon}
       <span className="min-w-0">{children}</span>
     </div>
-  );
+  )
 }
 
 function SidebarFooter({ route }: { route: string }) {
@@ -406,9 +406,9 @@ function SidebarFooter({ route }: { route: string }) {
       <a
         href="#/gallery"
         className={cn(
-          'flex items-center gap-2 rounded-md px-3 py-2 text-body-sm text-muted',
+          'flex items-center gap-2 rounded-md px-3 py-2 text-body-sm text-muted-foreground',
           'transition-colors hover:bg-accent-tint hover:text-text',
-          route === '#/gallery' && 'bg-accent-tint text-text',
+          route === '#/gallery' && 'bg-accent-tint text-text'
         )}
       >
         <Palette className="size-4" />
@@ -416,5 +416,5 @@ function SidebarFooter({ route }: { route: string }) {
       </a>
       <IdentityControl />
     </div>
-  );
+  )
 }

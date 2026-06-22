@@ -1,4 +1,4 @@
-import type { HighlighterCore } from 'shiki/core';
+import type { HighlighterCore } from 'shiki/core'
 
 // Curated, BUNDLED language subset + a SINGLE theme, loaded via Shiki's
 // FINE-GRAINED core (shiki/core) with the pure-JS regex engine - so the static
@@ -10,7 +10,7 @@ import type { HighlighterCore } from 'shiki/core';
 // Dual themes so code follows the app's light/dark mode. Shiki emits per-token
 // `--shiki-light`/`--shiki-dark` CSS vars (no inline color/background), and CSS
 // in globals.css switches them off the `<html data-theme>` attribute.
-export const BUNDLED_THEMES = { light: 'github-light', dark: 'github-dark' } as const;
+export const BUNDLED_THEMES = { light: 'github-light', dark: 'github-dark' } as const
 
 // Short request names accepted by callers; aliases below normalize to these.
 export const BUNDLED_LANGS = [
@@ -26,10 +26,10 @@ export const BUNDLED_LANGS = [
   'html',
   'markdown',
   'diff',
-  'yaml',
-] as const;
+  'yaml'
+] as const
 
-const LANG_SET = new Set<string>(BUNDLED_LANGS);
+const LANG_SET = new Set<string>(BUNDLED_LANGS)
 
 const LANG_ALIASES: Record<string, string> = {
   typescript: 'ts',
@@ -41,18 +41,18 @@ const LANG_ALIASES: Record<string, string> = {
   py: 'python',
   yml: 'yaml',
   md: 'markdown',
-  htm: 'html',
-};
+  htm: 'html'
+}
 
 /** Normalize a requested lang to a registered grammar/alias, or null for plaintext. */
 export function resolveLang(lang: string | undefined): string | null {
-  if (!lang) return null;
-  const lower = lang.toLowerCase().trim();
-  const aliased = LANG_ALIASES[lower] ?? lower;
-  return LANG_SET.has(aliased) ? aliased : null;
+  if (!lang) return null
+  const lower = lang.toLowerCase().trim()
+  const aliased = LANG_ALIASES[lower] ?? lower
+  return LANG_SET.has(aliased) ? aliased : null
 }
 
-let highlighterPromise: Promise<HighlighterCore> | null = null;
+let highlighterPromise: Promise<HighlighterCore> | null = null
 
 /** Lazily create (once) the shared core highlighter. Never blocks first paint. */
 export async function getHighlighter(): Promise<HighlighterCore> {
@@ -81,16 +81,16 @@ export async function getHighlighter(): Promise<HighlighterCore> {
         import('@shikijs/langs/html'),
         import('@shikijs/langs/markdown'),
         import('@shikijs/langs/diff'),
-        import('@shikijs/langs/yaml'),
-      ]);
+        import('@shikijs/langs/yaml')
+      ])
       return createHighlighterCore({
         themes: [themeLight.default, themeDark.default],
         langs: langs.map((m) => m.default),
-        engine: createJavaScriptRegexEngine(),
-      });
-    })();
+        engine: createJavaScriptRegexEngine()
+      })
+    })()
   }
-  return highlighterPromise;
+  return highlighterPromise
 }
 
 /**
@@ -100,21 +100,21 @@ export async function getHighlighter(): Promise<HighlighterCore> {
  */
 export async function highlightToHtml(
   code: string,
-  lang: string | undefined,
+  lang: string | undefined
 ): Promise<string | null> {
-  const resolved = resolveLang(lang);
-  if (!resolved) return null;
+  const resolved = resolveLang(lang)
+  if (!resolved) return null
   try {
-    const hl = await getHighlighter();
+    const hl = await getHighlighter()
     // Dual-theme output with no default color → only `--shiki-light`/`--shiki-dark`
     // CSS vars on each token (and no inline background), so globals.css can switch
     // the palette by `data-theme` and the container's themed background shows through.
     return hl.codeToHtml(code, {
       lang: resolved,
       themes: BUNDLED_THEMES,
-      defaultColor: false,
-    });
+      defaultColor: false
+    })
   } catch {
-    return null;
+    return null
   }
 }
