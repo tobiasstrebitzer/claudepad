@@ -5,7 +5,9 @@ All notable changes to claudepad are documented here. The format is based on
 [Semantic Versioning](https://semver.org/). The blob/identity **envelope version**
 (currently `1`) is tracked independently of the product version.
 
-## [Unreleased] - P5 (Self-Hosting & Launch)
+## [Unreleased]
+
+## [0.7.0] - 2026-06-22 - P5 (Self-Hosting & Launch)
 
 ### Added
 - `LICENSE` (MIT) at the repo root.
@@ -75,7 +77,8 @@ All notable changes to claudepad are documented here. The format is based on
 - Monorepo scaffold, `@claudepad/schema` tolerant parser (PRD-02), `@claudepad/shared` zero-dependency WebCrypto core (PRD-05) mirroring `poc/`, and the design system (PRD-01).
 - P1 (MVP-0): drop/paste a session → prettified `SessionViewer` (PRD-03) fed by `@claudepad/ingest` (PRD-04), fully offline and local-only.
 
-[Unreleased]: https://github.com/tobiasstrebitzer/claudepad/compare/v0.6.1...HEAD
+[Unreleased]: https://github.com/tobiasstrebitzer/claudepad/compare/v0.7.0...HEAD
+[0.7.0]: https://github.com/tobiasstrebitzer/claudepad/compare/v0.6.1...v0.7.0
 [0.6.1]: https://github.com/tobiasstrebitzer/claudepad/compare/v0.6.0...v0.6.1
 [0.6.0]: https://github.com/tobiasstrebitzer/claudepad/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/tobiasstrebitzer/claudepad/compare/v0.4.0...v0.5.0
