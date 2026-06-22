@@ -1,4 +1,4 @@
-import type { UserEvent } from '@claudepad/schema'
+import type { UserEvent } from '@/schema'
 import * as React from 'react'
 import { ContentBlocks } from '../blocks/ContentBlocks'
 import { TurnShell } from './TurnShell'

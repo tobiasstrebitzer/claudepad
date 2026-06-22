@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { parseSession, type Session, type DiagnosticRecord } from '@claudepad/schema'
+import { parseSession, type Session, type DiagnosticRecord } from '@/schema'
 import { classify, checkSize, type IngestShape } from '@claudepad/ingest'
 import { isShareBlob, isShareLink } from '../share/detect'
 

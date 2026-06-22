@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import type { Session, SessionEvent } from '@claudepad/schema';
+import type { Session, SessionEvent } from '@/schema';
 import {
   buildTimeline,
   resolveFrame,

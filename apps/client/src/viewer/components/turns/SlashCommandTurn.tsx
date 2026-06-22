@@ -1,4 +1,4 @@
-import type { ContentBlock, UserEvent } from '@claudepad/schema'
+import type { ContentBlock, UserEvent } from '@/schema'
 import { Terminal } from 'lucide-react'
 import * as React from 'react'
 import { TurnShell } from './TurnShell'

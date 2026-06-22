@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import type { Session, SessionEvent } from '@claudepad/schema';
+import type { Session, SessionEvent } from '@/schema';
 import { correlateTools } from '../src/viewer/hooks/useCorrelateTools';
 import { SessionViewer } from '../src/viewer';
 

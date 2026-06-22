@@ -1,4 +1,4 @@
-import type { ContentBlock } from '@claudepad/schema'
+import type { ContentBlock } from '@/schema'
 import { Markdown } from './Markdown'
 import { CodeBlock } from './CodeBlock'
 import { ImageBlock } from './ImageBlock'

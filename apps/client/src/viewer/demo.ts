@@ -1,4 +1,4 @@
-import type { Session } from '@claudepad/schema'
+import type { Session } from '@/schema'
 import type { SecretMap } from './hooks/useReveal'
 import { makeSecretToken } from './secret-token'
 

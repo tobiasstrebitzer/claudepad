@@ -1,10 +1,8 @@
 {
   "files": [],
   "references": [
-    { "path": "./packages/schema" },
     { "path": "./packages/crypto" },
     { "path": "./packages/ingest" },
-    { "path": "./packages/secrets" },
     { "path": "./packages/registry-spec" },
     { "path": "./apps/registry" },
     { "path": "./packages/registry-client" },

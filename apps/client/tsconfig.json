@@ -13,9 +13,7 @@
   },
   "include": ["src"],
   "references": [
-    { "path": "../../packages/schema" },
     { "path": "../../packages/crypto" },
-    { "path": "../../packages/ingest" },
-    { "path": "../../packages/secrets" }
+    { "path": "../../packages/ingest" }
   ]
 }

@@ -1,5 +1,5 @@
 import * as React from 'react'
-import type { Session } from '@claudepad/schema'
+import type { Session } from '@/schema'
 
 /**
  * The "Raw" view: the normalized session as formatted JSON. A power-user escape

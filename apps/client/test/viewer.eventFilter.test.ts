@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import type { SessionEvent } from '@claudepad/schema';
+import type { SessionEvent } from '@/schema';
 import { correlateTools } from '../src/viewer/hooks/useCorrelateTools';
 import {
   rowGroup,

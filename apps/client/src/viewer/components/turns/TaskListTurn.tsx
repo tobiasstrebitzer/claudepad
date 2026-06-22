@@ -1,4 +1,4 @@
-import type { ToolResultEvent, ToolUseEvent } from '@claudepad/schema'
+import type { ToolResultEvent, ToolUseEvent } from '@/schema'
 import { Circle, CircleCheck, CircleDot, ListChecks } from 'lucide-react'
 import * as React from 'react'
 import { cn } from '../../../lib/cn'

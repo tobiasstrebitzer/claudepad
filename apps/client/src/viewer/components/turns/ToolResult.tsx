@@ -1,4 +1,4 @@
-import type { ToolResultEvent } from '@claudepad/schema'
+import type { ToolResultEvent } from '@/schema'
 import { ChevronRight, CircleAlert, CircleCheck, CornerDownRight } from 'lucide-react'
 import * as React from 'react'
 import {

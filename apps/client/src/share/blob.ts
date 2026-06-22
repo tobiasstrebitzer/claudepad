@@ -17,8 +17,8 @@ import {
   type Identity,
   type Tier
 } from '@claudepad/crypto'
-import type { Session } from '@claudepad/schema'
-import type { SecretMap } from '@claudepad/secrets'
+import type { Session } from '@/schema'
+import type { SecretMap } from '@/secrets'
 import { CP_BLOB_PREFIX } from './detect'
 
 export interface CreateShareOpts {

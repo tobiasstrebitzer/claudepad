@@ -3,8 +3,8 @@
 // live progress; closing the dialog terminates the worker (cancellation). Falls
 // back to a deferred main-thread scan where workers aren't available.
 
-import type { Session } from '@claudepad/schema'
-import { scanSession, type Detection, type ScanSettings } from '@claudepad/secrets'
+import type { Session } from '@/schema'
+import { scanSession, type Detection, type ScanSettings } from '@/secrets'
 import * as React from 'react'
 import type { ScanRequest, ScanResponse } from './scanProtocol'
 

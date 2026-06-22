@@ -1,5 +1,5 @@
 import * as React from 'react'
-import type { SessionEvent } from '@claudepad/schema'
+import type { SessionEvent } from '@/schema'
 
 /**
  * Stable anchor id for an event. Prefers the source/event id; falls back to a

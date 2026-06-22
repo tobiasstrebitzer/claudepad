@@ -1,5 +1,5 @@
 import { User, Sparkles, Wrench, Brain, Info, PanelLeftClose } from 'lucide-react'
-import type { ContentBlock } from '@claudepad/schema'
+import type { ContentBlock } from '@/schema'
 import { cn } from '../../lib/cn'
 import type { RenderRow } from '../hooks/useCorrelateTools'
 import { anchorIdFor } from '../hooks/useAnchor'

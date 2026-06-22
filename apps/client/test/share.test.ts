@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import type { Session } from '@claudepad/schema';
+import type { Session } from '@/schema';
 import { mintIdentity, encodePublicCard } from '@claudepad/crypto';
-import { scanSession, redact } from '@claudepad/secrets';
+import { scanSession, redact } from '@/secrets';
 import { createShare, openShare } from '../src/share/blob';
 import { isShareBlob, isShareLink } from '../src/share/detect';
 

@@ -10,7 +10,7 @@
 // the review step. Quick-share pre-selects a recipient and opens at Grant.
 // All crypto + redaction is local; nothing is uploaded (PRD-11 FR-17).
 
-import type { Session } from '@claudepad/schema'
+import type { Session } from '@/schema'
 import {
   DEFAULT_SCAN_SETTINGS,
   DETECTION_QUALITY,
@@ -19,7 +19,7 @@ import {
   type Detection,
   type DetectionState,
   type ScanSettings
-} from '@claudepad/secrets'
+} from '@/secrets'
 import { decodePublicCard, encodePublicCard, type Tier } from '@claudepad/crypto'
 import { isVerifiedAssurance, type DirectoryEntry, type RegistryClient } from '@claudepad/registry-client'
 import {

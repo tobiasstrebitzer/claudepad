@@ -1,4 +1,4 @@
-import type { SessionEvent } from '@claudepad/schema'
+import type { SessionEvent } from '@/schema'
 
 /**
  * Pure session-metadata and UI-internal telemetry that only adds noise when

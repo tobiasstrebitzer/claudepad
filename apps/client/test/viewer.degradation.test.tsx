@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import type { Session, SessionEvent } from '@claudepad/schema';
+import type { Session, SessionEvent } from '@/schema';
 import { SessionViewer, EventFilterProvider, DEFAULT_VISIBILITY } from '../src/viewer';
 import { ContentBlocks } from '../src/viewer/components/blocks/ContentBlocks';
 import { TopBar } from '../src/components/shell/TopBar';

@@ -1,4 +1,4 @@
-import type { ToolResultEvent, ToolUseEvent } from '@claudepad/schema'
+import type { ToolResultEvent, ToolUseEvent } from '@/schema'
 import { CircleHelp } from 'lucide-react'
 import * as React from 'react'
 import { Badge } from '../../../components/ui/Badge'

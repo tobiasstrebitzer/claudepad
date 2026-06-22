@@ -5,7 +5,7 @@
 // on exactly what the audience sees - and on the *rendered, tier-appropriate*
 // content (secret placeholders count as their label only, FR-19).
 
-import type { ContentBlock } from '@claudepad/schema'
+import type { ContentBlock } from '@/schema'
 import type { RenderRow } from '../viewer/hooks/useCorrelateTools'
 
 export interface PacingWeights {

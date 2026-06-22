@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import type { Session, SessionEvent } from '@claudepad/schema';
+import type { Session, SessionEvent } from '@/schema';
 import { correlateTools } from '../src/viewer/hooks/useCorrelateTools';
 import { isHiddenEvent, attachmentType } from '../src/viewer/hooks/eventVisibility';
 import { matchTurn } from '../src/viewer/components/turns/registry';

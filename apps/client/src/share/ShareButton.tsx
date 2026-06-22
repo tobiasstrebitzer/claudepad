@@ -4,7 +4,7 @@
 // confirm). Always clickable when a session is loaded; if the identity isn't
 // unlocked the dialog explains how to set it up.
 
-import type { Session } from '@claudepad/schema'
+import type { Session } from '@/schema'
 import { ChevronDown, Share2 } from 'lucide-react'
 import * as React from 'react'
 import { Button } from '../components/ui/Button'

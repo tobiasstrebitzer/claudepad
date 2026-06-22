@@ -56,12 +56,6 @@ importers:
       '@claudepad/registry-client':
         specifier: workspace:*
         version: link:../../packages/registry-client
-      '@claudepad/schema':
-        specifier: workspace:*
-        version: link:../../packages/schema
-      '@claudepad/secrets':
-        specifier: workspace:*
-        version: link:../../packages/secrets
       '@fontsource/inter':
         specifier: ^5.2.8
         version: 5.2.8
@@ -144,6 +138,9 @@ importers:
       '@vitejs/plugin-react':
         specifier: ^6.0.2
         version: 6.0.2(vite@8.0.16(@types/node@22.19.21)(esbuild@0.28.1)(jiti@2.7.0))
+      fast-check:
+        specifier: ^3.23.2
+        version: 3.23.2
       jsdom:
         specifier: ^29.1.1
         version: 29.1.1
@@ -181,21 +178,6 @@ importers:
         version: link:../../apps/registry
 
   packages/registry-spec: {}
-
-  packages/schema:
-    devDependencies:
-      '@vitest/coverage-v8':
-        specifier: ^4.1.9
-        version: 4.1.9(vitest@4.1.9)
-      fast-check:
-        specifier: ^3.23.2
-        version: 3.23.2
-
-  packages/secrets:
-    dependencies:
-      '@claudepad/schema':
-        specifier: workspace:*
-        version: link:../schema
 
 packages:
 
@@ -3478,7 +3460,8 @@ snapshots:
     optionalDependencies:
       '@types/react': 19.2.17
 
-  '@bcoe/v8-coverage@1.0.2': {}
+  '@bcoe/v8-coverage@1.0.2':
+    optional: true
 
   '@bramus/specificity@2.4.2':
     dependencies:
@@ -4379,6 +4362,7 @@ snapshots:
       std-env: 4.1.0
       tinyrainbow: 3.1.0
       vitest: 4.1.9(@types/node@22.19.21)(@vitest/coverage-v8@4.1.9)(jsdom@29.1.1)(vite@8.0.16(@types/node@22.19.21)(esbuild@0.28.1)(jiti@2.7.0))
+    optional: true
 
   '@vitest/expect@4.1.9':
     dependencies:
@@ -4520,6 +4504,7 @@ snapshots:
       '@jridgewell/trace-mapping': 0.3.31
       estree-walker: 3.0.3
       js-tokens: 10.0.0
+    optional: true
 
   async-function@1.0.0: {}
 
@@ -5181,7 +5166,8 @@ snapshots:
     transitivePeerDependencies:
       - '@noble/hashes'
 
-  html-escaper@2.0.2: {}
+  html-escaper@2.0.2:
+    optional: true
 
   html-url-attributes@3.0.1: {}
 
@@ -5337,18 +5323,21 @@ snapshots:
 
   isexe@2.0.0: {}
 
-  istanbul-lib-coverage@3.2.2: {}
+  istanbul-lib-coverage@3.2.2:
+    optional: true
 
   istanbul-lib-report@3.0.1:
     dependencies:
       istanbul-lib-coverage: 3.2.2
       make-dir: 4.0.0
       supports-color: 7.2.0
+    optional: true
 
   istanbul-reports@3.2.0:
     dependencies:
       html-escaper: 2.0.2
       istanbul-lib-report: 3.0.1
+    optional: true
 
   iterator.prototype@1.1.5:
     dependencies:
@@ -5361,7 +5350,8 @@ snapshots:
 
   jiti@2.7.0: {}
 
-  js-tokens@10.0.0: {}
+  js-tokens@10.0.0:
+    optional: true
 
   js-tokens@4.0.0: {}
 
@@ -5511,10 +5501,12 @@ snapshots:
       '@babel/parser': 7.29.7
       '@babel/types': 7.29.7
       source-map-js: 1.2.1
+    optional: true
 
   make-dir@4.0.0:
     dependencies:
       semver: 7.8.4
+    optional: true
 
   markdown-table@3.0.4: {}
 

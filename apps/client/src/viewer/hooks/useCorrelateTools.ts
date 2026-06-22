@@ -4,7 +4,7 @@ import type {
   SessionEvent,
   ToolUseEvent,
   ToolResultEvent
-} from '@claudepad/schema'
+} from '@/schema'
 import { isHiddenEvent } from './eventVisibility'
 
 /**

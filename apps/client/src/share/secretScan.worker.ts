@@ -2,7 +2,7 @@
 // thread so the share dialog stays responsive on large sessions, posting
 // progress as it goes. The host cancels by terminating the worker.
 
-import { scanSession } from '@claudepad/secrets'
+import { scanSession } from '@/secrets'
 import type { ScanRequest, ScanResponse } from './scanProtocol'
 
 const post = (msg: ScanResponse) => self.postMessage(msg)

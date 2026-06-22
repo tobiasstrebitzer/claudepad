@@ -1,4 +1,4 @@
-import type { MetaEvent } from '@claudepad/schema'
+import type { MetaEvent } from '@/schema'
 import { SquareTerminal } from 'lucide-react'
 import * as React from 'react'
 import { cn } from '../../../lib/cn'

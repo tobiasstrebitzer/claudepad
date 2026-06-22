@@ -1,4 +1,4 @@
-import type { DiagnosticRecord, Session } from '@claudepad/schema'
+import type { DiagnosticRecord, Session } from '@/schema'
 import { Clock, Cpu, FolderOpen, Info } from 'lucide-react'
 import type { TopBarContent } from '../components/shell/TopBar'
 import { ViewSwitch, type ViewMode } from '../components/shell/ViewSwitch'

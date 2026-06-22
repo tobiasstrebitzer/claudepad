@@ -1,4 +1,4 @@
-import type { ContentBlock, ThinkingEvent } from '@claudepad/schema'
+import type { ContentBlock, ThinkingEvent } from '@/schema'
 import { Brain, ChevronRight } from 'lucide-react'
 import * as React from 'react'
 import {

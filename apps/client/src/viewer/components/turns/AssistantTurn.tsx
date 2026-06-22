@@ -1,4 +1,4 @@
-import type { AssistantEvent } from '@claudepad/schema'
+import type { AssistantEvent } from '@/schema'
 import * as React from 'react'
 import { Badge } from '../../../components/ui/Badge'
 import { ContentBlocks } from '../blocks/ContentBlocks'

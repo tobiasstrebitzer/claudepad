@@ -1,4 +1,4 @@
-import type { MetaEvent } from '@claudepad/schema'
+import type { MetaEvent } from '@/schema'
 import { Info } from 'lucide-react'
 import * as React from 'react'
 import { attachmentType } from '../../hooks/eventVisibility'

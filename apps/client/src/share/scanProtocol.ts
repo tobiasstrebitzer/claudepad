@@ -3,8 +3,8 @@
 // and Detection[] out, with progress in between. Cancellation = terminate the
 // worker (no cooperative protocol needed).
 
-import type { Session } from '@claudepad/schema'
-import type { Detection, ScanSettings } from '@claudepad/secrets'
+import type { Session } from '@/schema'
+import type { Detection, ScanSettings } from '@/secrets'
 
 /** main -> worker: scan this session. */
 export interface ScanRequest {

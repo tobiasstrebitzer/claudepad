@@ -1,4 +1,4 @@
-import type { ContentBlock, SessionEvent } from '@claudepad/schema'
+import type { ContentBlock, SessionEvent } from '@/schema'
 import type { RenderRow } from './useCorrelateTools'
 
 /**

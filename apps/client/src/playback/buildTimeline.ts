@@ -5,7 +5,7 @@
 // renderer mounts; no render fork (FR-14). Changing only the playhead never
 // rebuilds the timeline (FR-20) - resolveFrame is a pure O(log n) derivation.
 
-import type { Session } from '@claudepad/schema'
+import type { Session } from '@/schema'
 import { correlateTools, type RenderRow } from '../viewer/hooks/useCorrelateTools'
 import {
   filterRows,
