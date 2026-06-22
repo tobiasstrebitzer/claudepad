@@ -4,6 +4,6 @@ import { defineConfig } from 'vitest/config';
 // at the root runs the whole suite (schema + shared + client) as projects.
 export default defineConfig({
   test: {
-    projects: ['packages/*'],
+    projects: ['apps/*', 'packages/*'],
   },
 });

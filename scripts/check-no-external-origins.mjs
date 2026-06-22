@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // PRD-09 FR-18 / THREAT-MODEL "web hygiene": the built client bundle must make
-// no third-party runtime fetches. This scans packages/client/dist for absolute
+// no third-party runtime fetches. This scans apps/client/dist for absolute
 // external origins (http(s):// and protocol-relative //host) in the shipped
 // assets, allow-listing the handful that are inert (schema URLs, SVG xmlns,
 // docs/example links rendered as text). A hit here means the bundle could phone
@@ -13,7 +13,7 @@ import { join, relative, extname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
-const dist = join(root, 'packages', 'client', 'dist');
+const dist = join(root, 'apps', 'client', 'dist');
 
 if (!existsSync(dist)) {
   console.log('check-no-external-origins: skipped (no dist/ - run `pnpm build` first)');
@@ -33,6 +33,7 @@ const ALLOW = [
   'https://tailwindcss.com',   // banner comment in generated CSS
   'https://react.dev/errors/', // React minified-error decoder link (string, not a fetch)
   'https://base-ui.com/production-error', // Base UI minified-error link (string, not a fetch)
+  'https://registry.example.com', // registry-URL input placeholder (RFC-2606 reserved; never a real host)
 ];
 
 const SCAN_EXT = new Set(['.js', '.mjs', '.css', '.html']);

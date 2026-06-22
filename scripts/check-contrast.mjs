@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 // PRD-01 FR-21: automated WCAG contrast check over the documented token pairings,
-// in BOTH themes. Parses packages/client/src/styles/tokens.css (the single source
+// in BOTH themes. Parses apps/client/src/styles/tokens.css (the single source
 // of color truth) so CI fails if any pairing regresses below target.
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const css = readFileSync(
-  new URL('../packages/client/src/styles/tokens.css', import.meta.url),
+  new URL('../apps/client/src/styles/tokens.css', import.meta.url),
   'utf8',
 ).replace(/\/\*[\s\S]*?\*\//g, ''); // strip comments so they can't fuse with decls
 
@@ -65,7 +65,7 @@ function effectiveTokens(palette, mode) {
   return { ...BASE[mode], ...override };
 }
 
-// Keep in sync with the palette set in packages/client/src/lib/viewer-theme.ts.
+// Keep in sync with the palette set in apps/client/src/lib/viewer-theme.ts.
 const PALETTES = ['warm', 'slate', 'ocean', 'contrast'];
 const MODES = ['light', 'dark'];
 

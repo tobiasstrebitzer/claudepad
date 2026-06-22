@@ -28,7 +28,7 @@
     "source.organizeImports": "explicit"
   },
   "eslint.workingDirectories": [
-    "packages/client"
+    "apps/client"
   ],
   "editor.formatOnSave": true,
   "editor.rulers": [80],

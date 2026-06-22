@@ -39,7 +39,7 @@ jobs:
       - name: Package bundle + checksums
         run: |
           tag="${GITHUB_REF_NAME}"
-          tar -C packages/client/dist -czf "claudepad-${tag}.tar.gz" .
+          tar -C apps/client/dist -czf "claudepad-${tag}.tar.gz" .
           sha256sum "claudepad-${tag}.tar.gz" > "claudepad-${tag}.tar.gz.sha256"
 
       - name: Create GitHub Release
@@ -73,5 +73,5 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          workingDirectory: packages/client
+          workingDirectory: apps/client
           command: deploy

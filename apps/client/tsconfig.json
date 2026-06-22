@@ -13,9 +13,9 @@
   },
   "include": ["src"],
   "references": [
-    { "path": "../schema" },
-    { "path": "../shared" },
-    { "path": "../ingest" },
-    { "path": "../secrets" }
+    { "path": "../../packages/schema" },
+    { "path": "../../packages/shared" },
+    { "path": "../../packages/ingest" },
+    { "path": "../../packages/secrets" }
   ]
 }

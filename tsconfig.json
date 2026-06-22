@@ -6,8 +6,8 @@
     { "path": "./packages/ingest" },
     { "path": "./packages/secrets" },
     { "path": "./packages/registry-spec" },
-    { "path": "./packages/registry" },
+    { "path": "./apps/registry" },
     { "path": "./packages/registry-client" },
-    { "path": "./packages/client" }
+    { "path": "./apps/client" }
   ]
 }

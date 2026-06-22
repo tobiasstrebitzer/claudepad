@@ -45,23 +45,23 @@ importers:
         specifier: ^4.103.0
         version: 4.103.0
 
-  packages/client:
+  apps/client:
     dependencies:
       '@base-ui/react':
         specifier: ^1.6.0
         version: 1.6.0(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       '@claudepad/ingest':
         specifier: workspace:*
-        version: link:../ingest
+        version: link:../../packages/ingest
       '@claudepad/registry-client':
         specifier: workspace:*
-        version: link:../registry-client
+        version: link:../../packages/registry-client
       '@claudepad/schema':
         specifier: workspace:*
-        version: link:../schema
+        version: link:../../packages/schema
       '@claudepad/secrets':
         specifier: workspace:*
-        version: link:../secrets
+        version: link:../../packages/secrets
       '@fontsource/inter':
         specifier: ^5.2.8
         version: 5.2.8
@@ -122,7 +122,7 @@ importers:
     devDependencies:
       '@claudepad/shared':
         specifier: workspace:*
-        version: link:../shared
+        version: link:../../packages/shared
       '@playwright/test':
         specifier: ^1.61.0
         version: 1.61.0
@@ -154,16 +154,16 @@ importers:
         specifier: ^8.0.16
         version: 8.0.16(@types/node@22.19.21)(esbuild@0.28.1)(jiti@2.7.0)
 
-  packages/ingest: {}
-
-  packages/registry:
+  apps/registry:
     dependencies:
       '@claudepad/registry-spec':
         specifier: workspace:*
-        version: link:../registry-spec
+        version: link:../../packages/registry-spec
       '@claudepad/shared':
         specifier: workspace:*
-        version: link:../shared
+        version: link:../../packages/shared
+
+  packages/ingest: {}
 
   packages/registry-client:
     dependencies:
@@ -173,7 +173,7 @@ importers:
     devDependencies:
       '@claudepad/registry':
         specifier: workspace:*
-        version: link:../registry
+        version: link:../../apps/registry
       '@claudepad/shared':
         specifier: workspace:*
         version: link:../shared

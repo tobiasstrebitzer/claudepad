@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 // PRD-01 FR-6: no raw color hex outside the token source of truth.
-// Scans packages/client/src for `#rgb`/`#rrggbb`/`#rrggbbaa` literals in
+// Scans apps/client/src for `#rgb`/`#rrggbb`/`#rrggbbaa` literals in
 // .ts/.tsx/.css, allow-listing tokens.css (the single place hex may live).
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
-const scanRoot = join(root, 'packages', 'client', 'src');
+const scanRoot = join(root, 'apps', 'client', 'src');
 
 const ALLOW = new Set([join('styles', 'tokens.css')]);
 const HEX = /#[0-9a-fA-F]{3,8}\b/;
