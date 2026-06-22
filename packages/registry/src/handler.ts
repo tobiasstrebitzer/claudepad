@@ -41,7 +41,7 @@ export interface RegistryConfig {
 const CORS_HEADERS: Record<string, string> = {
   'access-control-allow-origin': '*',
   'access-control-allow-methods': 'GET,POST,DELETE,OPTIONS',
-  'access-control-allow-headers': 'authorization,content-type',
+  'access-control-allow-headers': `authorization,content-type,${INDEX_FOR_HEADER}`,
   'access-control-max-age': '86400',
 };
 
