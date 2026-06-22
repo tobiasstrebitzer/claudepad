@@ -50,6 +50,9 @@ importers:
       '@claudepad/ingest':
         specifier: workspace:*
         version: link:../ingest
+      '@claudepad/registry-client':
+        specifier: workspace:*
+        version: link:../registry-client
       '@claudepad/schema':
         specifier: workspace:*
         version: link:../schema
@@ -152,6 +155,30 @@ importers:
         version: 4.103.0
 
   packages/ingest: {}
+
+  packages/registry:
+    dependencies:
+      '@claudepad/registry-spec':
+        specifier: workspace:*
+        version: link:../registry-spec
+      '@claudepad/shared':
+        specifier: workspace:*
+        version: link:../shared
+
+  packages/registry-client:
+    dependencies:
+      '@claudepad/registry-spec':
+        specifier: workspace:*
+        version: link:../registry-spec
+    devDependencies:
+      '@claudepad/registry':
+        specifier: workspace:*
+        version: link:../registry
+      '@claudepad/shared':
+        specifier: workspace:*
+        version: link:../shared
+
+  packages/registry-spec: {}
 
   packages/schema:
     devDependencies:

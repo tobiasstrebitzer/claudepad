@@ -1,0 +1,32 @@
+{
+  "name": "@claudepad/registry",
+  "version": "0.8.0",
+  "private": true,
+  "description": "Reference implementation of the claudepad registry contract (REGISTRY-SPEC.md): a Cloudflare Worker (R2 blobs/sessions + KV directory) built on a storage-agnostic handler so it runs against an in-memory backend in tests. Zero-knowledge blob store + identity directory + opt-in trusted sessions.",
+  "license": "MIT",
+  "type": "module",
+  "main": "./src/index.ts",
+  "module": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "import": "./src/index.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "deploy": "wrangler deploy",
+    "dev": "wrangler dev"
+  },
+  "dependencies": {
+    "@claudepad/registry-spec": "workspace:*",
+    "@claudepad/shared": "workspace:*"
+  }
+}

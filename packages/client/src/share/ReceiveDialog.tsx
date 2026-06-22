@@ -15,7 +15,25 @@ import {
 } from '../components/ui/Dialog'
 import { Textarea } from '../components/ui/Textarea'
 import { Fingerprint, useIdentityContext } from '../identity'
+import { useRegistry } from '../registry'
 import { openShare, type OpenShareResult } from './blob'
+import { CP_BLOB_PREFIX } from './detect'
+
+/** A short link/id is anything that isn't already an inline `cp-blob-…`. */
+function looksLikeId(text: string): boolean {
+  return !text.trim().startsWith(CP_BLOB_PREFIX)
+}
+
+/** Pull the blob id out of a short URL (last path segment) or use the raw id. */
+function blobIdFrom(text: string): string {
+  const t = text.trim()
+  try {
+    const u = new URL(t)
+    return decodeURIComponent(u.pathname.split('/').filter(Boolean).pop() ?? t)
+  } catch {
+    return t
+  }
+}
 
 export function ReceiveDialog({
   open,
@@ -34,11 +52,32 @@ export function ReceiveDialog({
   initialBlob?: string
 }) {
   const { state: idState } = useIdentityContext()
+  const registry = useRegistry()
   const [input, setInput] = React.useState('')
   const [busy, setBusy] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
   const [result, setResult] = React.useState<OpenShareResult | null>(null)
   const unlocked = idState.status === 'unlocked'
+  const registryClient = registry.client
+  const [inboxIds, setInboxIds] = React.useState<string[]>([])
+
+  // When a registry is connected and we're unlocked, list anything addressed to
+  // us (opt-in inbox index). Best-effort: a registry without an inbox just yields
+  // nothing.
+  React.useEffect(() => {
+    if (!open || !unlocked || !registryClient) {
+      setInboxIds([])
+      return
+    }
+    let live = true
+    registryClient
+      .inbox()
+      .then((ids) => live && setInboxIds(ids))
+      .catch(() => live && setInboxIds([]))
+    return () => {
+      live = false
+    }
+  }, [open, unlocked, registryClient])
 
   const decrypt = React.useCallback(
     async (text: string) => {
@@ -46,7 +85,14 @@ export function ReceiveDialog({
       setBusy(true)
       setError(null)
       try {
-        setResult(await openShare(idState.identity, text))
+        // A short link / id (not an inline blob) is fetched from the connected
+        // registry first; the registry only ever returns opaque ciphertext.
+        let blobText = text.trim()
+        if (registryClient && looksLikeId(blobText)) {
+          const bytes = await registryClient.get(blobIdFrom(blobText))
+          blobText = new TextDecoder().decode(bytes)
+        }
+        setResult(await openShare(idState.identity, blobText))
       } catch {
         // Fail closed: don't distinguish "not for you" from "corrupt" beyond this.
         setError(
@@ -56,7 +102,7 @@ export function ReceiveDialog({
         setBusy(false)
       }
     },
-    [idState]
+    [idState, registryClient]
   )
 
   // Reset on open; if a blob was handed in, seed the field and auto-decrypt it
@@ -97,7 +143,34 @@ export function ReceiveDialog({
             <DialogDescription>
               Paste a <code>cp-blob-…</code> someone sent you, or upload a{' '}
               <code>.cpad</code> file.
+              {registryClient && (
+                <>
+                  {' '}
+                  You can also paste a short link or id from{' '}
+                  <span className="font-medium text-text">{registry.state.status === 'connected' ? registry.state.manifest.name : 'your registry'}</span>.
+                </>
+              )}
             </DialogDescription>
+
+            {inboxIds.length > 0 && (
+              <div className="mt-3">
+                <p className="mb-1.5 text-label uppercase tracking-[0.02em] text-muted-foreground">
+                  Shared with me ({inboxIds.length})
+                </p>
+                <ul className="max-h-[24vh] divide-y divide-border overflow-y-auto rounded-md border border-border">
+                  {inboxIds.map((id) => (
+                    <li key={id} className="flex items-center gap-2 p-2">
+                      <code className="min-w-0 flex-1 truncate font-mono text-label text-muted-foreground">
+                        {id}
+                      </code>
+                      <Button variant="secondary" size="sm" onClick={() => void decrypt(id)} disabled={busy}>
+                        Open
+                      </Button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
 
             <Textarea
               value={input}

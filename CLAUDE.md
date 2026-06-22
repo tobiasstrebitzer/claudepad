@@ -41,9 +41,11 @@ If a name describes plumbing, rename it after the user-facing intent - and if yo
 
 - **P5 (Self-Hosting & Launch, PRD-09 - serverless scope, D-66…D-70):** the v1 deploy path was already shipped (Vite build → `packages/client/dist`, served by anything; `claudepad.io` via `packages/client/wrangler.jsonc`). P5 adds the launch *artifacts*: `LICENSE` (MIT, D-67), public plain-language `docs/THREAT-MODEL.md`, `SECURITY.md`, `CONTRIBUTING.md`, `CHANGELOG.md`, rewritten `README.md`, `docs/self-hosting.md`, `docs/verify-zero-knowledge.md` + `scripts/check-no-external-origins.mjs` (ZK is reproducible, D-68), and CI/CD (`.github/workflows/{ci,release}.yml`; tag → bundle + SHA-256 + `wrangler` deploy, D-70). PRD-09's docker/Postgres/MinIO/Workers-R2 stack stays **vNext** (the optional store addon). 
 
-**Next:** the **independent security review** (FR-16 / Q-12, D-69) is the one remaining hard gate before the v1.0 tag - an external-vendor task; everything else for P5 is in place.
+**Next:** the **independent security review** (FR-16 / Q-12) is **no longer a v1.0 gate** - reclassified to a post-launch recommendation (D-78, supersedes D-69); v1.0 may be tagged with an honest "unaudited, audit welcome" label. Everything else for P5 is in place.
 
 **Post-launch polish - Viewer Themes (PRD-12, D-71…D-73, built 2026-06-22):** an aesthetic **palette axis** (`<html data-viewer-theme>`) orthogonal to functional light/dark. 4 palettes (`warm` default, `slate`, `ocean`, `contrast`), each a token-override block in `tokens.css` per mode; `lib/viewer-theme.ts` mirrors `lib/theme.ts` (global + persisted, no-flash boot). One **Appearance** popover (`components/shell/AppearanceMenu.tsx`) holds mode + palette, replacing the old `ThemeToggle`. `check-contrast` validates every palette × mode; chrome only (code keeps the github light/dark Shiki pair).
+
+**Registry - the optional store/directory addon (vNext, built 2026-06-22, D-74…D-80):** the deferred "store" seam grown into an open **registry** spanning three trust axes - availability (host the blob), authenticity (an identity **directory** with a registry-declared assurance level: `self`/`domain`/`sso`), and confidentiality (**zero-knowledge by default**, explicit opt-in **trusted** mode). Canonical doc: `docs/REGISTRY-SPEC.md` (absorbs/extends `STORE-PROVIDER-SPEC.md`). Built as three packages outside the launch bundle - `@claudepad/registry-spec` (contract: interfaces, wire DTOs, paths, typed errors, HTTPS-only guard, tolerant manifest parser, OpenAPI on a `/openapi` subpath), `@claudepad/registry` (Cloudflare Worker reference impl, R2 + KV, over a storage-agnostic handler + in-memory backend), `@claudepad/registry-client` (generic `fetch` SDK + conformance suite) - plus an **opt-in, null-by-default client integration** (`client/src/registry/**`): connect a registry, short-link upload + receive-by-id, share-by-name, publish-your-identity, opt-in inbox, consent-gated trusted publish. No `claudepad.io` URL is hardwired; sharing still works fully offline; `check-no-external-origins` stays green. The independent security review is **no longer a v1.0 gate** (D-78, post-launch recommendation).
 
 The repo also contains the finalized **PRD set** (`docs/`) and the **proof of concept** (`poc/`, the crypto reference; `poc/verify.mjs` stays green).
 
@@ -66,8 +68,9 @@ docs/
   CONCEPT.md            # the idea + prior-art / competitive landscape
   TRUSTLESS-MODEL.md    # ★ canonical v1 crypto/identity design (proven by poc/)
   SECURITY-MODEL.md     # threat-model framing (link/lifecycle sections = vNext)
-  STORE-PROVIDER-SPEC.md# the pluggable-store seam (open spec; store = vNext)
-  DECISIONS.md          # ★ decision log (D-1…D-49) + open questions + vNext backlog
+  REGISTRY-SPEC.md      # ★ registry open spec (store + identity directory + opt-in trusted mode; vNext, D-74…D-77)
+  STORE-PROVIDER-SPEC.md# the ZK blob-store axis of REGISTRY-SPEC (open spec; vNext)
+  DECISIONS.md          # ★ decision log (D-1…D-77) + open questions + vNext backlog
   prd/
     _context.md         # ★ canonical shared facts (tech stack, tokens, security, schema)
     README.md           # PRD index + briefs

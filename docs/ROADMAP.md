@@ -2,7 +2,7 @@
 
 > Drop a Claude Code session, see it beautifully, share it with one person - encrypted so only they can read it, with no server in the middle.
 
-**Status:** P0-P4 built; P5 (launch hardening) in progress - artifacts/docs/CI shipped, the independent security review (FR-16) is the one remaining v1.0 gate · **Target:** v1.0 (open-source, self-hostable, **entirely client-side**)
+**Status:** P0-P4 built; P5 (launch hardening) artifacts/docs/CI shipped. The independent security review (FR-16) is **no longer a hard gate** - reclassified to a post-launch recommendation (D-78); v1.0 ships honestly labeled "unaudited, audit welcome." · **Target:** v1.0 (open-source, self-hostable, **entirely client-side**)
 **Last updated:** 2026-06-22
 
 ---
@@ -94,4 +94,4 @@ Full briefs in `docs/prd/README.md`; canonical shared facts in `docs/prd/_contex
 | Identity loss (cleared browser) | Exportable secret + optional synced-passkey (pattern B) recovery (PRD-10). |
 | Missed secret leaks into the all-tiers body | Mandatory review-before-share UI; document best-effort limits (PRD-06). |
 | Giving up availability (no host) means a blob can be "lost" | It's the user's artifact to keep; documented trade-off. Optional pinning is vNext. |
-| Crypto subtlety | Zero-dep WebCrypto core, proven by `poc/`; independent security review before v1 (PRD-09). |
+| Crypto subtlety | Zero-dep WebCrypto core, proven by `poc/`; independent security review **recommended post-launch** (D-78), with an honest "unaudited" label until then (PRD-09). |

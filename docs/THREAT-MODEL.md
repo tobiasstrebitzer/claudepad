@@ -85,6 +85,6 @@ A reader rejects unknown versions or algorithms rather than guessing (`CryptoVer
 
 claudepad is a **client-side tool that makes one encrypted artifact for one recipient, and gets out of the way.** It is not E2E messaging, not a key directory or PKI, not a backup service. It is good for sharing a session with someone you can verify out-of-band; it is not a defense against a nation-state, a compromised endpoint, or a recipient who chooses to leak. Those limits are stated here, in the README, and in the app - never buried.
 
-## Pre-v1.0 gate
+## Audit status
 
-Per [`SECURITY-MODEL.md`](./SECURITY-MODEL.md), an **independent security review** of the crypto core and secret handling is a hard gate on the v1.0 tag, alongside this published threat model. See [`SECURITY.md`](../SECURITY.md) for how to report issues.
+claudepad's crypto core, identity/recipient crypto, and secret handling have **not** had an independent third-party security audit. We think the design is sound - it's zero-dependency WebCrypto, reproducibly verified in-repo by [`poc/verify.mjs`](../poc/verify.mjs) and the no-external-origins gate - but we'd rather say plainly that no external auditor has signed off than imply otherwise. **An independent review is recommended and welcome** (it was previously a launch gate; see DECISIONS D-78). If you're a security researcher, see [`SECURITY.md`](../SECURITY.md) for how to report findings.

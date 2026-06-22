@@ -1,6 +1,7 @@
 # claudepad - Store Provider Spec (design note)
 
 > **Status:** design note for v1; full spec + reference implementation are **vNext** (PRD-07). **v1 ships the seam, not the store.**
+> **Superseded scope:** this note covers the **zero-knowledge blob-store** axis only. It is now one axis of the broader **`REGISTRY-SPEC.md`** (store + identity directory + opt-in trusted mode, D-74…D-77). Read that for the full picture; this stays as the canonical statement of the ZK blob-store seam it builds on.
 > **Principle:** the store is an **open contract, not a proprietary service** (DECISIONS D-30…D-33). Like Bitwarden (point your client at any server URL) or Tailscale↔Headscale (open protocol, reference control server), `claudepad.io/store` is *one* free, open-source reference implementation - anyone can run their own.
 
 ## Why this note exists

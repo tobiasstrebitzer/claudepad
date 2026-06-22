@@ -1,0 +1,261 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "claudepad Registry Protocol",
+    "version": "1.0.0",
+    "description": "Open HTTP contract for a claudepad registry (REGISTRY-SPEC.md): a zero-knowledge blob store, an optional identity directory, and an optional trusted (vendor-readable) session store. All interactions are HTTPS-only (D-77).",
+    "license": { "name": "MIT" }
+  },
+  "servers": [{ "url": "https://{host}", "variables": { "host": { "default": "registry.example.com" } } }],
+  "tags": [
+    { "name": "manifest", "description": "Capability discovery" },
+    { "name": "blobs", "description": "Zero-knowledge opaque blob store" },
+    { "name": "sessions", "description": "Trusted-mode readable sessions" },
+    { "name": "directory", "description": "Identity directory" }
+  ],
+  "paths": {
+    "/.well-known/claudepad-registry": {
+      "get": {
+        "tags": ["manifest"],
+        "operationId": "getManifest",
+        "summary": "Capability manifest",
+        "responses": {
+          "200": {
+            "description": "The registry's capabilities",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/RegistryManifest" } } }
+          }
+        }
+      }
+    },
+    "/blobs": {
+      "post": {
+        "tags": ["blobs"],
+        "operationId": "putBlob",
+        "summary": "Upload opaque ciphertext (zero-knowledge)",
+        "parameters": [
+          { "name": "x-claudepad-index-for", "in": "header", "required": false, "schema": { "type": "string" }, "description": "Opt-in inbox index: comma-separated recipient public-key hashes (off by default; leaks the social graph, not content)." },
+          { "name": "expiresInSeconds", "in": "query", "required": false, "schema": { "type": "integer" } },
+          { "name": "burnAfterRead", "in": "query", "required": false, "schema": { "type": "boolean" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": { "application/octet-stream": { "schema": { "type": "string", "format": "binary" } } }
+        },
+        "responses": {
+          "201": { "description": "Stored", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PutResponse" } } } },
+          "413": { "$ref": "#/components/responses/Error" }
+        }
+      }
+    },
+    "/blobs/{id}": {
+      "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }],
+      "get": {
+        "tags": ["blobs"],
+        "operationId": "getBlob",
+        "summary": "Fetch opaque bytes by id",
+        "responses": {
+          "200": { "description": "The opaque blob", "content": { "application/octet-stream": { "schema": { "type": "string", "format": "binary" } } } },
+          "404": { "$ref": "#/components/responses/Error" },
+          "410": { "$ref": "#/components/responses/Error" }
+        }
+      },
+      "delete": {
+        "tags": ["blobs"],
+        "operationId": "deleteBlob",
+        "summary": "Delete a blob (if capabilities.delete)",
+        "responses": { "204": { "description": "Deleted" }, "404": { "$ref": "#/components/responses/Error" } }
+      }
+    },
+    "/inbox": {
+      "get": {
+        "tags": ["blobs"],
+        "operationId": "getInbox",
+        "summary": "List blob ids addressed to the authenticated identity (opt-in index)",
+        "security": [{ "identityAuth": [] }],
+        "responses": {
+          "200": { "description": "Inbox ids", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/InboxResponse" } } } },
+          "401": { "$ref": "#/components/responses/Error" }
+        }
+      }
+    },
+    "/sessions": {
+      "post": {
+        "tags": ["sessions"],
+        "operationId": "putSession",
+        "summary": "Upload a READABLE session (trusted mode; the registry can read it)",
+        "security": [{ "identityAuth": [] }],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object" } } } },
+        "responses": {
+          "201": { "description": "Stored", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PutResponse" } } } },
+          "422": { "$ref": "#/components/responses/Error" }
+        }
+      }
+    },
+    "/sessions/{id}": {
+      "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }],
+      "get": {
+        "tags": ["sessions"],
+        "operationId": "getSession",
+        "summary": "Fetch a readable session (org access control)",
+        "security": [{ "identityAuth": [] }],
+        "responses": {
+          "200": { "description": "The session", "content": { "application/json": { "schema": { "type": "object" } } } },
+          "403": { "$ref": "#/components/responses/Error" },
+          "404": { "$ref": "#/components/responses/Error" }
+        }
+      },
+      "delete": {
+        "tags": ["sessions"],
+        "operationId": "deleteSession",
+        "security": [{ "identityAuth": [] }],
+        "summary": "Delete a readable session",
+        "responses": { "204": { "description": "Deleted" }, "404": { "$ref": "#/components/responses/Error" } }
+      }
+    },
+    "/directory": {
+      "get": {
+        "tags": ["directory"],
+        "operationId": "searchDirectory",
+        "summary": "Search identities by name/handle",
+        "parameters": [{ "name": "q", "in": "query", "required": true, "schema": { "type": "string" } }],
+        "responses": {
+          "200": { "description": "Matching entries", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DirectorySearchResponse" } } } },
+          "404": { "$ref": "#/components/responses/Error" }
+        }
+      },
+      "post": {
+        "tags": ["directory"],
+        "operationId": "publishIdentity",
+        "summary": "Publish/claim a public-key card (registry verifies assurance)",
+        "security": [{ "identityAuth": [] }],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PublishIdentityRequest" } } } },
+        "responses": {
+          "201": { "description": "Published", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DirectoryEntry" } } } },
+          "409": { "$ref": "#/components/responses/Error" }
+        }
+      }
+    },
+    "/directory/{handle}": {
+      "parameters": [{ "name": "handle", "in": "path", "required": true, "schema": { "type": "string" } }],
+      "get": {
+        "tags": ["directory"],
+        "operationId": "resolveIdentity",
+        "summary": "Resolve one identity by handle",
+        "responses": {
+          "200": { "description": "The entry", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DirectoryEntry" } } } },
+          "404": { "$ref": "#/components/responses/Error" }
+        }
+      },
+      "delete": {
+        "tags": ["directory"],
+        "operationId": "revokeIdentity",
+        "summary": "Revoke = purge a directory entry (OQ-R3)",
+        "security": [{ "identityAuth": [] }],
+        "responses": { "204": { "description": "Purged" }, "404": { "$ref": "#/components/responses/Error" } }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "identityAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "Proof of control of an identity key (e.g. a signed challenge). The exact scheme is operator-defined; the contract only requires that mutating/inbox routes are authenticated."
+      }
+    },
+    "responses": {
+      "Error": {
+        "description": "Typed error",
+        "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } } }
+      }
+    },
+    "schemas": {
+      "RegistryManifest": {
+        "type": "object",
+        "required": ["id", "name", "baseUrl", "tls", "modes", "store"],
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "baseUrl": { "type": "string", "format": "uri" },
+          "tls": { "type": "string", "const": "required" },
+          "modes": { "type": "array", "items": { "type": "string", "enum": ["zero-knowledge", "trusted"] } },
+          "directory": {
+            "type": "object",
+            "required": ["enabled", "assurance"],
+            "properties": {
+              "enabled": { "type": "boolean" },
+              "assurance": { "type": "array", "items": { "$ref": "#/components/schemas/AssuranceLevel" } },
+              "verifiedBy": { "type": "string" }
+            }
+          },
+          "trustedAtRest": { "type": "string" },
+          "store": { "$ref": "#/components/schemas/StoreCapabilities" }
+        }
+      },
+      "StoreCapabilities": {
+        "type": "object",
+        "required": ["expiry", "burnAfterRead", "delete"],
+        "properties": {
+          "expiry": { "type": "boolean" },
+          "burnAfterRead": { "type": "boolean" },
+          "delete": { "type": "boolean" },
+          "maxBytes": { "type": "integer" }
+        }
+      },
+      "AssuranceLevel": { "type": "string", "enum": ["self", "domain", "sso"] },
+      "DirectoryEntry": {
+        "type": "object",
+        "required": ["handle", "name", "pub", "fingerprint", "assurance"],
+        "properties": {
+          "handle": { "type": "string" },
+          "name": { "type": "string" },
+          "pub": { "type": "string", "description": "cp-pub-… card (public key only)" },
+          "fingerprint": { "type": "string" },
+          "assurance": { "$ref": "#/components/schemas/AssuranceLevel" },
+          "verifiedBy": { "type": "string" }
+        }
+      },
+      "DirectorySearchResponse": {
+        "type": "object",
+        "required": ["entries"],
+        "properties": { "entries": { "type": "array", "items": { "$ref": "#/components/schemas/DirectoryEntry" } } }
+      },
+      "PublishIdentityRequest": {
+        "type": "object",
+        "required": ["card"],
+        "properties": {
+          "card": { "type": "string" },
+          "handle": { "type": "string" },
+          "assurance": { "$ref": "#/components/schemas/AssuranceLevel" }
+        }
+      },
+      "PutResponse": {
+        "type": "object",
+        "required": ["id"],
+        "properties": { "id": { "type": "string" }, "url": { "type": "string", "format": "uri" } }
+      },
+      "InboxResponse": {
+        "type": "object",
+        "required": ["ids"],
+        "properties": { "ids": { "type": "array", "items": { "type": "string" } } }
+      },
+      "ErrorBody": {
+        "type": "object",
+        "required": ["error"],
+        "properties": {
+          "error": {
+            "type": "object",
+            "required": ["code", "message"],
+            "properties": {
+              "code": {
+                "type": "string",
+                "enum": ["tls_required", "bad_request", "unauthorized", "forbidden", "not_found", "conflict", "mode_unsupported", "directory_disabled", "payload_too_large", "rate_limited", "gone", "server_error"]
+              },
+              "message": { "type": "string" }
+            }
+          }
+        }
+      }
+    }
+  }
+}

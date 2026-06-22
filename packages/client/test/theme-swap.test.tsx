@@ -3,11 +3,12 @@ import { render, cleanup } from '@testing-library/react';
 import { AppShell } from '../src/components/shell/AppShell';
 import { IdentityProvider } from '../src/identity';
 import type { IdentityStorage } from '../src/identity';
+import { RegistryProvider } from '../src/registry';
 import { Home } from '../src/pages/Home';
 
 afterEach(cleanup);
 
-// The sidebar footer hosts the identity control, which needs the provider.
+// The sidebar footer hosts the identity + registry controls, which need providers.
 const noStorage: IdentityStorage = {
   load: () => Promise.resolve(undefined),
   save: () => Promise.resolve(),
@@ -22,9 +23,11 @@ describe('theme swap (FR-3)', () => {
     document.documentElement.setAttribute('data-theme', 'light');
     const { container } = render(
       <IdentityProvider storage={noStorage}>
-        <AppShell route="#/" recent={[{ id: 'a', title: 'Session A' }]} activeId="a">
-          <Home />
-        </AppShell>
+        <RegistryProvider>
+          <AppShell route="#/" recent={[{ id: 'a', title: 'Session A' }]} activeId="a">
+            <Home />
+          </AppShell>
+        </RegistryProvider>
       </IdentityProvider>,
     );
     const before = container.innerHTML;
