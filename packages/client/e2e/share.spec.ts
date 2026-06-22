@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './fixtures';
 
 // P3 share flow (PRD-11 + PRD-06): mint an identity, open Share, and verify the
 // review step - the off-main-thread scan lands and the advanced review controls

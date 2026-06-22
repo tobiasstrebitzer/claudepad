@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './fixtures';
 
 // P1 MVP-0 (PRD-03 + PRD-04): drop/paste → see it beautifully, fully offline.
 

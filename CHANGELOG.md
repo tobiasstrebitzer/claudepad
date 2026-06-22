@@ -7,6 +7,9 @@ All notable changes to claudepad are documented here. The format is based on
 
 ## [Unreleased]
 
+### Added
+- **First-launch onboarding wizard** (`client/src/onboarding/**`, D-81): auto-opens once (persisted `claudepad.onboarded` flag), re-runnable via a "Take the tour" entry in the sidebar footer. A few quick how-to steps, then an inline **name-only identity generator** so a new user lands ready to share.
+
 ## [0.9.0] - 2026-06-22 - Registry (optional store + identity directory addon)
 
 ### Added

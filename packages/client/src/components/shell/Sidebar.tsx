@@ -19,6 +19,7 @@ import {
   type VaultSession
 } from '../../fs'
 import { IdentityControl } from '../../identity'
+import { OnboardingControl } from '../../onboarding'
 import { RegistryControl } from '../../registry'
 import { cn } from '../../lib/cn'
 import { Wordmark } from '../brand/Wordmark'
@@ -416,6 +417,7 @@ function SidebarFooter(_params: { route: string }) {
       </a> */}
       <IdentityControl />
       <RegistryControl />
+      <OnboardingControl />
     </div>
   )
 }

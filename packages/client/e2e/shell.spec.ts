@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './fixtures';
 
 // PRD-01 FR-14/FR-15/FR-3: the app-shell layout, responsive sidebar collapse,
 // and theme switching, verified in a real browser.

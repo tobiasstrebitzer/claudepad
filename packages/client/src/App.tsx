@@ -8,6 +8,7 @@ import { Button } from './components/ui/Button'
 import { TooltipProvider } from './components/ui/Tooltip'
 import { readSessionFile, useVault, type VaultSession } from './fs'
 import { IdentityProvider } from './identity'
+import { OnboardingProvider } from './onboarding'
 import { RegistryProvider } from './registry'
 import { SessionExperience, sessionTopBar, useSession } from './ingest'
 import { Gallery } from './pages/Gallery'
@@ -174,51 +175,53 @@ export function App() {
   return (
     <TooltipProvider>
       <IdentityProvider>
-        <RegistryProvider>
-          <RevealProvider secretMap={secretMap}>
-            <ExpandProvider>
-              <EventFilterProvider>
-                <PlaybackProvider session={loaded?.session ?? null}>
-                  <AppShell
-                    route={route}
-                    recent={RECENT}
-                    activeId={activeSessionId}
-                    vault={
-                      vault.supported ? { ...vault, activeSessionId, onSelectSession } : undefined
-                    }
-                    topbar={topbar}
-                    footer={<TransportBar />}
-                  >
-                    {isGallery ? (
-                      <Gallery />
-                    ) : (
-                      <SessionExperience
-                        api={session}
-                        viewMode={viewMode}
-                        onAnchorChange={onAnchorChange}
-                      />
-                    )}
-                  </AppShell>
-                  <ReceiveDialog
-                    open={receiveOpen}
-                    onOpenChange={onReceiveOpenChange}
-                    onReceived={onReceived}
-                    initialBlob={receiveBlob}
-                  />
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept={OPEN_ACCEPT}
-                    className="sr-only"
-                    onChange={onPickFile}
-                    aria-hidden="true"
-                    tabIndex={-1}
-                  />
-                </PlaybackProvider>
-              </EventFilterProvider>
-            </ExpandProvider>
-          </RevealProvider>
-        </RegistryProvider>
+        <OnboardingProvider>
+          <RegistryProvider>
+            <RevealProvider secretMap={secretMap}>
+              <ExpandProvider>
+                <EventFilterProvider>
+                  <PlaybackProvider session={loaded?.session ?? null}>
+                    <AppShell
+                      route={route}
+                      recent={RECENT}
+                      activeId={activeSessionId}
+                      vault={
+                        vault.supported ? { ...vault, activeSessionId, onSelectSession } : undefined
+                      }
+                      topbar={topbar}
+                      footer={<TransportBar />}
+                    >
+                      {isGallery ? (
+                        <Gallery />
+                      ) : (
+                        <SessionExperience
+                          api={session}
+                          viewMode={viewMode}
+                          onAnchorChange={onAnchorChange}
+                        />
+                      )}
+                    </AppShell>
+                    <ReceiveDialog
+                      open={receiveOpen}
+                      onOpenChange={onReceiveOpenChange}
+                      onReceived={onReceived}
+                      initialBlob={receiveBlob}
+                    />
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept={OPEN_ACCEPT}
+                      className="sr-only"
+                      onChange={onPickFile}
+                      aria-hidden="true"
+                      tabIndex={-1}
+                    />
+                  </PlaybackProvider>
+                </EventFilterProvider>
+              </ExpandProvider>
+            </RevealProvider>
+          </RegistryProvider>
+        </OnboardingProvider>
       </IdentityProvider>
     </TooltipProvider>
   )

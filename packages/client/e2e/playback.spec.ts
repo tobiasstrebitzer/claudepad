@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './fixtures';
 
 // P4 playback (PRD-08): toggle into playback from the viewer, drive the transport,
 // exit back to the static viewer. Pure client-side over the in-memory session.
