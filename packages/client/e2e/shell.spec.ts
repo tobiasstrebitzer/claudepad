@@ -26,15 +26,26 @@ test.describe('app shell - desktop (1280px)', () => {
     await expect(page.getByRole('navigation', { name: 'Sessions' })).toBeVisible();
   });
 
-  test('theme toggle flips <html data-theme>', async ({ page }) => {
-    // Seed an explicit "light" preference so the first cycle (light → dark) is a
-    // deterministic flip (cycling through "system" can resolve back to light).
+  test('appearance menu flips mode (data-theme) and palette (data-viewer-theme)', async ({
+    page,
+  }) => {
+    // Seed an explicit "light" preference so the mode switch is a deterministic flip.
     await page.addInitScript(() => localStorage.setItem('claudepad.theme', 'light'));
     await page.goto('/#/');
     const html = page.locator('html');
     await expect(html).toHaveAttribute('data-theme', 'light');
-    await page.getByRole('button', { name: /theme/i }).click();
+    await expect(html).toHaveAttribute('data-viewer-theme', 'warm');
+
+    // Open the single Appearance popover (mode + palette live here).
+    await page.getByRole('button', { name: 'Appearance' }).click();
+    await page.getByRole('button', { name: 'Dark' }).click();
     await expect(html).toHaveAttribute('data-theme', 'dark');
+
+    // Pick a different palette; it applies and persists across a reload.
+    await page.getByRole('button', { name: 'Ocean' }).click();
+    await expect(html).toHaveAttribute('data-viewer-theme', 'ocean');
+    await page.reload();
+    await expect(html).toHaveAttribute('data-viewer-theme', 'ocean');
   });
 });
 

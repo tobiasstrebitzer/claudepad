@@ -23,24 +23,51 @@ const PAIRINGS = [
   { fg: '--danger', bg: '--bg', min: 3, note: 'danger on canvas' },
 ];
 
-// Extract a `--name: value;` map from the body of the FIRST CSS rule whose
-// selector text contains `selectorIncludes`.
-function tokensFor(selectorIncludes) {
+// Parse every CSS rule into { selector (whitespace-normalized), decls }.
+const RULES = [];
+{
   const re = /([^{}]+)\{([^}]*)\}/g;
   let m;
-  const out = {};
   while ((m = re.exec(css))) {
-    if (!m[1].includes(selectorIncludes)) continue;
+    const selector = m[1].replace(/\s+/g, ' ').trim();
+    const decls = {};
     for (const decl of m[2].split(';')) {
       const i = decl.indexOf(':');
       if (i === -1) continue;
       const name = decl.slice(0, i).trim();
       const val = decl.slice(i + 1).trim();
-      if (name.startsWith('--')) out[name] = val;
+      if (name.startsWith('--')) decls[name] = val;
     }
+    RULES.push({ selector, decls });
   }
+}
+
+// Merge `--name: value` declarations across every rule whose selector satisfies
+// `pred` (later rules win, matching CSS source order).
+function tokensWhere(pred) {
+  const out = {};
+  for (const r of RULES) if (pred(r.selector)) Object.assign(out, r.decls);
   return out;
 }
+
+// The default `warm` palette = the base mode blocks (no `data-viewer-theme`).
+const BASE = {
+  light: tokensWhere((s) => s.includes("[data-theme='light']") && !s.includes('data-viewer-theme')),
+  dark: tokensWhere((s) => s.includes("[data-theme='dark']") && !s.includes('data-viewer-theme')),
+};
+
+// Effective tokens for a palette+mode = base layered with that palette's override.
+function effectiveTokens(palette, mode) {
+  if (palette === 'warm') return BASE[mode];
+  const override = tokensWhere(
+    (s) => s.includes(`[data-viewer-theme='${palette}']`) && s.includes(`[data-theme='${mode}']`),
+  );
+  return { ...BASE[mode], ...override };
+}
+
+// Keep in sync with the palette set in packages/client/src/lib/viewer-theme.ts.
+const PALETTES = ['warm', 'slate', 'ocean', 'contrast'];
+const MODES = ['light', 'dark'];
 
 function parseColor(s) {
   const hex = s.trim().match(/^#([0-9a-f]{3,8})$/i);
@@ -96,21 +123,19 @@ function ratio(fgRaw, bgRaw) {
   return (hi + 0.05) / (lo + 0.05);
 }
 
-const THEMES = {
-  light: tokensFor("[data-theme='light']"),
-  dark: tokensFor("[data-theme='dark']"),
-};
-
 let failed = 0;
-for (const [theme, tokens] of Object.entries(THEMES)) {
-  for (const p of PAIRINGS) {
-    const r = ratio(tokens[p.fg], tokens[p.bg]);
-    const ok = r >= p.min;
-    if (!ok) {
-      failed++;
-      console.error(
-        `  ✗ [${theme}] ${p.note}: ${p.fg} on ${p.bg} = ${r.toFixed(2)} (need ≥ ${p.min})`,
-      );
+for (const palette of PALETTES) {
+  for (const mode of MODES) {
+    const tokens = effectiveTokens(palette, mode);
+    for (const p of PAIRINGS) {
+      const r = ratio(tokens[p.fg], tokens[p.bg]);
+      const ok = r >= p.min;
+      if (!ok) {
+        failed++;
+        console.error(
+          `  ✗ [${palette}/${mode}] ${p.note}: ${p.fg} on ${p.bg} = ${r.toFixed(2)} (need ≥ ${p.min})`,
+        );
+      }
     }
   }
 }
@@ -119,5 +144,7 @@ if (failed) {
   console.error(`check-contrast: ${failed} pairing(s) below target (PRD-01 FR-21).`);
   process.exit(1);
 }
-console.log('check-contrast: ok (all documented pairings pass in light + dark)');
+console.log(
+  `check-contrast: ok (all documented pairings pass for ${PALETTES.length} palettes × light/dark)`,
+);
 void root;

@@ -43,6 +43,8 @@ If a name describes plumbing, rename it after the user-facing intent - and if yo
 
 **Next:** the **independent security review** (FR-16 / Q-12, D-69) is the one remaining hard gate before the v1.0 tag - an external-vendor task; everything else for P5 is in place.
 
+**Post-launch polish - Viewer Themes (PRD-12, D-71…D-73, built 2026-06-22):** an aesthetic **palette axis** (`<html data-viewer-theme>`) orthogonal to functional light/dark. 4 palettes (`warm` default, `slate`, `ocean`, `contrast`), each a token-override block in `tokens.css` per mode; `lib/viewer-theme.ts` mirrors `lib/theme.ts` (global + persisted, no-flash boot). One **Appearance** popover (`components/shell/AppearanceMenu.tsx`) holds mode + palette, replacing the old `ThemeToggle`. `check-contrast` validates every palette × mode; chrome only (code keeps the github light/dark Shiki pair).
+
 The repo also contains the finalized **PRD set** (`docs/`) and the **proof of concept** (`poc/`, the crypto reference; `poc/verify.mjs` stays green).
 
 ## The one decision that shapes everything: v1 is serverless & trustless

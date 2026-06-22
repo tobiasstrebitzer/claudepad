@@ -64,3 +64,118 @@
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
   --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.5);
 }
+
+/*
+ * Viewer themes (aesthetic palette axis) - an override layer selected by the
+ * `data-viewer-theme` attribute, orthogonal to light/dark (`data-theme`). The
+ * default `warm` palette is the base blocks above (no override needed). Each
+ * palette redeclares the full color token set per mode; shadows/radii/motion
+ * inherit from the base mode block. Specificity (0,2,0) beats the base
+ * `[data-theme=…]` (0,1,0), so a palette wins without `!important`. Every
+ * palette must clear scripts/check-contrast.mjs in BOTH modes (FR-21).
+ */
+
+/* Slate - cool neutral grays, indigo-blue accent */
+[data-viewer-theme='slate'][data-theme='light'] {
+  --bg: #f7f8fa;
+  --surface: #ffffff;
+  --sidebar: #eef0f4;
+  --border: #dde1e8;
+  --text: #1c2128;
+  --text-muted: #59616e;
+  --accent: #4257c9;
+  --accent-hover: #36499f;
+  --accent-tint: rgba(66, 87, 201, 0.1);
+  --accent-fg: #ffffff;
+  --success: #3f8f5b;
+  --warn: #9c6b1c;
+  --danger: #c0392f;
+  --ring: #4257c9;
+}
+
+[data-viewer-theme='slate'][data-theme='dark'] {
+  --bg: #15171c;
+  --surface: #1d2026;
+  --sidebar: #191c22;
+  --border: #2c313a;
+  --text: #e7eaf0;
+  --text-muted: #99a3b4;
+  --accent: #8ea2f5;
+  --accent-hover: #7c92ee;
+  --accent-tint: rgba(142, 162, 245, 0.16);
+  --accent-fg: #15171c;
+  --success: #74c08c;
+  --warn: #d8a85a;
+  --danger: #e07a7a;
+  --ring: #8ea2f5;
+}
+
+/* Ocean - teal-tinted canvas, teal accent */
+[data-viewer-theme='ocean'][data-theme='light'] {
+  --bg: #f2f7f8;
+  --surface: #ffffff;
+  --sidebar: #e4eff1;
+  --border: #cbdee1;
+  --text: #102a30;
+  --text-muted: #4a6067;
+  --accent: #0c7383;
+  --accent-hover: #095c69;
+  --accent-tint: rgba(12, 115, 131, 0.1);
+  --accent-fg: #ffffff;
+  --success: #2f8f6b;
+  --warn: #9c6b1c;
+  --danger: #c0392f;
+  --ring: #0c7383;
+}
+
+[data-viewer-theme='ocean'][data-theme='dark'] {
+  --bg: #0e1a1d;
+  --surface: #15252a;
+  --sidebar: #112025;
+  --border: #1f3239;
+  --text: #dcebed;
+  --text-muted: #8ba6aa;
+  --accent: #3fbcd0;
+  --accent-hover: #2fa6ba;
+  --accent-tint: rgba(63, 188, 208, 0.16);
+  --accent-fg: #0e1a1d;
+  --success: #5fc096;
+  --warn: #d8a85a;
+  --danger: #e07a7a;
+  --ring: #3fbcd0;
+}
+
+/* High-contrast - maximal legibility (a11y), strong clay accent */
+[data-viewer-theme='contrast'][data-theme='light'] {
+  --bg: #ffffff;
+  --surface: #ffffff;
+  --sidebar: #f0f0f0;
+  --border: #9a9a9a;
+  --text: #000000;
+  --text-muted: #3a3a3a;
+  --accent: #9a3413;
+  --accent-hover: #7c2a0f;
+  --accent-tint: rgba(154, 52, 19, 0.1);
+  --accent-fg: #ffffff;
+  --success: #156c32;
+  --warn: #7a4f00;
+  --danger: #a31410;
+  --ring: #9a3413;
+}
+
+[data-viewer-theme='contrast'][data-theme='dark'] {
+  --bg: #000000;
+  --surface: #0b0b0b;
+  --sidebar: #131313;
+  --border: #5a5a5a;
+  --text: #ffffff;
+  --text-muted: #c7c7c7;
+  --accent: #ff8a5c;
+  --accent-hover: #ff7a45;
+  --accent-tint: rgba(255, 138, 92, 0.18);
+  --accent-fg: #000000;
+  --success: #4dd27d;
+  --warn: #ffc24d;
+  --danger: #ff6b5e;
+  --ring: #ff8a5c;
+}

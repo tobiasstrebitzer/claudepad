@@ -4,8 +4,8 @@ import { cn } from '../../lib/cn'
 import { usePersistedState } from '../../lib/usePersistedState'
 import { Wordmark } from '../brand/Wordmark'
 import { Button } from '../ui/Button'
+import { AppearanceMenu } from './AppearanceMenu'
 import { Sidebar, type RecentItem, type VaultNav } from './Sidebar'
-import { ThemeToggle } from './ThemeToggle'
 import { TopBar, type TopBarContent } from './TopBar'
 
 interface AppShellProps {
@@ -125,7 +125,7 @@ export function AppShell({
               )}
             </>
           }
-          trailing={<ThemeToggle />}
+          trailing={<AppearanceMenu />}
         />
 
         <main className="min-h-0 flex-1 overflow-y-auto">{children}</main>

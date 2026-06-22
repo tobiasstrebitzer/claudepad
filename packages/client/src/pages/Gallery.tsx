@@ -76,6 +76,12 @@ import {
 } from '../components/ui/Tooltip'
 import { contrastRatio, ratioLabel } from '../lib/contrast'
 import { getTheme, setTheme, type ResolvedTheme } from '../lib/theme'
+import {
+  getViewerTheme,
+  setViewerTheme,
+  VIEWER_THEMES,
+  type ViewerTheme
+} from '../lib/viewer-theme'
 
 // Read a set of CSS custom properties off <html> for the current theme.
 function useCssVars(names: string[], dep: unknown): Record<string, string> {
@@ -136,11 +142,17 @@ export function Gallery() {
     () =>
       (document.documentElement.getAttribute('data-theme') as ResolvedTheme) ?? 'light'
   )
-  const vars = useCssVars(ALL_TOKENS, resolved)
+  const [palette, setPalette] = React.useState<ViewerTheme>(() => getViewerTheme())
+  // Re-read tokens whenever EITHER axis (mode or palette) changes.
+  const vars = useCssVars(ALL_TOKENS, `${resolved}:${palette}`)
 
   const setMode = (mode: 'light' | 'dark') => {
     setTheme(mode)
     setResolved(mode)
+  }
+  const setPaletteMode = (p: ViewerTheme) => {
+    setViewerTheme(p)
+    setPalette(p)
   }
 
   const icons = [
@@ -169,28 +181,48 @@ export function Gallery() {
             <p className="text-body-sm text-muted-foreground">Design system</p>
             <h1 className="mt-1 font-serif text-display-lg text-text">Gallery</h1>
           </div>
-          {/* Light/dark switch at the top (FR-23). */}
-          <div className="inline-flex rounded-md border border-border bg-surface p-0.5">
-            {(['light', 'dark'] as const).map((m) => (
-              <button
-                key={m}
-                type="button"
-                onClick={() => setMode(m)}
-                className={
-                  'rounded-[5px] px-3 py-1 text-body-sm capitalize transition-colors ' +
-                  (resolved === m
-                    ? 'bg-accent text-accent-fg'
-                    : 'text-muted-foreground hover:text-text')
-                }
-              >
-                {m}
-              </button>
-            ))}
+          {/* Light/dark + palette switches at the top (FR-23). */}
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="inline-flex rounded-md border border-border bg-surface p-0.5">
+              {(['light', 'dark'] as const).map((m) => (
+                <button
+                  key={m}
+                  type="button"
+                  onClick={() => setMode(m)}
+                  className={
+                    'rounded-[5px] px-3 py-1 text-body-sm capitalize transition-colors ' +
+                    (resolved === m
+                      ? 'bg-accent text-accent-fg'
+                      : 'text-muted-foreground hover:text-text')
+                  }
+                >
+                  {m}
+                </button>
+              ))}
+            </div>
+            <div className="inline-flex rounded-md border border-border bg-surface p-0.5">
+              {VIEWER_THEMES.map((p) => (
+                <button
+                  key={p}
+                  type="button"
+                  onClick={() => setPaletteMode(p)}
+                  className={
+                    'rounded-[5px] px-3 py-1 text-body-sm capitalize transition-colors ' +
+                    (palette === p
+                      ? 'bg-accent text-accent-fg'
+                      : 'text-muted-foreground hover:text-text')
+                  }
+                >
+                  {p}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
         <p className="mt-2 text-body-sm text-muted-foreground">
-          Current preference: <code className="font-mono text-code">{getTheme()}</code> ·
-          resolved <code className="font-mono text-code">{resolved}</code>
+          Mode <code className="font-mono text-code">{getTheme()}</code> · resolved{' '}
+          <code className="font-mono text-code">{resolved}</code> · palette{' '}
+          <code className="font-mono text-code">{palette}</code>
         </p>
 
         <Section title="Color tokens">

@@ -16,6 +16,7 @@ This folder holds the product requirement documents for claudepad v1. Read [`_co
 | 09 | [Self-Hosting (Static) & Launch](./PRD-09-selfhost-launch.md) | P5 | Drafted ✓ (reframed: static) |
 | 10 | [Identity, Trust & Device Keys](./PRD-10-identity-trust-device-keys.md) | P2 | Drafted ✓ (**new**) |
 | 11 | [Trustless Recipient Sharing](./PRD-11-trustless-sharing.md) | P3 | Drafted ✓ (**new**) |
+| 12 | [Viewer Themes (Aesthetic Palette Axis)](./PRD-12-viewer-themes.md) | Polish | Built ✓ (**new**) |
 | ~~07~~ | [Store Provider Spec & Reference Impl](./PRD-07-backend.md) | **vNext** | Deferred (open-spec addon) |
 
 ---
@@ -51,6 +52,9 @@ Client-side identity: mint/import/export an ECDH P-256 keypair + display name (n
 
 ### PRD-11 - Trustless Recipient Sharing (P3) - new
 The headline: encrypt a session **to a recipient's public key** at a chosen tier (body / body+secrets) → a self-contained `cp-blob` carried via clipboard/`.cpad` (drop anywhere). Receive/decrypt at the granted tier; verify sender by fingerprint; non-recipients are locked out by the math. Defines the blob format. Proven in `poc/`.
+
+### PRD-12 - Viewer Themes (Aesthetic Palette Axis) - new
+An aesthetic **palette axis** (`data-viewer-theme`) orthogonal to functional light/dark. 4 palettes - `warm` (default), `slate`, `ocean`, `contrast` - each a token-override block in `tokens.css` per mode, gated by `check-contrast` (palette × mode). Global + persisted; chosen from a single **Appearance** popover (mode + palette). Chrome only - code stays on the github light/dark Shiki pair.
 
 ### PRD-07 - Store Provider Spec & Reference Implementation (vNext, deferred)
 **Not in v1.** The optional store is an **open HTTP contract** for a zero-knowledge blob store + a reference implementation at `claudepad.io/store` (Bitwarden/Headscale model - a spec, not a service). Adds convenience (short URLs) and optional lifecycle without changing the trust model. v1 ships only the `StoreProvider` seam ([`../STORE-PROVIDER-SPEC.md`](../STORE-PROVIDER-SPEC.md)); this PRD's endpoint/storage design is the blueprint for the reference impl.
