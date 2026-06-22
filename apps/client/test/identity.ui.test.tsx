@@ -1,6 +1,6 @@
 import { describe, it, expect, afterEach } from 'vitest';
 import { render, screen, waitFor, cleanup } from '@testing-library/react';
-import { fingerprint } from '@claudepad/shared';
+import { fingerprint } from '@claudepad/crypto';
 import { Fingerprint } from '../src/identity/Fingerprint';
 import { IdentityProvider } from '../src/identity/IdentityProvider';
 import { IdentityControl } from '../src/identity/IdentityControl';

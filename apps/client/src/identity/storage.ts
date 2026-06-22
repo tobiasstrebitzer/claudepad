@@ -5,8 +5,8 @@
 // at rest (FR-16). Mirrors the fs/handleStore IDB pattern; nothing leaves the
 // browser (there is no network for identities - PRD-10 §8).
 
-import type { Identity } from '@claudepad/shared'
-import type { AesLayer } from '@claudepad/shared'
+import type { Identity } from '@claudepad/crypto'
+import type { AesLayer } from '@claudepad/crypto'
 
 /** An identity stored unprotected - the secret, plus a discriminant. */
 export type StoredUnprotected = Identity & { protected: false }

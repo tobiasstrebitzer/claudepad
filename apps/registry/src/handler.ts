@@ -21,7 +21,7 @@ import {
   type RegistryManifest,
 } from '@claudepad/registry-spec';
 import { OPENAPI_DOCUMENT } from '@claudepad/registry-spec/openapi';
-import { decodePublicCard, fingerprint } from '@claudepad/shared';
+import { decodePublicCard, fingerprint } from '@claudepad/crypto';
 import type { AuthContext, Authenticator } from './auth';
 import { devBearerAuth } from './auth';
 import type { BlobMeta, RegistryBackend } from './backend';

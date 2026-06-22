@@ -1,6 +1,6 @@
 // Client orchestration of the trustless share artifact (PRD-11). The crypto -
 // the ephemeral sealed box, the two content keys, the recipient wrap - lives in
-// @claudepad/shared (proven by poc/verify.mjs). This layer turns a redacted
+// @claudepad/crypto (proven by poc/verify.mjs). This layer turns a redacted
 // session + secret map into the wire form `cp-blob-<base64url(JSON)>` and back,
 // and decodes the decrypted bytes into a Session + SecretMap for the viewer.
 
@@ -16,7 +16,7 @@ import {
   bytesToUtf8,
   type Identity,
   type Tier
-} from '@claudepad/shared'
+} from '@claudepad/crypto'
 import type { Session } from '@claudepad/schema'
 import type { SecretMap } from '@claudepad/secrets'
 import { CP_BLOB_PREFIX } from './detect'

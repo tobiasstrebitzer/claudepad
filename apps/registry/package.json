@@ -27,6 +27,6 @@
   },
   "dependencies": {
     "@claudepad/registry-spec": "workspace:*",
-    "@claudepad/shared": "workspace:*"
+    "@claudepad/crypto": "workspace:*"
   }
 }

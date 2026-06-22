@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { renderHook, act, waitFor } from '@testing-library/react';
-import { fingerprint } from '@claudepad/shared';
+import { fingerprint } from '@claudepad/crypto';
 import { useIdentity } from '../src/identity/useIdentity';
 import type { IdentityStorage, StoredIdentity } from '../src/identity/storage';
 

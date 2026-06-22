@@ -1,4 +1,4 @@
-import { b64urlToBytes } from '@claudepad/shared'
+import { b64urlToBytes } from '@claudepad/crypto'
 
 /**
  * The opaque inbox/auth key for an identity: hex SHA-256 of its raw public key.

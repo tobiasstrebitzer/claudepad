@@ -1,5 +1,5 @@
 // Public surface of the client identity layer (PRD-10, P2). The crypto itself
-// lives in @claudepad/shared; this package productizes it: persistence, the
+// lives in @claudepad/crypto; this package productizes it: persistence, the
 // none/locked/unlocked state machine, device protection, and the trust UI.
 
 export { IdentityProvider, useIdentityContext } from './IdentityProvider'

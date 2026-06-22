@@ -28,6 +28,6 @@
   },
   "devDependencies": {
     "@claudepad/registry": "workspace:*",
-    "@claudepad/shared": "workspace:*"
+    "@claudepad/crypto": "workspace:*"
   }
 }

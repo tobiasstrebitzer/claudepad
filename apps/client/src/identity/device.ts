@@ -15,7 +15,7 @@ import {
   b64urlToBytes,
   utf8ToBytes,
   type Identity
-} from '@claudepad/shared'
+} from '@claudepad/crypto'
 import type { StoredProtected } from './storage'
 
 const subtle = globalThis.crypto.subtle

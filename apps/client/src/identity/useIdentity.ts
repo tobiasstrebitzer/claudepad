@@ -12,7 +12,7 @@ import {
   encodePublicCard,
   importPrivateKey,
   type Identity
-} from '@claudepad/shared'
+} from '@claudepad/crypto'
 import {
   indexedDbStorage,
   type IdentityStorage,

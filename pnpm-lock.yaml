@@ -120,9 +120,9 @@ importers:
         specifier: ^1.1.2
         version: 1.1.2(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
     devDependencies:
-      '@claudepad/shared':
+      '@claudepad/crypto':
         specifier: workspace:*
-        version: link:../../packages/shared
+        version: link:../../packages/crypto
       '@playwright/test':
         specifier: ^1.61.0
         version: 1.61.0
@@ -156,12 +156,14 @@ importers:
 
   apps/registry:
     dependencies:
+      '@claudepad/crypto':
+        specifier: workspace:*
+        version: link:../../packages/crypto
       '@claudepad/registry-spec':
         specifier: workspace:*
         version: link:../../packages/registry-spec
-      '@claudepad/shared':
-        specifier: workspace:*
-        version: link:../../packages/shared
+
+  packages/crypto: {}
 
   packages/ingest: {}
 
@@ -171,12 +173,12 @@ importers:
         specifier: workspace:*
         version: link:../registry-spec
     devDependencies:
+      '@claudepad/crypto':
+        specifier: workspace:*
+        version: link:../crypto
       '@claudepad/registry':
         specifier: workspace:*
         version: link:../../apps/registry
-      '@claudepad/shared':
-        specifier: workspace:*
-        version: link:../shared
 
   packages/registry-spec: {}
 
@@ -194,8 +196,6 @@ importers:
       '@claudepad/schema':
         specifier: workspace:*
         version: link:../schema
-
-  packages/shared: {}
 
 packages:
 

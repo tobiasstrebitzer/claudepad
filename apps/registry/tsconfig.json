@@ -9,5 +9,5 @@
   },
   "include": ["src/**/*.ts"],
   "exclude": ["dist", "node_modules", "test", "**/*.test.ts"],
-  "references": [{ "path": "../../packages/registry-spec" }, { "path": "../../packages/shared" }]
+  "references": [{ "path": "../../packages/registry-spec" }, { "path": "../../packages/crypto" }]
 }

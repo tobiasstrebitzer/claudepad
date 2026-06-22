@@ -14,7 +14,7 @@
   "include": ["src"],
   "references": [
     { "path": "../../packages/schema" },
-    { "path": "../../packages/shared" },
+    { "path": "../../packages/crypto" },
     { "path": "../../packages/ingest" },
     { "path": "../../packages/secrets" }
   ]

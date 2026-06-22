@@ -42,7 +42,7 @@
     "vaul": "^1.1.2"
   },
   "devDependencies": {
-    "@claudepad/shared": "workspace:*",
+    "@claudepad/crypto": "workspace:*",
     "@playwright/test": "^1.61.0",
     "@tailwindcss/vite": "^4.3.1",
     "@testing-library/jest-dom": "^6.9.1",

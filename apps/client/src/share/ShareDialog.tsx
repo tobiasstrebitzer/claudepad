@@ -20,7 +20,7 @@ import {
   type DetectionState,
   type ScanSettings
 } from '@claudepad/secrets'
-import { decodePublicCard, encodePublicCard, type Tier } from '@claudepad/shared'
+import { decodePublicCard, encodePublicCard, type Tier } from '@claudepad/crypto'
 import { isVerifiedAssurance, type DirectoryEntry, type RegistryClient } from '@claudepad/registry-client'
 import {
   Check,

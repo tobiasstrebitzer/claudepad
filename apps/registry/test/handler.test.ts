@@ -1,5 +1,5 @@
 import { describe, expect, it, beforeEach } from 'vitest';
-import { encodePublicCard, mintIdentity, type Identity } from '@claudepad/shared';
+import { encodePublicCard, mintIdentity, type Identity } from '@claudepad/crypto';
 import type { RegistryManifest } from '@claudepad/registry-spec';
 import { createRegistryHandler, InMemoryBackend } from '../src/index';
 

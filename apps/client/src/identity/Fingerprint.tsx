@@ -5,7 +5,7 @@
 // blob's sender (PRD-11).
 
 import * as React from 'react'
-import { fingerprint } from '@claudepad/shared'
+import { fingerprint } from '@claudepad/crypto'
 import { cn } from '../lib/cn'
 
 /** Compute a key's fingerprint, recomputing only when the raw key changes. */
