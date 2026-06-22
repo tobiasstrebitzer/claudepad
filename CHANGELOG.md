@@ -7,6 +7,23 @@ All notable changes to claudepad are documented here. The format is based on
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-06-22 - Registry (optional store + identity directory addon)
+
+### Added
+- **`docs/REGISTRY-SPEC.md`** - the open registry contract (absorbs/extends `STORE-PROVIDER-SPEC.md`): three trust axes (availability / authenticity / confidentiality), zero-knowledge by default with an opt-in trusted mode, and an identity directory with a registry-declared assurance level (`self`/`domain`/`sso`). Decisions D-74…D-80.
+- **`@claudepad/registry-spec`** - the contract as a zero-dep package: provider interfaces, wire DTOs, endpoint paths, typed errors, the HTTPS-only guard, a tolerant manifest parser, and the OpenAPI 3.1 document (on a `/openapi` subpath, kept off the client bundle).
+- **`@claudepad/registry`** - Cloudflare Worker reference implementation (R2 blobs/sessions + KV directory/inbox) over a storage-agnostic handler, with an in-memory backend for tests/local dev.
+- **`@claudepad/registry-client`** - framework-agnostic `fetch` SDK that works against any conformant registry (no hardwired URL, HTTPS-only at connect), with a conformance suite run against the reference impl.
+- **Client integration** (opt-in, null by default): connect a registry, short-link upload + receive-by-id, share-by-name via the directory, publish-your-identity, opt-in inbox, and consent-gated trusted-mode publish. Every flow still works with no registry; `check-no-external-origins` stays green.
+
+### Changed
+- The independent security review is **reclassified from a v1.0 hard gate to a post-launch recommendation** (D-78); `docs/THREAT-MODEL.md` now states plainly that the crypto is unaudited and an audit is welcome.
+
+## [0.8.0] - 2026-06-22 - Viewer themes (aesthetic palette axis)
+
+### Added
+- **Viewer themes** (PRD-12, D-71…D-73): an aesthetic palette axis (`<html data-viewer-theme>`) orthogonal to functional light/dark - 4 palettes (`warm`/`slate`/`ocean`/`contrast`), each a token-override block per mode, with a single **Appearance** popover for mode + palette. `check-contrast` validates every palette × mode.
+
 ## [0.7.0] - 2026-06-22 - P5 (Self-Hosting & Launch)
 
 ### Added
