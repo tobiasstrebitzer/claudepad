@@ -76,6 +76,55 @@ export function groupRows(
   return items
 }
 
+/**
+ * Minimal shape of a playback timeline segment this module needs (structural, so
+ * groupRows stays free of a playback import / circular dependency).
+ */
+export interface FoldSegment {
+  rowStart: number
+  rowEnd: number
+  folded?: boolean
+  idleMarker?: boolean
+  idleSeconds?: number
+}
+
+/**
+ * Build the display items for the *revealed prefix* during playback (PRD-08
+ * FR-11/12), driven by the timeline's own fold/idle structure rather than by
+ * re-grouping the revealed slice. The engine reveals a folded tool-spam run
+ * atomically (revealedCount jumps to its rowEnd) and inserts idle beats, so
+ * folding here can never show a half-revealed group - the open problem that kept
+ * playback rendering rows 1:1. Returns the same `ViewItem[]` the reading view
+ * uses, so `ToolRunGroup` / `IdleDivider` / `TurnRenderer` are reused verbatim.
+ */
+export function revealedViewItems(
+  rows: readonly RenderRow[],
+  segs: readonly FoldSegment[],
+  revealedCount: number
+): ViewItem[] {
+  const items: ViewItem[] = []
+  for (const seg of segs) {
+    if (seg.idleMarker) {
+      // Surface the divider once the turn before the gap is on screen.
+      if (seg.rowStart >= 1 && revealedCount >= seg.rowStart) {
+        items.push({ kind: 'idle', gapMs: (seg.idleSeconds ?? 0) * 1000 })
+      }
+      continue
+    }
+    if (seg.rowStart >= revealedCount) break // nothing past here is revealed yet
+    if (seg.folded && seg.rowEnd <= revealedCount) {
+      items.push({ kind: 'tool-run', baseStart: seg.rowStart, rows: rows.slice(seg.rowStart, seg.rowEnd) })
+    } else {
+      // One item per revealed row (defensively bounded by revealedCount).
+      const end = Math.min(seg.rowEnd, revealedCount)
+      for (let r = seg.rowStart; r < end; r++) {
+        items.push({ kind: 'single', baseStart: r, row: rows[r]! })
+      }
+    }
+  }
+  return items
+}
+
 /** Map each base-row position to the index of the view item that contains it. */
 export function baseToViewIndex(items: readonly ViewItem[]): number[] {
   const map: number[] = []

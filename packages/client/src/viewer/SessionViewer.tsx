@@ -10,7 +10,7 @@ import { buildToc, TableOfContents } from './components/TableOfContents'
 import { TranscriptList, type TranscriptHandle } from './components/TranscriptList'
 import { RawBlock } from './components/blocks/RawBlock'
 import { filterRows } from './hooks/eventFilter'
-import { groupRows, type ViewItem } from './hooks/groupRows'
+import { groupRows, revealedViewItems, type ViewItem } from './hooks/groupRows'
 import { anchorIdFor, useAnchor } from './hooks/useAnchor'
 import { useCorrelateTools } from './hooks/useCorrelateTools'
 import { useEventFilter } from './hooks/useEventFilter'
@@ -76,16 +76,16 @@ function ViewerInner({
   )
   const [tocOpen, setTocOpen] = React.useState(showToc)
 
-  // Reading view folds consecutive same-tool runs ("Read ×6"); playback renders
-  // base rows 1:1 (no fold) so progressive reveal + typing + active highlight stay
-  // simple and aligned with the engine's per-row reveal.
+  // Reading view folds consecutive same-tool runs ("Read ×6") and inserts idle
+  // dividers. During playback the same affordances are driven by the timeline's
+  // own fold/idle structure (it reveals folded runs atomically), so the revealed
+  // prefix gets the same ToolRunGroup / IdleDivider without half-revealed groups.
   const items = React.useMemo<ViewItem[]>(() => {
-    if (playbackActive) {
-      const revealed = rows.slice(0, Math.max(0, pb.frame.revealedCount))
-      return revealed.map((row, i) => ({ kind: 'single', baseStart: i, row }))
+    if (playbackActive && pb.timeline) {
+      return revealedViewItems(rows, pb.timeline.segs, pb.frame.revealedCount)
     }
     return groupRows(rows)
-  }, [rows, playbackActive, pb.frame.revealedCount])
+  }, [rows, playbackActive, pb.timeline, pb.frame.revealedCount])
 
   // The active turn reuses PRD-03's `highlighted` ring (FR-15) by overriding the
   // anchor highlight while playing.

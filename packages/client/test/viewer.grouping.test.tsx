@@ -2,7 +2,8 @@ import { describe, it, expect } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import type { Session, SessionEvent } from '@claudepad/schema';
 import { correlateTools } from '../src/viewer/hooks/useCorrelateTools';
-import { groupRows, baseToViewIndex } from '../src/viewer/hooks/groupRows';
+import { groupRows, baseToViewIndex, revealedViewItems } from '../src/viewer/hooks/groupRows';
+import { buildTimeline } from '../src/playback/buildTimeline';
 import { SessionViewer } from '../src/viewer';
 
 function session(events: SessionEvent[]): Session {
@@ -64,6 +65,40 @@ describe('groupRows', () => {
       { idleMs: 5 * 60_000 },
     );
     expect(items.map((it) => it.kind)).toEqual(['single', 'idle', 'single']);
+  });
+});
+
+describe('revealedViewItems (playback folding, FR-11/12)', () => {
+  it('folds a timeline tool-spam run only once fully revealed (never half a group)', () => {
+    const events: SessionEvent[] = [
+      { kind: 'user', content: [{ type: 'text', text: 'go' }] },
+      ...reads(4),
+      { kind: 'assistant', content: [{ type: 'text', text: 'done' }] },
+    ];
+    const rows = correlateTools(events);
+    const tl = buildTimeline(session(events), 'present');
+    const folded = tl.segs.find((s) => s.folded);
+    expect(folded).toBeDefined();
+
+    // Only the user row revealed -> one single, no group.
+    expect(revealedViewItems(rows, tl.segs, 1).map((it) => it.kind)).toEqual(['single']);
+    // Playhead inside the folded run reveals it atomically -> the group appears whole.
+    const whole = revealedViewItems(rows, tl.segs, folded!.rowEnd);
+    const group = whole.find((it) => it.kind === 'tool-run');
+    expect(group).toBeDefined();
+    if (group?.kind === 'tool-run') expect(group.rows).toHaveLength(4);
+  });
+
+  it('emits an idle divider once the turn before the gap is revealed', () => {
+    const events: SessionEvent[] = [
+      { kind: 'user', content: [{ type: 'text', text: 'a' }], ts: '2026-01-01T00:00:00.000Z' },
+      { kind: 'assistant', content: [{ type: 'text', text: 'b' }], ts: '2026-01-01T00:30:00.000Z' },
+    ];
+    const rows = correlateTools(events);
+    const tl = buildTimeline(session(events), 'present');
+    expect(tl.segs.some((s) => s.idleMarker)).toBe(true);
+    // First row revealed -> single + idle divider (the gap precedes row 1).
+    expect(revealedViewItems(rows, tl.segs, 1).map((it) => it.kind)).toEqual(['single', 'idle']);
   });
 });
 
