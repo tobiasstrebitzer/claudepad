@@ -535,7 +535,7 @@ export function Gallery() {
               />
               <CollapsibleContent>
                 <pre className="mt-2 rounded-md bg-sidebar p-3 font-mono text-code text-text">
-                  $ node poc/verify.mjs{'\n'}16/16 checks passed
+                  $ node poc/verify.mjs{'\n'}21/21 checks passed
                 </pre>
               </CollapsibleContent>
             </Collapsible>
@@ -545,11 +545,12 @@ export function Gallery() {
         <Section title="Avatar">
           <div className="flex flex-wrap items-center gap-4 rounded-lg border border-border bg-surface p-6">
             <Avatar>
+              {/* Self-contained data-URI image - no third-party fetch (no-phone-home posture). */}
               <AvatarImage
-                src="https://avatars.githubusercontent.com/u/9919?v=4"
-                alt="GitHub"
+                src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2040%2040'%3E%3Crect%20width='40'%20height='40'%20fill='%23CC785C'/%3E%3Ctext%20x='20'%20y='27'%20font-family='sans-serif'%20font-size='18'%20fill='white'%20text-anchor='middle'%3Ecp%3C/text%3E%3C/svg%3E"
+                alt="Sample avatar"
               />
-              <AvatarFallback>GH</AvatarFallback>
+              <AvatarFallback>CP</AvatarFallback>
             </Avatar>
             <Avatar>
               <AvatarImage src="" alt="" />
