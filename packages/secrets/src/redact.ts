@@ -5,7 +5,7 @@
 
 import type { Session } from '@claudepad/schema';
 import type { Detection, RedactionResult, SecretMap } from './model';
-import { mapSessionStrings } from './text';
+import { mapAllStrings } from './text';
 import { makeSecretToken, sanitizeType, neutralizeSentinels } from './placeholder';
 
 function escapeRegExp(s: string): string {
@@ -34,7 +34,10 @@ export function redact(session: Session, detections: Detection[]): RedactionResu
     token: makeSecretToken(d.id, sanitizeType(d.type), d.length),
   }));
 
-  const body = mapSessionStrings(session, (s) => {
+  // Redact across EVERY string in the session (incl. each event's preserved
+  // `raw` source record), not just the scannable subset - the whole body ships
+  // encrypted, so a duplicate in `raw` would otherwise leak (and trip FR-25).
+  const body = mapAllStrings(session, (s) => {
     // Neutralize any pre-existing sentinels so they can't masquerade as tokens.
     let out = neutralizeSentinels(s);
     for (const { re, token } of replacers) out = out.replace(re, token);

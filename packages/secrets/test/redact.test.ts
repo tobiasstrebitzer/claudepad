@@ -78,4 +78,48 @@ describe('redaction (PRD-06 §7.5)', () => {
     expect(body.events).toHaveLength(session.events.length);
     expect(body.events[0]!.kind).toBe('user');
   });
+
+  // Regression: a confirmed value detected in scannable content but ALSO present
+  // in a location the scanner skips (each event's preserved `raw` source record,
+  // meta.raw, a raw content block, a meta-event note) used to survive redaction -
+  // the redactor only walked the scannable subset while the body that ships (and
+  // the FR-25 gate) serialize the whole session. That is a real leak, not just a
+  // strict gate: `raw` is encrypted and handed to the recipient.
+  it('hard gate covers raw/meta locations the scanner skips (FR-25 regression)', () => {
+    const session: Session = {
+      id: 's',
+      source: 'claude-code',
+      formatVersion: 'test',
+      // The same secret lifted into session-level preserved metadata.
+      meta: { raw: { firstLine: `connect with ${AWS}` } },
+      events: [
+        {
+          kind: 'tool_result',
+          id: 'r1',
+          output: `start-time failure: ${AWS}`,
+          // The original source record duplicates the value verbatim (preserveRaw).
+          raw: { type: 'tool_result', content: `start-time failure: ${AWS}`, extra: AWS },
+        },
+        {
+          kind: 'user',
+          id: 'u1',
+          content: [{ type: 'raw', value: { pastedText: `key ${AWS}` } }],
+          raw: { message: { content: `key ${AWS}` } },
+        },
+        { kind: 'meta', id: 'm1', note: `saw ${AWS} in env`, raw: { line: AWS } },
+      ],
+    };
+
+    const detections = scanSession(session);
+    // The value is detected from the scannable tool_result output...
+    expect(detections.some((d) => d.value === AWS)).toBe(true);
+
+    const { body, secretMap } = redact(session, detections);
+    // ...and must be scrubbed everywhere, including the skipped raw/meta locations.
+    expect(findLeakedValues(body, secretMap)).toEqual([]);
+    expect(JSON.stringify(body)).not.toContain(AWS);
+    // Structure (and the meta-event note) is preserved, just tokenized.
+    expect(body.events).toHaveLength(3);
+    expect(JSON.stringify(body)).toContain('cp-secret:');
+  });
 });

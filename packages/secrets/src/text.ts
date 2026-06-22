@@ -49,6 +49,20 @@ export function mapSessionStrings(session: Session, fn: StringFn): Session {
   return { ...session, events: session.events.map((e) => mapEvent(e, fn)) };
 }
 
+/**
+ * Transform EVERY string leaf in the entire session - including locations the
+ * scanner intentionally skips: each event's preserved `raw` source record,
+ * `meta.raw`, meta-event notes, image/raw content blocks, and session metadata.
+ *
+ * Redaction must use this (not `mapSessionStrings`): the whole body is encrypted
+ * and shipped, so a confirmed value duplicated in `raw` would otherwise leak to
+ * the recipient (and trip the FR-25 hard gate, which serializes the full body).
+ * Scanning stays scoped to avoid double-counting the `raw` duplicates.
+ */
+export function mapAllStrings(session: Session, fn: StringFn): Session {
+  return mapUnknown(session, fn) as Session;
+}
+
 /** Collect every scannable string in document order (for scanning). */
 export function collectStrings(session: Session): string[] {
   const out: string[] = [];
