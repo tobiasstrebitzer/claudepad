@@ -41,6 +41,9 @@ importers:
       vitest:
         specifier: ^4.1.9
         version: 4.1.9(@types/node@22.19.21)(@vitest/coverage-v8@4.1.9)(jsdom@29.1.1)(vite@8.0.16(@types/node@22.19.21)(esbuild@0.28.1)(jiti@2.7.0))
+      wrangler:
+        specifier: ^4.103.0
+        version: 4.103.0
 
   packages/client:
     dependencies:
@@ -150,9 +153,6 @@ importers:
       vite:
         specifier: ^8.0.16
         version: 8.0.16(@types/node@22.19.21)(esbuild@0.28.1)(jiti@2.7.0)
-      wrangler:
-        specifier: ^4.103.0
-        version: 4.103.0
 
   packages/ingest: {}
 

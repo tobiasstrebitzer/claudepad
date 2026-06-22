@@ -3,15 +3,14 @@
   "name": "claudepad-registry",
   "main": "src/cloudflare.ts",
   "compatibility_date": "2026-06-22",
-  // Reference registry. Configure your own host + bindings before deploying.
-  // "routes": [{ "pattern": "registry.example.com", "custom_domain": true }],
+  "routes": [{ "pattern": "registry.claudepad.io", "custom_domain": true }],
   "vars": {
-    "REGISTRY_ID": "claudepad-registry-reference",
-    "REGISTRY_NAME": "claudepad reference registry",
-    "REGISTRY_BASE_URL": "https://registry.example.com",
+    "REGISTRY_ID": "claudepad.io/registry",
+    "REGISTRY_NAME": "claudepad.io registry",
+    "REGISTRY_BASE_URL": "https://registry.claudepad.io",
     "REGISTRY_MODES": "zero-knowledge",
     "REGISTRY_DIRECTORY": "true"
   },
   "r2_buckets": [{ "binding": "BLOBS", "bucket_name": "claudepad-registry-blobs" }],
-  "kv_namespaces": [{ "binding": "KV", "id": "REPLACE_WITH_YOUR_KV_NAMESPACE_ID" }]
+  "kv_namespaces": [{ "binding": "KV", "id": "ff3f48b54c3740ffaf663b48264b3aa3" }]
 }
