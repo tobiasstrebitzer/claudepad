@@ -1,6 +1,6 @@
 {
   "name": "@claudepad/client",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "private": true,
   "description": "claudepad web client - design system foundation, app shell, and component gallery (PRD-01). Single static bundle, no third-party runtime fetches.",
   "license": "MIT",

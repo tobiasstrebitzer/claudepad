@@ -7,6 +7,8 @@ All notable changes to claudepad are documented here. The format is based on
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-06-23 - Share short links + frictionless open
+
 ### Added
 - **First-launch onboarding wizard** (`client/src/onboarding/**`, D-81): auto-opens once (persisted `claudepad.onboarded` flag), re-runnable via a "Take the tour" entry in the sidebar footer. A few quick how-to steps, then an inline **name-only identity generator** so a new user lands ready to share.
 - **Registry-issued share short links** (D-87): a registry can advertise a paired web app (`manifest.webApp`) and serve a clickable `…/s/<id>` link that 302-redirects into it (`?share=<id>&r=<baseUrl>`). The client opens such a link straight away - it fetches the opaque blob from the registry named in the link, so it works even for a recipient who never connected that registry. New `/s/{id}` endpoint, `webApp` manifest field, and `SHARE_ID_PARAM`/`SHARE_REGISTRY_PARAM` in `@claudepad/registry-spec`; `REGISTRY_WEB_APP` env var on the reference Worker.
