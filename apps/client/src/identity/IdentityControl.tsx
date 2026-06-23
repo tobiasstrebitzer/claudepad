@@ -1,10 +1,18 @@
-// The identity affordance in the sidebar footer (replaces the old hardcoded
-// "self-host" stub). One click opens the full panel in a popover - frictionless:
-// the identity is always one reach away, never its own page. The trigger reflects
-// the current state (none / locked / signed-in) at a glance.
+// The single "you" affordance in the sidebar footer: your identity AND how
+// you're reachable (the optional registry), unified into one item. One click
+// opens a modal with both - identity first (who you are), registry second (an
+// opt-in directory so people can share with you by name). The trigger reflects
+// the current identity state (none / locked / signed-in) at a glance.
 
 import { KeyRound, UserPlus } from 'lucide-react'
-import { Popover, PopoverContent, PopoverTrigger } from '../components/ui/Popover'
+import { RegistryPanel } from '../registry'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+  DialogTrigger
+} from '../components/ui/Dialog'
 import { cn } from '../lib/cn'
 import { IdentityPanel } from './IdentityPanel'
 import { useIdentityContext } from './IdentityProvider'
@@ -20,8 +28,8 @@ export function IdentityControl() {
   const { state } = useIdentityContext()
 
   return (
-    <Popover>
-      <PopoverTrigger
+    <Dialog>
+      <DialogTrigger
         className={cn(
           'flex w-full items-center gap-2 rounded-md px-3 py-2 text-left',
           'transition-colors hover:bg-accent-tint focus-visible:outline-none',
@@ -29,15 +37,19 @@ export function IdentityControl() {
         )}
       >
         <Trigger state={state} />
-      </PopoverTrigger>
-      <PopoverContent
-        align="start"
-        side="top"
-        className="max-h-[80vh] w-[320px] overflow-y-auto z-100"
-      >
+      </DialogTrigger>
+      <DialogContent className="grid-cols-1 max-h-[85vh] overflow-x-hidden overflow-y-auto sm:max-w-md">
+        <DialogTitle className="sr-only">Your identity and registry</DialogTitle>
+        <DialogDescription className="sr-only">
+          Manage the keypair you share with, and the optional registry that lets people
+          reach you by name.
+        </DialogDescription>
         <IdentityPanel />
-      </PopoverContent>
-    </Popover>
+        <div className="mt-6 border-t border-border pt-5">
+          <RegistryPanel />
+        </div>
+      </DialogContent>
+    </Dialog>
   )
 }
 

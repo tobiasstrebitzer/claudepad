@@ -49,7 +49,7 @@ export function RegistryControl() {
   )
 }
 
-function RegistryPanel() {
+export function RegistryPanel() {
   const { url, state, configure, disconnect } = useRegistry()
   const [custom, setCustom] = React.useState(false)
   const [draft, setDraft] = React.useState(url)

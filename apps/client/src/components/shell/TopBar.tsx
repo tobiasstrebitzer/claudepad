@@ -15,6 +15,8 @@ export interface TopBarContent {
   titleIsHeading?: boolean
   /** When set, a back icon-button leads the breadcrumbs (e.g. close the session). */
   onBack?: () => void
+  /** Accessible label for the back button (defaults to "Close session"). */
+  backLabel?: string
   labels?: React.ReactNode
   actions?: React.ReactNode
   meta?: React.ReactNode
@@ -43,6 +45,7 @@ export function TopBar({
             crumbs={content.crumbs}
             titleIsHeading={content.titleIsHeading}
             onBack={content.onBack}
+            backLabel={content.backLabel}
           />
         )}
         <div className="min-w-0 flex-1" />
@@ -68,11 +71,13 @@ export function TopBar({
 function Breadcrumbs({
   crumbs,
   titleIsHeading,
-  onBack
+  onBack,
+  backLabel = 'Close session'
 }: {
   crumbs: Crumb[]
   titleIsHeading?: boolean
   onBack?: () => void
+  backLabel?: string
 }) {
   return (
     <nav
@@ -85,8 +90,8 @@ function Breadcrumbs({
           size="icon-sm"
           className="-ml-1 shrink-0"
           onClick={onBack}
-          aria-label="Close session"
-          title="Close session"
+          aria-label={backLabel}
+          title={backLabel}
         >
           <ArrowLeft />
         </Button>

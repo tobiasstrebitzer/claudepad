@@ -6,7 +6,7 @@ import {
   FileText,
   Folder,
   FolderInput,
-  Inbox,
+  Info,
   Loader2,
   PanelLeftClose,
   RefreshCw,
@@ -21,7 +21,6 @@ import {
 } from '../../fs'
 import { IdentityControl } from '../../identity'
 import { OnboardingControl } from '../../onboarding'
-import { RegistryControl } from '../../registry'
 import { cn } from '../../lib/cn'
 import { Wordmark } from '../brand/Wordmark'
 import { Button } from '../ui/Button'
@@ -40,12 +39,12 @@ interface SidebarProps {
   onSelect?: (id: string) => void
   /** Collapse the sidebar (desktop); omitted in the mobile drawer. */
   onCollapse?: () => void
-  /** current hash route, to mark the gallery link active */
+  /** current hash route, to mark the gallery/about links active */
   route: string
   /** Folder-backed navigation (Chromium only); falls back to `recent` when absent. */
   vault?: VaultNav
-  /** Open the receive flow (inbox + paste a share) from the footer. */
-  onOpenReceive?: () => void
+  /** Return to the home surface and close any open session (the wordmark click). */
+  onHome?: () => void
   className?: string
 }
 
@@ -59,7 +58,7 @@ export function Sidebar({
   onCollapse,
   route,
   vault,
-  onOpenReceive,
+  onHome,
   className
 }: SidebarProps) {
   return (
@@ -71,13 +70,14 @@ export function Sidebar({
       aria-label="Sessions"
     >
       <div className="px-3 h-14 flex items-center gap-1">
-        <a
-          href="#/"
+        <button
+          type="button"
+          onClick={onHome}
           className="mr-auto flex items-center rounded-md"
           aria-label="claudepad home"
         >
           <Wordmark size="full" />
-        </a>
+        </button>
         {onCollapse && (
           <Button
             variant="ghost"
@@ -98,7 +98,7 @@ export function Sidebar({
         <RecentList recent={recent} activeId={activeId} onSelect={onSelect} />
       )}
 
-      <SidebarFooter route={route} onOpenReceive={onOpenReceive} />
+      <SidebarFooter route={route} />
     </nav>
   )
 }
@@ -405,33 +405,26 @@ function Hint({ icon, children }: { icon?: React.ReactNode; children: React.Reac
   )
 }
 
-function SidebarFooter({ onOpenReceive }: { route: string; onOpenReceive?: () => void }) {
+function SidebarFooter({ route }: { route: string }) {
+  const aboutActive = route.startsWith('#/about')
   return (
     <div className="px-2 py-2 border-t border-border flex flex-col gap-0.5">
-      <IdentityControl />
-      <RegistryControl />
-      {onOpenReceive && (
-        <button
-          type="button"
-          onClick={onOpenReceive}
-          className={cn(
-            'flex w-full items-center gap-2 rounded-md px-3 py-2 text-left',
-            'transition-colors hover:bg-accent-tint focus-visible:outline-none',
-            'focus-visible:ring-2 focus-visible:ring-ring'
-          )}
-        >
-          <span className="grid size-7 shrink-0 place-items-center rounded-full bg-accent-tint text-muted-foreground">
-            <Inbox className="size-3.5" />
-          </span>
-          <span className="flex min-w-0 flex-col leading-tight">
-            <span className="truncate text-body-sm text-text">Open a share</span>
-            <span className="truncate text-label text-muted-foreground">
-              paste a blob, or see what&rsquo;s shared with you
-            </span>
-          </span>
-        </button>
-      )}
+      <a
+        href="#/about"
+        className={cn(
+          'flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-body-sm',
+          'transition-colors hover:bg-accent-tint hover:text-text focus-visible:outline-none',
+          'focus-visible:ring-2 focus-visible:ring-ring',
+          aboutActive ? 'bg-accent-tint text-text' : 'text-muted-foreground'
+        )}
+      >
+        <span className="grid size-7 shrink-0 place-items-center">
+          <Info className="size-4" />
+        </span>
+        About claudepad
+      </a>
       <OnboardingControl />
+      <IdentityControl />
     </div>
   )
 }

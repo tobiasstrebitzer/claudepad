@@ -4,7 +4,7 @@ Turn a raw Claude Code session (`~/.claude/projects/*.jsonl`) into a clean, shar
 
 Open source and self-hostable. [`claudepad.io`](https://claudepad.io) is a free hosted instance running the identical static bundle.
 
-> **Status:** v1 feature-complete (phases P0-P4 built), in launch hardening (P5). The independent security review (PRD-09 FR-16) is the remaining hard gate before the v1.0 tag. See [`docs/ROADMAP.md`](docs/ROADMAP.md).
+> **Status:** an early, open-source developer demo - v1 feature-complete (phases P0-P5 built), shared to gather feedback and find the use cases worth building. The crypto core is intentionally small and auditable, but it has **not** had an independent security review yet; treat claudepad as a capable demo rather than a vault for your most sensitive secrets. An audit is welcome. See [`docs/ROADMAP.md`](docs/ROADMAP.md).
 
 ## What it does
 
@@ -19,7 +19,7 @@ Open source and self-hostable. [`claudepad.io`](https://claudepad.io) is a free 
 - **No server, nothing to trust** - parsing, identity, encryption, and decryption all run in the browser. "The host can't read it" is true because there is no host.
 - **The blob is the message** - a share is a self-contained encrypted artifact you carry, not a link pointing at a server.
 - **Trust is verifiable** - a self-claimed name is paired with a key **fingerprint** (6 emoji + hex) for out-of-band verification.
-- **Zero-dependency crypto** - WebCrypto only (AES-256-GCM, ECDH P-256, HKDF, SHA-256), so the core is auditable. Proven by [`poc/verify.mjs`](poc/verify.mjs).
+- **Zero-dependency crypto** - WebCrypto only (AES-256-GCM, ECDH P-256, HKDF, SHA-256), so the core is auditable. Proven end-to-end by [`packages/crypto/test/conformance.test.ts`](packages/crypto/test/conformance.test.ts).
 - **Single static bundle** - self-hosting is "serve some files"; no CDNs, fonts self-hosted, no third-party runtime fetches.
 - **Honesty over polish** in security claims - the [threat model](docs/THREAT-MODEL.md) states the trade-offs plainly.
 
@@ -31,8 +31,8 @@ The fastest path is the hosted instance: open [`claudepad.io`](https://claudepad
 
 ```sh
 pnpm install
-pnpm build                       # → packages/client/dist (single static bundle)
-npx serve packages/client/dist   # or nginx, Caddy, Cloudflare, S3+CDN, GitHub Pages…
+pnpm build                    # → apps/client/dist (single static bundle)
+npx serve apps/client/dist    # or nginx, Caddy, Cloudflare, S3+CDN, GitHub Pages…
 ```
 
 No database, no API, no accounts, no env vars. Full guide: [`docs/self-hosting.md`](docs/self-hosting.md).
@@ -42,8 +42,8 @@ No database, no API, no accounts, no env vars. Full guide: [`docs/self-hosting.m
 You don't have to trust us:
 
 ```sh
-node poc/verify.mjs                          # crypto conformance: non-recipient lockout, tiered decrypt, no plaintext in blob
-pnpm build && node scripts/check-no-external-origins.mjs   # the bundle makes no third-party fetches
+pnpm test                                    # crypto conformance: non-recipient lockout, tiered decrypt, no plaintext in blob
+pnpm build && pnpm run verify:no-phone-home  # the built bundle makes no third-party fetches
 ```
 
 Plus a live network-capture procedure in [`docs/verify-zero-knowledge.md`](docs/verify-zero-knowledge.md).
@@ -51,17 +51,19 @@ Plus a live network-capture procedure in [`docs/verify-zero-knowledge.md`](docs/
 ## Monorepo layout
 
 ```
+apps/
+  client/    @claudepad/client    - the deployable SPA: design system, tolerant JSONL parser, secret
+                                    scanner, viewer, identity, share, playback. Single static bundle.
+  registry/  @claudepad/registry  - optional registry Worker (vNext addon; not in the launch bundle).
 packages/
-  schema/   @claudepad/schema   - tolerant Claude Code JSONL → normalized Session model (PRD-02). Zero deps, isomorphic.
-  shared/   @claudepad/shared   - zero-dependency WebCrypto core (PRD-05): ECDH P-256, HKDF, AES-256-GCM, sealed-box blobs, fingerprints.
-  secrets/  @claudepad/secrets  - pure secret scanner + redactor, opaque placeholders, body/secret-map split (PRD-06).
-  ingest/   @claudepad/ingest   - drop/paste/folder-connect ingest + session metadata (PRD-04).
-  client/   @claudepad/client   - the web client: design system, viewer, identity, share, playback. Single static bundle.
+  crypto/           @claudepad/crypto          - zero-dependency WebCrypto core (PRD-05): ECDH P-256, HKDF,
+                                                 AES-256-GCM, sealed-box blobs, fingerprints. test/conformance.test.ts is the anchor.
+  registry-spec/    @claudepad/registry-spec   - the open registry contract (interfaces, DTOs, OpenAPI).
+  registry-client/  @claudepad/registry-client - fetch SDK + conformance suite for any conformant registry.
 docs/       PRDs + canonical design/security/decision docs (start with ROADMAP, TRUSTLESS-MODEL, THREAT-MODEL).
-poc/        the runnable proof of concept + verify.mjs (crypto conformance anchor).
 ```
 
-There is **no `server`** in v1 by design - an optional store addon is vNext (DECISIONS D-20…D-33).
+There is **no `server`** in the launch bundle by design. The optional **registry** (`apps/registry` + the `registry-*` packages) is a separate, opt-in addon for short-links and a public-key directory; it stores only opaque blobs it cannot read, and sharing works fully offline without it (DECISIONS D-20…D-33, D-74…D-88).
 
 ## Develop
 
@@ -70,7 +72,7 @@ Requires Node ≥ 20 and pnpm.
 ```sh
 pnpm dev                 # run the client (Vite) at http://localhost:5173
 pnpm test                # the whole Vitest suite
-pnpm check               # typecheck + lint + test + verify:poc (the full gate)
+pnpm check               # build + typecheck + lint (no-raw-hex + WCAG contrast) + tests (the full gate)
 pnpm --filter @claudepad/client test:e2e   # Playwright
 ```
 

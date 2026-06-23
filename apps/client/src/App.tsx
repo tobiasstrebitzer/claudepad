@@ -12,6 +12,7 @@ import { OnboardingProvider } from './onboarding'
 import { fetchSharedBlob, RegistryProvider } from './registry'
 import { SHARE_ID_PARAM, SHARE_REGISTRY_PARAM } from '@claudepad/registry-client'
 import { SessionExperience, sessionTopBar, useSession } from './ingest'
+import { About } from './pages/About'
 import { Gallery } from './pages/Gallery'
 import { PlaybackProvider, TransportBar } from './playback'
 import { ReceiveDialog, type OpenShareResult } from './share'
@@ -46,6 +47,7 @@ const AUTO_OPEN_MAX_BYTES = 8 * 1024 * 1024
 export function App() {
   const route = useHashRoute()
   const isGallery = route.startsWith('#/gallery')
+  const isAbout = route.startsWith('#/about')
 
   const vault = useVault()
   const [activeSessionId, setActiveSessionId] = React.useState<string>()
@@ -91,6 +93,12 @@ export function App() {
     }
   }, [onShareBlob])
 
+  // Loading a session/share must leave any overlay route (gallery, about) so the
+  // viewer is shown instead of the overlay page staying mounted.
+  const leaveOverlayRoute = React.useCallback(() => {
+    if (window.location.hash && window.location.hash !== '#/') window.location.hash = '#/'
+  }, [])
+
   // A single picker for both `.jsonl` sessions and `.cpad` shares - loadFile
   // routes by content (the blob sniff in useSession sends shares to onShareBlob).
   const fileInputRef = React.useRef<HTMLInputElement>(null)
@@ -99,30 +107,34 @@ export function App() {
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0]
       e.target.value = '' // allow re-picking the same file
-      if (file) void session.loadFile(file, 'file-picker')
+      if (file) {
+        leaveOverlayRoute()
+        void session.loadFile(file, 'file-picker')
+      }
     },
-    [session]
+    [session, leaveOverlayRoute]
   )
 
   // Open a session straight from the connected folder (lazy read - contents are
-  // only touched here, on click). Navigate home so the viewer is visible.
+  // only touched here, on click). Leave any overlay route so the viewer shows.
   const onSelectSession = React.useCallback(
     async (s: VaultSession) => {
       setActiveSessionId(s.id)
-      if (window.location.hash.startsWith('#/gallery')) window.location.hash = '#/'
+      leaveOverlayRoute()
       const file = await readSessionFile(s)
       await session.loadFile(file, 'fs')
     },
-    [session]
+    [session, leaveOverlayRoute]
   )
 
-  // "Overview" / "New / Open" returns to the empty drop/paste surface.
+  // The wordmark / "Overview" returns to the empty drop/paste surface, closing
+  // any open session and leaving a non-home route (gallery, about).
   const onHome = React.useCallback(() => {
     setActiveSessionId(undefined)
     setReceivedSecretMap(undefined)
     session.clear()
-    if (window.location.hash.startsWith('#/gallery')) window.location.hash = '#/'
-  }, [session])
+    leaveOverlayRoute()
+  }, [session, leaveOverlayRoute])
 
   // A decrypted blob → show its session in the viewer, with any granted secrets
   // feeding the high-priv reveal (body-only leaves the map undefined).
@@ -133,9 +145,9 @@ export function App() {
       session.showSession(result.session, `share from ${result.from.name}`)
       setReceiveOpen(false)
       setReceiveBlob(undefined)
-      if (window.location.hash.startsWith('#/gallery')) window.location.hash = '#/'
+      leaveOverlayRoute()
     },
-    [session]
+    [session, leaveOverlayRoute]
   )
 
   // Drop the seeded blob when the receive dialog closes so a later manual open
@@ -178,25 +190,27 @@ export function App() {
   const secretMap = isDemo ? demoSecretMap : receivedSecretMap
 
   const topbar: TopBarContent = isGallery
-    ? { crumbs: [{ label: 'Gallery' }] }
-    : loaded
-      ? sessionTopBar({
-        session: loaded.session,
-        diagnostics: loaded.diagnostics,
-        fileName: loaded.fileName,
-        viewMode,
-        onViewMode: setViewMode,
-        onHome
-      })
-      : {
-        crumbs: [],
-        actions: (
-          <Button size="sm" variant="secondary" onClick={openFilePicker}>
-            <FolderOpen />
-            Open…
-          </Button>
-        )
-      }
+    ? { crumbs: [{ label: 'Gallery' }], onBack: onHome, backLabel: 'Back to app' }
+    : isAbout
+      ? { crumbs: [{ label: 'About' }], onBack: onHome, backLabel: 'Back to app' }
+      : loaded
+        ? sessionTopBar({
+          session: loaded.session,
+          diagnostics: loaded.diagnostics,
+          fileName: loaded.fileName,
+          viewMode,
+          onViewMode: setViewMode,
+          onHome
+        })
+        : {
+          crumbs: [],
+          actions: (
+            <Button size="sm" variant="secondary" onClick={openFilePicker}>
+              <FolderOpen />
+              Open…
+            </Button>
+          )
+        }
 
   return (
     <TooltipProvider>
@@ -216,10 +230,12 @@ export function App() {
                       }
                       topbar={topbar}
                       footer={<TransportBar />}
-                      onOpenReceive={() => setReceiveOpen(true)}
+                      onHome={onHome}
                     >
                       {isGallery ? (
                         <Gallery />
+                      ) : isAbout ? (
+                        <About />
                       ) : (
                         <SessionExperience
                           api={session}

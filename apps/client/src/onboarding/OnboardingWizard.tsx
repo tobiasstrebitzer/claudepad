@@ -37,8 +37,9 @@ import howToPlay from './assets/onboarding-03.png'
 import howToShare from './assets/onboarding-04.png'
 
 const PUB_PREFIX = 'cp-pub-'
-// TODO: replace with the real explainer page when content lands.
-const LEARN_MORE_URL = 'https://claudepad.io/registry'
+// The in-app explainer (works on any self-host origin). Its registry section
+// covers what listing does, that it's zero-knowledge, and that it's opt-in.
+const LEARN_MORE_URL = '#/about'
 
 // The how-to steps shown before the identity generator. The identity step is
 // rendered separately (it owns minting).
@@ -215,7 +216,9 @@ function IdentityStep({
   const identity = useIdentityContext()
   const registry = useRegistry()
   const [name, setName] = React.useState('')
-  const [register, setRegister] = React.useState(true)
+  // Opt-in by default: a new user leaves the wizard fully local, nothing
+  // published. The registry directory is an explicit choice, not a default.
+  const [register, setRegister] = React.useState(false)
   const [busy, setBusy] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
   // The minted key's auth token, read lazily by the registry client when publishing.
@@ -336,8 +339,8 @@ function IdentityStep({
                 Learn more
               </a>
               <span className="mt-0.5 block text-label text-muted-foreground">
-                Publishes your public key + name. Uncheck to stay fully offline; you can change this
-                later.
+                Optional - publishes your public key + name to the directory. Leave unchecked
+                (the default) to stay fully offline; you can change this later.
               </span>
             </span>
           </label>

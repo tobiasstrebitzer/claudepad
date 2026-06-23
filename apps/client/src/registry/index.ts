@@ -3,7 +3,7 @@
 // React wiring + UI.
 
 export { RegistryProvider, useRegistry, type RegistryApi, type RegistryState } from './RegistryProvider'
-export { RegistryControl } from './RegistryControl'
+export { RegistryControl, RegistryPanel } from './RegistryControl'
 export { pubHash } from './pubHash'
 export { fetchSharedBlob } from './sharedBlob'
 export { DEFAULT_REGISTRY_URL, DEFAULT_REGISTRY_LABEL } from './defaults'

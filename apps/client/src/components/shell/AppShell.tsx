@@ -21,8 +21,8 @@ interface AppShellProps {
   /** Pinned below the scrolling canvas, inside the content column (e.g. the
    * playback transport bar) - sits right of the sidebar and never overlaps. */
   footer?: React.ReactNode
-  /** Open the receive flow (inbox + paste a share) from the sidebar footer. */
-  onOpenReceive?: () => void
+  /** Return to the home surface and close any open session (the wordmark click). */
+  onHome?: () => void
   children: React.ReactNode
 }
 
@@ -37,7 +37,7 @@ export function AppShell({
   route,
   topbar,
   footer,
-  onOpenReceive,
+  onHome,
   children
 }: AppShellProps) {
   const [drawerOpen, setDrawerOpen] = React.useState(false)
@@ -67,7 +67,7 @@ export function AppShell({
           onCollapse={() => setCollapsed(true)}
           vault={vault}
           route={route}
-          onOpenReceive={onOpenReceive}
+          onHome={onHome}
         />
       </aside>
 
@@ -87,7 +87,7 @@ export function AppShell({
               onSelect={onSelect}
               vault={vault}
               route={route}
-              onOpenReceive={onOpenReceive}
+              onHome={onHome}
             />
           </div>
         </div>
@@ -124,9 +124,14 @@ export function AppShell({
                   >
                     <PanelLeftOpen />
                   </Button>
-                  <a href="#/" className="rounded-md flex" aria-label="claudepad home">
+                  <button
+                    type="button"
+                    onClick={onHome}
+                    className="rounded-md flex"
+                    aria-label="claudepad home"
+                  >
                     <Wordmark size="small" />
-                  </a>
+                  </button>
                 </span>
               )}
             </>
