@@ -6,8 +6,10 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
+    "clean": "rimraf dist tsconfig.tsbuildinfo",
     "dev": "vite",
     "build": "tsc -p tsconfig.json --noEmit && vite build",
+    "prepack": "pnpm clean && pnpm build",
     "preview": "vite preview",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "eslint .",
