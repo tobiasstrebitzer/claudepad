@@ -1,6 +1,6 @@
 {
   "name": "@claudepad/registry",
-  "version": "0.11.0",
+  "version": "0.11.1",
   "private": true,
   "description": "Reference implementation of the claudepad registry contract (REGISTRY-SPEC.md): a Cloudflare Worker (R2 blobs/sessions + KV directory) built on a storage-agnostic handler so it runs against an in-memory backend in tests. Zero-knowledge blob store + identity directory + opt-in trusted sessions.",
   "license": "MIT",
