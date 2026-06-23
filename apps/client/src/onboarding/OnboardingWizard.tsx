@@ -11,18 +11,30 @@ import {
   Loader2,
   Play,
   ShieldCheck,
-  Sparkles
+  Sparkles,
+  X
 } from 'lucide-react'
 import { encodePublicCard } from '@claudepad/crypto'
 import { RegistryClient } from '@claudepad/registry-client'
 import * as React from 'react'
 import { Button } from '../components/ui/Button'
 import { Checkbox } from '../components/ui/Checkbox'
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogTitle } from '../components/ui/Dialog'
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogTitle
+} from '../components/ui/Dialog'
 import { Input } from '../components/ui/Input'
 import { useIdentityContext } from '../identity'
 import { cn } from '../lib/cn'
 import { DEFAULT_REGISTRY_LABEL, DEFAULT_REGISTRY_URL, pubHash, useRegistry } from '../registry'
+import howToWelcome from './assets/onboarding-01.png'
+import howToBring from './assets/onboarding-02.png'
+import howToPlay from './assets/onboarding-03.png'
+import howToShare from './assets/onboarding-04.png'
 
 const PUB_PREFIX = 'cp-pub-'
 // TODO: replace with the real explainer page when content lands.
@@ -33,21 +45,25 @@ const LEARN_MORE_URL = 'https://claudepad.io/registry'
 const HOW_TO = [
   {
     icon: Sparkles,
+    image: howToWelcome,
     title: 'Welcome to claudepad',
     body: 'claudepad turns a raw Claude Code session into a clean, readable artifact you can explore, play back, and share - privately. Everything runs in your browser; nothing is uploaded.'
   },
   {
     icon: FolderOpen,
+    image: howToBring,
     title: 'Bring a session',
     body: 'On Chrome, connect your ~/.claude folder once and every project/session shows up in the sidebar. Anywhere else, drop a .jsonl file onto the page or paste it in. You can also open a sample to look around.'
   },
   {
     icon: Play,
+    image: howToPlay,
     title: 'Read it, play it back',
     body: 'Sessions render as a prettified transcript - messages, tools, thinking, code. Hit play to watch it unfold in real time or presentation pace, with a scrubber and speed control.'
   },
   {
     icon: ShieldCheck,
+    image: howToShare,
     title: 'Share privately',
     body: 'To share, claudepad encrypts the session to a specific recipient’s public key - producing an inert blob you can drop anywhere. Only that person can read it. No server, no link that phones home.'
   }
@@ -74,26 +90,51 @@ export function OnboardingWizard({
   const next = () => setStep((s) => Math.min(s + 1, identityStep))
   const back = () => setStep((s) => Math.max(s - 1, 0))
 
+  const entry = onHowTo ? HOW_TO[step]! : null
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
-        {onHowTo ? (
-          <HowToStep
-            entry={HOW_TO[step]!}
-            step={step}
-            totalSteps={totalSteps}
-            onSkip={() => onOpenChange(false)}
-            onBack={step > 0 ? back : undefined}
-            onNext={next}
-          />
-        ) : (
-          <IdentityStep
-            step={step}
-            totalSteps={totalSteps}
-            onBack={back}
-            onDone={() => onOpenChange(false)}
-          />
-        )}
+      <DialogContent
+        showCloseButton={false}
+        className={cn('overflow-hidden p-0', onHowTo ? 'sm:max-w-2xl' : 'sm:max-w-md')}
+      >
+        <div className="flex">
+          <div className="relative grid flex-1 content-start gap-6 p-6">
+            <DialogClose
+              render={<Button variant="ghost" size="icon-sm" className="absolute top-4 right-4" />}
+            >
+              <X />
+              <span className="sr-only">Close</span>
+            </DialogClose>
+            {entry ? (
+              <HowToStep
+                entry={entry}
+                step={step}
+                totalSteps={totalSteps}
+                onSkip={() => onOpenChange(false)}
+                onBack={step > 0 ? back : undefined}
+                onNext={next}
+              />
+            ) : (
+              <IdentityStep
+                step={step}
+                totalSteps={totalSteps}
+                onBack={back}
+                onDone={() => onOpenChange(false)}
+              />
+            )}
+          </div>
+          {entry && (
+            <div className="relative hidden w-2/5 shrink-0 self-stretch bg-muted sm:block">
+              <img
+                src={entry.image}
+                alt=""
+                aria-hidden
+                className="absolute inset-0 size-full object-cover object-top"
+              />
+            </div>
+          )}
+        </div>
       </DialogContent>
     </Dialog>
   )
