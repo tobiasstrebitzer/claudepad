@@ -62,4 +62,4 @@ claudepad is pre-1.0. Only the **latest released version** (and `master`) receiv
 You don't have to trust us:
 
 - Run the crypto conformance anchor: `node poc/verify.mjs` (non-recipient lockout, tiered decrypt, no-plaintext-in-blob, fingerprint stability, device-key wrap).
-- Verify zero-knowledge for yourself: follow [`docs/verify-zero-knowledge.md`](docs/verify-zero-knowledge.md) (a network capture shows nothing leaves the browser).
+- Verify zero-knowledge for yourself: follow [`docs/VERIFY_ZERO_KNOWLEDGE.md`](docs/VERIFY_ZERO_KNOWLEDGE.md) (a network capture shows nothing leaves the browser).

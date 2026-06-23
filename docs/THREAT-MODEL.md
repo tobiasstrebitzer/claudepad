@@ -33,7 +33,7 @@ Envelope: `ECDH-P256+HKDF-SHA256+AES-256-GCM`, version `1`. See [§ Wire format]
 
 - **A curious or compromised host reading your session or its secrets.** There is no host in the data path. The blob you hand someone contains only ciphertext plus your *public* card - no plaintext transcript, no secret values. ([`poc/verify.mjs`](../poc/verify.mjs) test "no plaintext in blob".)
 - **A non-recipient who gets the blob.** Without the recipient's private key, the derived wrapping key is different and decryption fails. They get nothing. (test "non-recipient lockout".)
-- **A network observer.** Nothing is uploaded, so there is nothing on the wire to observe. You can verify this yourself - see [`verify-zero-knowledge.md`](./verify-zero-knowledge.md).
+- **A network observer.** Nothing is uploaded, so there is nothing on the wire to observe. You can verify this yourself - see [`VERIFY_ZERO_KNOWLEDGE.md`](./VERIFY_ZERO_KNOWLEDGE.md).
 - **A low-privilege recipient trying to read secrets.** Body-only blobs omit the secret ciphertext entirely; the secret key is never wrapped to them. (test "tiered decrypt".)
 - **A forged sender name.** Anyone can mint an identity named "Anthropic". The fingerprint - shown when you decrypt - is what you verify; a swapped key produces a different fingerprint.
 - **A swapped recipient key (MITM before encryption).** The pre-encryption fingerprint check catches a key that doesn't match what your recipient told you.

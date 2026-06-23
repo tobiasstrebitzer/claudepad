@@ -54,7 +54,7 @@ All notable changes to claudepad are documented here. The format is based on
 - `SECURITY.md` - vulnerability-disclosure policy, scope, and supported versions.
 - `CONTRIBUTING.md` - setup, monorepo layout, the gate, conventions, and the release process.
 - `docs/self-hosting.md` - self-host = serve the static bundle (any host / Cloudflare), no server, no DB.
-- `docs/verify-zero-knowledge.md` + `scripts/check-no-external-origins.mjs` - reproducible zero-knowledge verification (crypto conformance, bundle has no third-party fetches, live network capture).
+- `docs/VERIFY_ZERO_KNOWLEDGE.md` + `scripts/check-no-external-origins.mjs` - reproducible zero-knowledge verification (crypto conformance, bundle has no third-party fetches, live network capture).
 - `CHANGELOG.md` (this file).
 - GitHub Actions CI (gate + E2E) and tag-driven release/deploy workflows.
 

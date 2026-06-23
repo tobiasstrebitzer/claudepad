@@ -78,4 +78,4 @@ No Postgres, no S3/MinIO, no Docker, no API server, no accounts, no environment 
 
 ## Verify there's really no server
 
-Don't take our word for it - see [`verify-zero-knowledge.md`](./verify-zero-knowledge.md) to confirm with your browser's network panel that nothing leaves the page.
+Don't take our word for it - see [`VERIFY_ZERO_KNOWLEDGE.md`](./VERIFY_ZERO_KNOWLEDGE.md) to confirm with your browser's network panel that nothing leaves the page.

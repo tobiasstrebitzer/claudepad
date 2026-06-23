@@ -25,7 +25,7 @@ Open source and self-hostable. [`claudepad.io`](https://claudepad.io) is a free 
 
 ## Use it
 
-The fastest path is the hosted instance: open [`claudepad.io`](https://claudepad.io) and drop a session. Nothing you do there leaves your browser - [verify that yourself](docs/verify-zero-knowledge.md).
+The fastest path is the hosted instance: open [`claudepad.io`](https://claudepad.io) and drop a session. Nothing you do there leaves your browser - [verify that yourself](docs/VERIFY_ZERO_KNOWLEDGE.md).
 
 ## Self-host (serve a static bundle)
 
@@ -46,7 +46,7 @@ pnpm test                                    # crypto conformance: non-recipient
 pnpm build && pnpm run verify:no-phone-home  # the built bundle makes no third-party fetches
 ```
 
-Plus a live network-capture procedure in [`docs/verify-zero-knowledge.md`](docs/verify-zero-knowledge.md).
+Plus a live network-capture procedure in [`docs/VERIFY_ZERO_KNOWLEDGE.md`](docs/VERIFY_ZERO_KNOWLEDGE.md).
 
 ## Monorepo layout
 
@@ -83,7 +83,7 @@ See [`CONTRIBUTING.md`](CONTRIBUTING.md) for the full contributor guide and [`SE
 - [`docs/ROADMAP.md`](docs/ROADMAP.md) - phases and success metrics
 - [`docs/THREAT-MODEL.md`](docs/THREAT-MODEL.md) - what's defended, what isn't, in plain language
 - [`docs/TRUSTLESS-MODEL.md`](docs/TRUSTLESS-MODEL.md) - the canonical v1 crypto/identity design
-- [`docs/self-hosting.md`](docs/self-hosting.md) · [`docs/verify-zero-knowledge.md`](docs/verify-zero-knowledge.md)
+- [`docs/self-hosting.md`](docs/self-hosting.md) · [`docs/VERIFY_ZERO_KNOWLEDGE.md`](docs/VERIFY_ZERO_KNOWLEDGE.md)
 - [`docs/prd/`](docs/prd/) - the full PRD set · [`docs/DECISIONS.md`](docs/DECISIONS.md) - decision log
 
 ## License
