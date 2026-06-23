@@ -15,12 +15,15 @@ const empty: IdentityStorage = {
 };
 
 describe('Fingerprint badge (FR-11/FR-12)', () => {
-  it('always shows the hex code beside the emoji', async () => {
-    const { code } = await fingerprint('AAAA');
+  it('shows emoji by default, with the hex code in the accessible label', async () => {
+    const { emoji, code } = await fingerprint('AAAA');
     render(<Fingerprint pub="AAAA" />);
-    // The accessible hex code is present (the emoji-blind fallback, FR-12).
-    await waitFor(() => expect(screen.getByText(code)).toBeInTheDocument());
+    // Default surface is emoji; the exact hex code stays in the aria-label as the
+    // emoji-blind/screen-reader fallback (FR-12).
+    await waitFor(() => expect(screen.getByText(emoji)).toBeInTheDocument());
     expect(screen.getByLabelText(`Fingerprint ${code}`)).toBeInTheDocument();
+    // The hex isn't rendered as its own visible node by default.
+    expect(screen.queryByText(code)).not.toBeInTheDocument();
   });
 });
 

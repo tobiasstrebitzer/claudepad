@@ -5,15 +5,18 @@
 
 import * as React from 'react'
 
+/** How a key fingerprint is rendered: emoji glyphs (default) or the hex code. */
+export type FingerprintDisplay = 'emoji' | 'hex'
+
 export interface AppSettings {
-  /** Require an out-of-band fingerprint match before a recipient is added. */
-  requireFingerprintConfirm: boolean
   /** Show the secret-review step when sharing body-only (strip mode). */
   requireSecretReview: boolean
+  /** Render fingerprints as emoji or hex (the other is kept in the aria-label). */
+  fingerprintDisplay: FingerprintDisplay
 }
 
 const STORAGE_KEY = 'claudepad.settings'
-const DEFAULTS: AppSettings = { requireFingerprintConfirm: true, requireSecretReview: true }
+const DEFAULTS: AppSettings = { requireSecretReview: true, fingerprintDisplay: 'emoji' }
 
 function read(): AppSettings {
   try {
@@ -21,14 +24,14 @@ function read(): AppSettings {
     if (!raw) return DEFAULTS
     const p = JSON.parse(raw) as Partial<AppSettings>
     return {
-      requireFingerprintConfirm:
-        typeof p.requireFingerprintConfirm === 'boolean'
-          ? p.requireFingerprintConfirm
-          : DEFAULTS.requireFingerprintConfirm,
       requireSecretReview:
         typeof p.requireSecretReview === 'boolean'
           ? p.requireSecretReview
-          : DEFAULTS.requireSecretReview
+          : DEFAULTS.requireSecretReview,
+      fingerprintDisplay:
+        p.fingerprintDisplay === 'hex' || p.fingerprintDisplay === 'emoji'
+          ? p.fingerprintDisplay
+          : DEFAULTS.fingerprintDisplay
     }
   } catch {
     return DEFAULTS

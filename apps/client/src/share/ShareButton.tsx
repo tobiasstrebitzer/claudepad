@@ -1,8 +1,8 @@
 // The "Share…" top-bar action (PRD-11 entry point). A split button: the main
-// action opens the full wizard; the dropdown caret quick-shares with a recent
-// recipient (pre-selected), aiming for a three-click share (caret → name →
-// confirm). Always clickable when a session is loaded; if the identity isn't
-// unlocked the dialog explains how to set it up.
+// action opens the share dialog; the dropdown caret quick-shares with a recent
+// recipient (pre-selected), so it's a two-click share (caret → name → Share).
+// Always clickable when a session is loaded; if the identity isn't unlocked the
+// dialog explains how to set it up.
 
 import type { Session } from '@/schema'
 import { ChevronDown, Share2 } from 'lucide-react'

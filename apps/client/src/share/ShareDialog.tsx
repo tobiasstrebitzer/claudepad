@@ -1,14 +1,14 @@
-// The share wizard (PRD-11 §4.1 + PRD-06 review). Steps in one dialog:
-//   1. Recipient- paste cp-pub-…, confirm name + fingerprint out of band
-//   2. Grant    - body-only vs body+secrets (secrets disabled when none redacted)
-//   3. Review   - secret review; redact/dismiss, add a literal, ACK limits.
-//                 Only when sharing body-only (strip mode) - body+secrets ships
-//                 the secrets anyway - and only while the setting is on.
-//   4. Result   - the cp-blob-…, auto-copied + downloadable, with honest trade-offs
+// The share flow (PRD-11 §4.1 + PRD-06 review). Two steps in one dialog:
+//   1. Recipient - one unified field: paste a key (cp-pub-…) to insta-add, or
+//      search the directory by name. Pick the tier (body / body+secrets) right in
+//      the footer. No out-of-band confirmation - the fingerprint is shown on each
+//      chip, which is the check.
+//   2. Review    - secret review (only when sharing body-only and the setting is
+//      on and the scan found something to strip).
+//   3. Result    - auto-uploaded to the connected registry → a clickable share
+//      link; Copy (link, or the blob when there's no registry) + Download.
 //
-// Two app settings trim friction (both default on): the fingerprint confirm and
-// the review step. Quick-share pre-selects a recipient and opens at Grant.
-// All crypto + redaction is local; nothing is uploaded (PRD-11 FR-17).
+// All crypto + redaction is local; the registry only ever holds opaque ciphertext.
 
 import type { Session } from '@/schema'
 import {
@@ -46,6 +46,7 @@ import {
   DialogTitle
 } from '../components/ui/Dialog'
 import { Input } from '../components/ui/Input'
+import { Tooltip, TooltipContent, TooltipTrigger } from '../components/ui/Tooltip'
 import { Fingerprint, useIdentityContext } from '../identity'
 import { useCopy } from '../ingest/useCopy'
 import { cn } from '../lib/cn'
@@ -55,7 +56,7 @@ import { createShare, createMultiShare } from './blob'
 import { useAddressBook, type AddressBook, type Contact } from './useAddressBook'
 import { useSecretScan } from './useSecretScan'
 
-type Step = 'review' | 'recipient' | 'grant' | 'result'
+type Step = 'recipient' | 'review' | 'result'
 
 /** A confirmed recipient for this share (public card + decoded display fields). */
 interface Recipient {
@@ -74,6 +75,19 @@ const SENSITIVITY_PRESETS = [
   { label: 'Aggressive', value: 0.8 }
 ] as const
 
+/** Decode pasted/typed text into a recipient, or null if it isn't a valid card. */
+function decodeCard(text: string): Recipient | null {
+  const raw = text.trim()
+  if (!raw) return null
+  const body = raw.startsWith(PUB_PREFIX) ? raw.slice(PUB_PREFIX.length) : raw
+  try {
+    const { name, pub } = decodePublicCard(body)
+    return { card: PUB_PREFIX + body, name, pub }
+  } catch {
+    return null
+  }
+}
+
 export function ShareDialog({
   session,
   open,
@@ -83,7 +97,7 @@ export function ShareDialog({
   session: Session
   open: boolean
   onOpenChange: (open: boolean) => void
-  /** Quick-share: a recent recipient to pre-select, opening the dialog at Grant. */
+  /** Quick-share: a recent recipient to pre-select. */
   initialContact?: Contact
 }) {
   const { state: idState } = useIdentityContext()
@@ -106,8 +120,6 @@ export function ShareDialog({
   const scan = useSecretScan(session, open, scanSettings)
   const addressBook = useAddressBook()
 
-  const [recipientInput, setRecipientInput] = React.useState('')
-  const [recipientConfirmed, setRecipientConfirmed] = React.useState(false)
   // Confirmed recipients for this share. One -> a single-recipient blob (leaks
   // nothing); more than one -> a single multi-recipient blob (PRD-11 Q-14).
   const [recipients, setRecipients] = React.useState<Recipient[]>([])
@@ -121,20 +133,18 @@ export function ShareDialog({
 
   // Reset the wizard whenever it opens so re-share starts clean. The scan itself
   // is owned by useSecretScan; we seed the editable detection list from it.
-  // Quick-share seeds the pre-selected recipient and opens at Grant.
   React.useEffect(() => {
     if (!open) return
-    const seeded = initialContact
-      ? [{ card: initialContact.card, name: initialContact.name, pub: initialContact.pub }]
-      : []
-    setRecipients(seeded)
-    setStep(seeded.length > 0 ? 'grant' : 'recipient')
+    setRecipients(
+      initialContact
+        ? [{ card: initialContact.card, name: initialContact.name, pub: initialContact.pub }]
+        : []
+    )
+    setStep('recipient')
     setAck(false)
     setDetections([])
     setSensitivity(DEFAULT_SCAN_SETTINGS.entropySensitivity)
     setHideDismissed(false)
-    setRecipientInput('')
-    setRecipientConfirmed(false)
     setTier('body')
     setBlob('')
     setRedactedBody(null)
@@ -164,57 +174,27 @@ export function ShareDialog({
     setDetections((prev) => prev.map((d) => (ids.has(d.id) ? { ...d, state } : d)))
   }
 
-  const recipient = React.useMemo(() => {
-    const raw = recipientInput.trim()
-    if (!raw) return null
-    const body = raw.startsWith(PUB_PREFIX) ? raw.slice(PUB_PREFIX.length) : raw
-    try {
-      return decodePublicCard(body)
-    } catch {
-      return null
-    }
-  }, [recipientInput])
-
-  const alreadyAdded = recipient != null && recipients.some((r) => r.pub === recipient.pub)
-
-  // Add the confirmed in-progress recipient to the list, then clear the input.
-  // The fingerprint confirm is skipped when the setting is off.
-  const addRecipient = () => {
-    if (!recipient || (settings.requireFingerprintConfirm && !recipientConfirmed) || alreadyAdded)
-      return
-    setRecipients((prev) => [
-      ...prev,
-      { card: recipientInput.trim(), name: recipient.name, pub: recipient.pub }
-    ])
-    setRecipientInput('')
-    setRecipientConfirmed(false)
-  }
+  // Add a recipient (insta-add, deduped by pub). Stable for the input effects.
+  const addRecipient = React.useCallback((r: Recipient) => {
+    setRecipients((prev) => (prev.some((x) => x.pub === r.pub) ? prev : [...prev, r]))
+  }, [])
 
   const removeRecipient = (pub: string) =>
     setRecipients((prev) => prev.filter((r) => r.pub !== pub))
 
-  // Add a recipient picked from the registry directory. A verified (domain/sso)
-  // entry is trusted via the registry and added directly; a self-asserted one is
-  // routed through the manual out-of-band fingerprint confirm (same as a paste).
-  const addDirectoryRecipient = (entry: DirectoryEntry) => {
-    if (recipients.some((r) => r.pub === entry.pub)) return
-    const card = encodePublicCard({ v: 1, name: entry.name, pub: entry.pub })
-    // Verified (domain/sso) entries - or any entry when the manual confirm is
-    // off - are added directly; otherwise route through the fingerprint confirm.
-    if (isVerifiedAssurance(entry.assurance) || !settings.requireFingerprintConfirm) {
-      setRecipients((prev) => [...prev, { card, name: entry.name, pub: entry.pub }])
-    } else {
-      setRecipientInput(PUB_PREFIX + card)
-    }
-  }
+  const lookup = React.useCallback(
+    (q: string) => registry.client?.lookup(q) ?? Promise.resolve([]),
+    [registry.client]
+  )
 
   const recipientLabel =
     recipients.length === 1 ? recipients[0]!.name : `${recipients.length} recipients`
 
+  const hasSecrets = redactedCount > 0
   // Review is only meaningful when sharing body-only (strip mode) - body+secrets
   // ships the secrets regardless - and only while the setting is on and the scan
   // actually found something to strip.
-  const reviewNeeded = settings.requireSecretReview && tier === 'body' && redactedCount > 0
+  const reviewNeeded = settings.requireSecretReview && tier === 'body' && hasSecrets
 
   const toggle = (id: string) =>
     setDetections((prev) =>
@@ -284,6 +264,18 @@ export function ShareDialog({
     }
   }
 
+  // From the recipient step: review first if needed, else encrypt straight away.
+  const onShare = () => {
+    if (reviewNeeded) setStep('review')
+    else void encrypt()
+  }
+
+  // Stable across re-renders so the result step uploads exactly once.
+  const recipientPubs = React.useMemo(() => recipients.map((r) => r.pub), [recipients])
+
+  const directoryEnabled =
+    registry.state.status === 'connected' && registry.state.manifest.directory?.enabled === true
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
@@ -291,36 +283,22 @@ export function ShareDialog({
           <NeedsIdentity />
         ) : step === 'recipient' ? (
           <RecipientStep
-            recipientInput={recipientInput}
-            setRecipientInput={setRecipientInput}
-            recipient={recipient}
-            confirmed={recipientConfirmed}
-            setConfirmed={setRecipientConfirmed}
-            requireConfirm={settings.requireFingerprintConfirm}
             recipients={recipients}
-            alreadyAdded={alreadyAdded}
             addRecipient={addRecipient}
             removeRecipient={removeRecipient}
             addressBook={addressBook}
-            registry={registry}
-            onPickDirectory={addDirectoryRecipient}
-            onCancel={() => onOpenChange(false)}
-            onNext={() => setStep('grant')}
-          />
-        ) : step === 'grant' ? (
-          <GrantStep
-            recipientName={recipientLabel}
-            recipients={recipients}
-            redactedCount={redactedCount}
+            directoryEnabled={directoryEnabled}
+            lookup={lookup}
             tier={tier}
             setTier={setTier}
+            hasSecrets={hasSecrets}
+            redactedCount={redactedCount}
             busy={busy}
             scanning={scan.scanning}
             reviewNeeded={reviewNeeded}
             error={error}
-            onBack={() => setStep('recipient')}
-            onReview={() => setStep('review')}
-            onEncrypt={encrypt}
+            onCancel={() => onOpenChange(false)}
+            onShare={onShare}
           />
         ) : step === 'review' ? (
           <ReviewStep
@@ -343,7 +321,7 @@ export function ShareDialog({
             addLiteral={addLiteral}
             toggle={toggle}
             busy={busy}
-            onBack={() => setStep('grant')}
+            onBack={() => setStep('recipient')}
             onEncrypt={encrypt}
           />
         ) : (
@@ -351,7 +329,7 @@ export function ShareDialog({
             blob={blob}
             recipientName={recipientLabel}
             registry={registry}
-            recipientPubs={recipients.map((r) => r.pub)}
+            recipientPubs={recipientPubs}
             redactedBody={redactedBody}
             onDone={() => onOpenChange(false)}
           />
@@ -370,6 +348,368 @@ function NeedsIdentity() {
         unlock your identity from the sidebar, then try again.
       </DialogDescription>
     </>
+  )
+}
+
+function RecipientStep({
+  recipients,
+  addRecipient,
+  removeRecipient,
+  addressBook,
+  directoryEnabled,
+  lookup,
+  tier,
+  setTier,
+  hasSecrets,
+  redactedCount,
+  busy,
+  scanning,
+  reviewNeeded,
+  error,
+  onCancel,
+  onShare
+}: {
+  recipients: Recipient[]
+  addRecipient: (r: Recipient) => void
+  removeRecipient: (pub: string) => void
+  addressBook: AddressBook
+  directoryEnabled: boolean
+  lookup: (query: string) => Promise<DirectoryEntry[]>
+  tier: Tier
+  setTier: (t: Tier) => void
+  hasSecrets: boolean
+  redactedCount: number
+  busy: boolean
+  scanning: boolean
+  reviewNeeded: boolean
+  error: string | null
+  onCancel: () => void
+  onShare: () => void
+}) {
+  const [input, setInput] = React.useState('')
+  const [results, setResults] = React.useState<DirectoryEntry[]>([])
+  const [searching, setSearching] = React.useState(false)
+  const addedPubs = new Set(recipients.map((r) => r.pub))
+
+  const decoded = React.useMemo(() => decodeCard(input), [input])
+  const looksLikeKey = input.trim().startsWith(PUB_PREFIX)
+
+  // A valid pasted/typed key is added immediately, then the field clears.
+  React.useEffect(() => {
+    if (!decoded) return
+    addRecipient(decoded)
+    setInput('')
+  }, [decoded, addRecipient])
+
+  // Non-key text searches the directory (debounced).
+  React.useEffect(() => {
+    const q = input.trim()
+    if (!q || decoded || looksLikeKey || !directoryEnabled) {
+      setResults([])
+      setSearching(false)
+      return
+    }
+    let live = true
+    setSearching(true)
+    const t = setTimeout(() => {
+      lookup(q)
+        .then((r) => live && setResults(r))
+        .catch(() => live && setResults([]))
+        .finally(() => live && setSearching(false))
+    }, 250)
+    return () => {
+      live = false
+      clearTimeout(t)
+    }
+  }, [input, decoded, looksLikeKey, directoryEnabled, lookup])
+
+  const contacts = addressBook.contacts.filter((c) => !addedPubs.has(c.pub))
+  const showContacts = input.trim().length === 0 && contacts.length > 0
+  const shownResults = results.filter((e) => !addedPubs.has(e.pub))
+  const showInvalid = !directoryEnabled && input.trim().length > 0 && !decoded
+  const searchActive = directoryEnabled && input.trim().length > 0 && !decoded && !looksLikeKey
+
+  const pickEntry = (e: DirectoryEntry) => {
+    addRecipient({
+      card: PUB_PREFIX + encodePublicCard({ v: 1, name: e.name, pub: e.pub }),
+      name: e.name,
+      pub: e.pub
+    })
+    setInput('')
+  }
+
+  return (
+    <>
+      <DialogTitle>Share with…</DialogTitle>
+      <DialogDescription>
+        Paste a recipient&rsquo;s public key (<code>cp-pub-…</code>)
+        {directoryEnabled ? ' or search the directory by name' : ''}. Only the people
+        you add can decrypt the result.
+      </DialogDescription>
+
+      {recipients.length > 0 && (
+        <ul className="mt-3 flex flex-wrap gap-1.5">
+          {recipients.map((r) => (
+            <li
+              key={r.pub}
+              className="inline-flex items-center gap-2 rounded-full border border-border bg-bg py-1 pl-3 pr-1.5 text-body-sm"
+            >
+              <span className="font-medium text-text">{r.name}</span>
+              <Fingerprint pub={r.pub} size="sm" />
+              <button
+                type="button"
+                onClick={() => removeRecipient(r.pub)}
+                aria-label={`Remove ${r.name}`}
+                className="rounded-full p-0.5 text-muted-foreground hover:text-danger"
+              >
+                <X className="size-3.5" />
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <Input
+        value={input}
+        onChange={(e) => setInput(e.target.value)}
+        placeholder={directoryEnabled ? 'Paste a key (cp-pub-…) or search by name…' : 'cp-pub-…'}
+        className="mt-3 text-body-sm"
+        spellCheck={false}
+        autoFocus
+      />
+      {showInvalid && (
+        <p className="mt-1.5 flex items-center gap-1.5 text-body-sm text-danger">
+          <TriangleAlert className="size-4" /> That doesn&rsquo;t look like a valid public key.
+        </p>
+      )}
+
+      {searchActive && (
+        <ul className="mt-1.5 max-h-[28vh] divide-y divide-border overflow-y-auto rounded-md border border-border">
+          {searching && shownResults.length === 0 ? (
+            <li className="flex items-center gap-2 p-2.5 text-body-sm text-muted-foreground">
+              <Loader2 className="size-4 animate-spin" /> Searching…
+            </li>
+          ) : shownResults.length === 0 ? (
+            <li className="p-2.5 text-body-sm text-muted-foreground">No matches.</li>
+          ) : (
+            shownResults.map((e) => (
+              <li key={`${e.handle}:${e.pub}`}>
+                <button
+                  type="button"
+                  onClick={() => pickEntry(e)}
+                  className="flex w-full items-center gap-2 p-2.5 text-left transition-colors hover:bg-accent-tint"
+                >
+                  <span className="truncate text-body-sm font-medium text-text">{e.name}</span>
+                  <AssuranceShield entry={e} />
+                  <Fingerprint pub={e.pub} size="sm" className="ml-auto shrink-0" />
+                  <Plus className="size-4 shrink-0 text-muted-foreground" />
+                </button>
+              </li>
+            ))
+          )}
+        </ul>
+      )}
+
+      {showContacts && (
+        <div className="mt-3">
+          <p className="mb-1.5 text-label uppercase tracking-[0.02em] text-muted-foreground">
+            Recent recipients
+          </p>
+          <ul className="divide-y divide-border rounded-md border border-border">
+            {contacts.map((c) => (
+              <ContactRow
+                key={c.pub}
+                contact={c}
+                onPick={() => addRecipient({ card: c.card, name: c.alias || c.name, pub: c.pub })}
+                onRemove={() => addressBook.remove(c.pub)}
+                onAlias={(alias) => addressBook.setAlias(c.pub, alias)}
+              />
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {error && (
+        <p className="mt-3 flex items-center gap-1.5 text-body-sm text-danger">
+          <TriangleAlert className="size-4" /> {error}
+        </p>
+      )}
+
+      <DialogFooter>
+        <TierToggle
+          tier={tier}
+          setTier={setTier}
+          hasSecrets={hasSecrets}
+          redactedCount={redactedCount}
+          className="mr-auto"
+        />
+        <Button variant="ghost" onClick={onCancel} disabled={busy}>
+          Cancel
+        </Button>
+        <Button onClick={onShare} disabled={recipients.length === 0 || busy || scanning}>
+          {busy ? <Loader2 className="animate-spin" /> : null}
+          {scanning ? 'Scanning…' : reviewNeeded ? 'Review secrets' : 'Share'}
+        </Button>
+      </DialogFooter>
+    </>
+  )
+}
+
+/** Tier picker that lives in the footer: body only vs. body + secrets. */
+function TierToggle({
+  tier,
+  setTier,
+  hasSecrets,
+  redactedCount,
+  className
+}: {
+  tier: Tier
+  setTier: (t: Tier) => void
+  hasSecrets: boolean
+  redactedCount: number
+  className?: string
+}) {
+  return (
+    <span className={cn('inline-flex overflow-hidden rounded-md border border-border', className)}>
+      <TierButton active={tier === 'body'} onClick={() => setTier('body')}>
+        Body only
+      </TierButton>
+      <TierButton
+        active={tier === 'body+secret'}
+        disabled={!hasSecrets}
+        title={hasSecrets ? undefined : 'No secrets were redacted'}
+        onClick={() => hasSecrets && setTier('body+secret')}
+      >
+        Body + secrets{hasSecrets ? ` (${redactedCount})` : ''}
+      </TierButton>
+    </span>
+  )
+}
+
+function TierButton({
+  active,
+  disabled,
+  title,
+  onClick,
+  children
+}: {
+  active: boolean
+  disabled?: boolean
+  title?: string
+  onClick: () => void
+  children: React.ReactNode
+}) {
+  return (
+    <button
+      type="button"
+      aria-pressed={active}
+      disabled={disabled}
+      title={title}
+      onClick={onClick}
+      className={cn(
+        'px-2.5 py-1 text-body-sm transition-colors',
+        active ? 'bg-accent text-accent-foreground' : 'text-muted-foreground hover:bg-accent-tint',
+        disabled && 'cursor-not-allowed opacity-50 hover:bg-transparent'
+      )}
+    >
+      {children}
+    </button>
+  )
+}
+
+/** A registry assurance level as a single shield icon with a tooltip. */
+function AssuranceShield({ entry }: { entry: DirectoryEntry }) {
+  const verified = isVerifiedAssurance(entry.assurance)
+  const label = verified
+    ? `verified${entry.verifiedBy ? ` by ${entry.verifiedBy}` : ` (${entry.assurance})`}`
+    : 'self-asserted'
+  return (
+    <Tooltip>
+      <TooltipTrigger
+        render={
+          <span
+            aria-label={label}
+            className={cn('inline-flex shrink-0', verified ? 'text-success' : 'text-warn')}
+          >
+            {verified ? <ShieldCheck className="size-3.5" /> : <ShieldAlert className="size-3.5" />}
+          </span>
+        }
+      />
+      <TooltipContent>{label}</TooltipContent>
+    </Tooltip>
+  )
+}
+
+function ContactRow({
+  contact,
+  onPick,
+  onRemove,
+  onAlias
+}: {
+  contact: Contact
+  onPick: () => void
+  onRemove: () => void
+  onAlias: (alias: string) => void
+}) {
+  const [editing, setEditing] = React.useState(false)
+  const [draft, setDraft] = React.useState(contact.alias ?? '')
+  const label = contact.alias || contact.name
+
+  const commit = () => {
+    onAlias(draft)
+    setEditing(false)
+  }
+
+  return (
+    <li className="flex items-center gap-2 p-2">
+      {editing ? (
+        <Input
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          placeholder={contact.name}
+          autoFocus
+          className="h-7 flex-1 text-body-sm"
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault()
+              commit()
+            } else if (e.key === 'Escape') {
+              setEditing(false)
+            }
+          }}
+          onBlur={commit}
+        />
+      ) : (
+        <button
+          type="button"
+          onClick={onPick}
+          className="flex min-w-0 flex-1 items-center gap-2 text-left hover:text-accent"
+        >
+          <span className="truncate text-body-sm font-medium text-text">{label}</span>
+          <Fingerprint pub={contact.pub} size="sm" className="shrink-0" />
+          <Plus className="size-4 shrink-0 text-muted-foreground" />
+        </button>
+      )}
+      <button
+        type="button"
+        onClick={() => {
+          setDraft(contact.alias ?? '')
+          setEditing((v) => !v)
+        }}
+        aria-label={`Rename ${label}`}
+        className="shrink-0 rounded-sm p-1 text-muted-foreground hover:text-text"
+      >
+        <Pencil className="size-3.5" />
+      </button>
+      <button
+        type="button"
+        onClick={onRemove}
+        aria-label={`Forget ${label}`}
+        className="shrink-0 rounded-sm p-1 text-muted-foreground hover:text-danger"
+      >
+        <X className="size-3.5" />
+      </button>
+    </li>
   )
 }
 
@@ -567,7 +907,7 @@ function ReviewStep({
       <label className="mt-3 flex items-start gap-2 text-body-sm text-text">
         <Checkbox checked={ack} onCheckedChange={(v) => setAck(v === true)} className="mt-0.5" />
         <span>
-          I’ve reviewed these detections and understand detection is best-effort -
+          I&rsquo;ve reviewed these detections and understand detection is best-effort -
           missed secrets stay readable to every recipient.
         </span>
       </label>
@@ -586,461 +926,6 @@ function ReviewStep({
   )
 }
 
-function RecipientStep({
-  recipientInput,
-  setRecipientInput,
-  recipient,
-  confirmed,
-  setConfirmed,
-  requireConfirm,
-  recipients,
-  alreadyAdded,
-  addRecipient,
-  removeRecipient,
-  addressBook,
-  registry,
-  onPickDirectory,
-  onCancel,
-  onNext
-}: {
-  recipientInput: string
-  setRecipientInput: (v: string) => void
-  recipient: { name: string; pub: string } | null
-  confirmed: boolean
-  setConfirmed: (v: boolean) => void
-  requireConfirm: boolean
-  recipients: Recipient[]
-  alreadyAdded: boolean
-  addRecipient: () => void
-  removeRecipient: (pub: string) => void
-  addressBook: AddressBook
-  registry: RegistryApi
-  onPickDirectory: (entry: DirectoryEntry) => void
-  onCancel: () => void
-  onNext: () => void
-}) {
-  const invalid = recipientInput.trim().length > 0 && !recipient
-  const addedPubs = new Set(recipients.map((r) => r.pub))
-  const contacts = addressBook.contacts.filter((c) => !addedPubs.has(c.pub))
-  const showContacts = recipientInput.trim().length === 0 && contacts.length > 0
-  const directoryEnabled =
-    registry.state.status === 'connected' && registry.state.manifest.directory?.enabled === true
-  return (
-    <>
-      <DialogTitle>Share with…</DialogTitle>
-      <DialogDescription>
-        Paste each recipient’s public key (<code>cp-pub-…</code>)
-        {directoryEnabled ? ', or find them by name in the directory' : ''}. Only the
-        people you add can decrypt the result. Add more than one to send a single
-        shared blob (which reveals how many recipients there are, but not who).
-      </DialogDescription>
-
-      {directoryEnabled && registry.client && (
-        <DirectorySearch
-          lookup={(q) => registry.client!.lookup(q)}
-          addedPubs={addedPubs}
-          onPick={onPickDirectory}
-        />
-      )}
-
-      {recipients.length > 0 && (
-        <ul className="mt-3 flex flex-wrap gap-1.5">
-          {recipients.map((r) => (
-            <li
-              key={r.pub}
-              className="inline-flex items-center gap-1.5 rounded-full border border-border bg-bg py-1 pl-2.5 pr-1 text-body-sm"
-            >
-              <span className="font-medium text-text">{r.name}</span>
-              <Fingerprint pub={r.pub} size="sm" />
-              <button
-                type="button"
-                onClick={() => removeRecipient(r.pub)}
-                aria-label={`Remove ${r.name}`}
-                className="rounded-full p-0.5 text-muted-foreground hover:text-danger"
-              >
-                <X className="size-3.5" />
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
-
-      {showContacts && (
-        <div className="mt-3">
-          <p className="mb-1.5 text-label uppercase tracking-[0.02em] text-muted-foreground">
-            Recent recipients
-          </p>
-          <ul className="divide-y divide-border rounded-md border border-border">
-            {contacts.map((c) => (
-              <ContactRow
-                key={c.pub}
-                contact={c}
-                onPick={() => setRecipientInput(c.card)}
-                onRemove={() => addressBook.remove(c.pub)}
-                onAlias={(alias) => addressBook.setAlias(c.pub, alias)}
-              />
-            ))}
-          </ul>
-        </div>
-      )}
-
-      <Input
-        value={recipientInput}
-        onChange={(e) => setRecipientInput(e.target.value)}
-        placeholder="cp-pub-…"
-        className="mt-3 font-mono text-body-sm"
-        spellCheck={false}
-        autoFocus
-      />
-      {invalid && (
-        <p className="mt-1.5 flex items-center gap-1.5 text-body-sm text-danger">
-          <TriangleAlert className="size-4" /> That doesn’t look like a valid public key.
-        </p>
-      )}
-      {recipient && alreadyAdded && (
-        <p className="mt-1.5 text-body-sm text-muted-foreground">
-          {recipient.name} is already on the list.
-        </p>
-      )}
-
-      {recipient && !alreadyAdded && (
-        <div className="mt-3 rounded-md border border-border bg-bg p-3">
-          <p className="text-body-sm">
-            For <span className="font-medium">{recipient.name}</span>
-          </p>
-          <Fingerprint pub={recipient.pub} className="mt-1" size="sm" />
-          {requireConfirm && (
-            <label className="mt-2 flex items-start gap-2 text-body-sm text-text">
-              <Checkbox
-                checked={confirmed}
-                onCheckedChange={(v) => setConfirmed(v === true)}
-                className="mt-0.5"
-              />
-              <span>
-                This fingerprint matches what {recipient.name} told me out of band.
-              </span>
-            </label>
-          )}
-          <Button
-            variant="secondary"
-            size="sm"
-            className="mt-2"
-            onClick={addRecipient}
-            disabled={requireConfirm && !confirmed}
-          >
-            <Plus /> Add recipient
-          </Button>
-        </div>
-      )}
-
-      <DialogFooter>
-        <span className="mr-auto text-label text-muted-foreground">
-          {recipients.length} added
-        </span>
-        <Button variant="ghost" onClick={onCancel}>
-          Cancel
-        </Button>
-        <Button onClick={onNext} disabled={recipients.length === 0}>
-          Continue
-        </Button>
-      </DialogFooter>
-    </>
-  )
-}
-
-function DirectorySearch({
-  lookup,
-  addedPubs,
-  onPick
-}: {
-  lookup: (query: string) => Promise<DirectoryEntry[]>
-  addedPubs: Set<string>
-  onPick: (entry: DirectoryEntry) => void
-}) {
-  const [query, setQuery] = React.useState('')
-  const [results, setResults] = React.useState<DirectoryEntry[]>([])
-  const [searching, setSearching] = React.useState(false)
-
-  React.useEffect(() => {
-    const q = query.trim()
-    if (!q) {
-      setResults([])
-      return
-    }
-    let live = true
-    setSearching(true)
-    const t = setTimeout(() => {
-      lookup(q)
-        .then((r) => live && setResults(r))
-        .catch(() => live && setResults([]))
-        .finally(() => live && setSearching(false))
-    }, 250)
-    return () => {
-      live = false
-      clearTimeout(t)
-    }
-  }, [query, lookup])
-
-  const shown = results.filter((e) => !addedPubs.has(e.pub))
-
-  return (
-    <div className="mt-3">
-      <Input
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        placeholder="Search the directory by name…"
-        className="text-body-sm"
-        spellCheck={false}
-      />
-      {query.trim() && (
-        <ul className="mt-1.5 max-h-[28vh] divide-y divide-border overflow-y-auto rounded-md border border-border">
-          {searching && shown.length === 0 ? (
-            <li className="flex items-center gap-2 p-2.5 text-body-sm text-muted-foreground">
-              <Loader2 className="size-4 animate-spin" /> Searching…
-            </li>
-          ) : shown.length === 0 ? (
-            <li className="p-2.5 text-body-sm text-muted-foreground">No matches.</li>
-          ) : (
-            shown.map((e) => (
-              <li key={`${e.handle}:${e.pub}`} className="flex items-center gap-2 p-2.5">
-                <span className="min-w-0 flex-1">
-                  <span className="flex items-center gap-1.5">
-                    <span className="truncate text-body-sm font-medium text-text">{e.name}</span>
-                    <AssuranceBadge entry={e} />
-                  </span>
-                  <span className="block truncate text-label text-muted-foreground">{e.handle}</span>
-                  <Fingerprint pub={e.pub} size="sm" className="mt-1" />
-                </span>
-                <Button variant="secondary" size="sm" onClick={() => onPick(e)}>
-                  <Plus /> {isVerifiedAssurance(e.assurance) ? 'Add' : 'Verify'}
-                </Button>
-              </li>
-            ))
-          )}
-        </ul>
-      )}
-    </div>
-  )
-}
-
-function AssuranceBadge({ entry }: { entry: DirectoryEntry }) {
-  const verified = isVerifiedAssurance(entry.assurance)
-  const label = verified
-    ? `verified${entry.verifiedBy ? ` · ${entry.verifiedBy}` : ` · ${entry.assurance}`}`
-    : 'self-asserted'
-  return (
-    <span
-      className={cn(
-        'inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-label',
-        verified ? 'bg-success/15 text-success' : 'bg-warn/15 text-warn'
-      )}
-    >
-      {verified ? <ShieldCheck className="size-3" /> : <ShieldAlert className="size-3" />}
-      {label}
-    </span>
-  )
-}
-
-function ContactRow({
-  contact,
-  onPick,
-  onRemove,
-  onAlias
-}: {
-  contact: Contact
-  onPick: () => void
-  onRemove: () => void
-  onAlias: (alias: string) => void
-}) {
-  const [editing, setEditing] = React.useState(false)
-  const [draft, setDraft] = React.useState(contact.alias ?? '')
-  const label = contact.alias || contact.name
-
-  const commit = () => {
-    onAlias(draft)
-    setEditing(false)
-  }
-
-  return (
-    <li className="flex items-center gap-2 p-2">
-      {editing ? (
-        <Input
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          placeholder={contact.name}
-          autoFocus
-          className="h-7 flex-1 text-body-sm"
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') {
-              e.preventDefault()
-              commit()
-            } else if (e.key === 'Escape') {
-              setEditing(false)
-            }
-          }}
-          onBlur={commit}
-        />
-      ) : (
-        <button
-          type="button"
-          onClick={onPick}
-          className="flex min-w-0 flex-1 items-center gap-2 text-left hover:text-accent"
-        >
-          <span className="truncate text-body-sm font-medium text-text">{label}</span>
-          <Fingerprint pub={contact.pub} size="sm" className="shrink-0" />
-        </button>
-      )}
-      <button
-        type="button"
-        onClick={() => {
-          setDraft(contact.alias ?? '')
-          setEditing((v) => !v)
-        }}
-        aria-label={`Rename ${label}`}
-        className="shrink-0 rounded-sm p-1 text-muted-foreground hover:text-text"
-      >
-        <Pencil className="size-3.5" />
-      </button>
-      <button
-        type="button"
-        onClick={onRemove}
-        aria-label={`Forget ${label}`}
-        className="shrink-0 rounded-sm p-1 text-muted-foreground hover:text-danger"
-      >
-        <X className="size-3.5" />
-      </button>
-    </li>
-  )
-}
-
-function GrantStep({
-  recipientName,
-  recipients,
-  redactedCount,
-  tier,
-  setTier,
-  busy,
-  scanning,
-  reviewNeeded,
-  error,
-  onBack,
-  onReview,
-  onEncrypt
-}: {
-  recipientName: string
-  recipients: Recipient[]
-  redactedCount: number
-  tier: Tier
-  setTier: (t: Tier) => void
-  busy: boolean
-  scanning: boolean
-  reviewNeeded: boolean
-  error: string | null
-  onBack: () => void
-  onReview: () => void
-  onEncrypt: () => void
-}) {
-  const hasSecrets = redactedCount > 0
-  return (
-    <>
-      <DialogTitle>Confirm share</DialogTitle>
-      <DialogDescription>
-        Choose what {recipientName} can read. This is enforced by cryptography, not
-        by the UI.
-      </DialogDescription>
-
-      {/* Who you're sharing with - name + emoji fingerprint (hex on hover). */}
-      <ul className="mt-3 flex flex-wrap gap-1.5">
-        {recipients.map((r) => (
-          <li
-            key={r.pub}
-            className="inline-flex items-center gap-2 rounded-full border border-border bg-bg py-1 pl-3 pr-2.5 text-body-sm"
-          >
-            <span className="font-medium text-text">{r.name}</span>
-            <Fingerprint pub={r.pub} size="sm" showCode={false} />
-          </li>
-        ))}
-      </ul>
-
-      <div className="mt-3 space-y-2">
-        <TierOption
-          label="Body only"
-          desc="The transcript with secrets shown as placeholders."
-          selected={tier === 'body'}
-          onSelect={() => setTier('body')}
-        />
-        <TierOption
-          label={`Body + secrets${hasSecrets ? ` (${redactedCount})` : ''}`}
-          desc={
-            hasSecrets
-              ? 'The transcript plus the real secret values.'
-              : 'No secrets were redacted, so there’s nothing extra to grant.'
-          }
-          selected={tier === 'body+secret'}
-          disabled={!hasSecrets}
-          onSelect={() => hasSecrets && setTier('body+secret')}
-        />
-      </div>
-
-      {error && (
-        <p className="mt-3 flex items-center gap-1.5 text-body-sm text-danger">
-          <TriangleAlert className="size-4" /> {error}
-        </p>
-      )}
-
-      <DialogFooter>
-        <Button variant="ghost" onClick={onBack} disabled={busy}>
-          Back
-        </Button>
-        <Button onClick={reviewNeeded ? onReview : onEncrypt} disabled={busy || scanning}>
-          {busy ? <Loader2 className="animate-spin" /> : null}
-          {scanning ? 'Scanning…' : reviewNeeded ? 'Review secrets' : 'Confirm share'}
-        </Button>
-      </DialogFooter>
-    </>
-  )
-}
-
-function TierOption({
-  label,
-  desc,
-  selected,
-  disabled,
-  onSelect
-}: {
-  label: string
-  desc: string
-  selected: boolean
-  disabled?: boolean
-  onSelect: () => void
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onSelect}
-      disabled={disabled}
-      className={cn(
-        'flex w-full items-start gap-3 rounded-md border p-3 text-left transition-colors',
-        selected ? 'border-accent bg-accent-tint' : 'border-border hover:bg-accent-tint',
-        disabled && 'cursor-not-allowed opacity-50 hover:bg-transparent'
-      )}
-    >
-      <span
-        className={cn(
-          'mt-0.5 grid size-4 shrink-0 place-items-center rounded-full border',
-          selected ? 'border-accent' : 'border-muted'
-        )}
-      >
-        {selected && <span className="size-2 rounded-full bg-accent" />}
-      </span>
-      <span>
-        <span className="block text-body-sm font-medium text-text">{label}</span>
-        <span className="block text-label text-muted-foreground">{desc}</span>
-      </span>
-    </button>
-  )
-}
-
 function ResultStep({
   blob,
   recipientName,
@@ -1056,15 +941,50 @@ function ResultStep({
   redactedBody: Session | null
   onDone: () => void
 }) {
+  const hasRegistry = !!registry.client
+  const registryName = registry.state.status === 'connected' ? registry.state.manifest.name : 'registry'
   const trustedAvailable =
     registry.state.status === 'connected' &&
     registry.state.manifest.modes.includes('trusted') &&
     redactedBody !== null
   const [copied, copy] = useCopy()
-  // Auto-copy on success (PRD-11 FR-6).
+  const [link, setLink] = React.useState('')
+  const [uploading, setUploading] = React.useState(hasRegistry)
+  const [uploadError, setUploadError] = React.useState<string | null>(null)
+
+  // Auto-upload the (already-encrypted) blob to the registry and build a share
+  // link. The registry stores opaque ciphertext; the inbox index is always set so
+  // recipients can find it. No-op when there's no registry (the blob is the artifact).
   React.useEffect(() => {
-    if (blob) copy(blob)
-  }, [blob, copy])
+    const client = registry.client
+    if (!client) return
+    let live = true
+    setUploading(true)
+    setUploadError(null)
+    void (async () => {
+      try {
+        const bytes = new TextEncoder().encode(blob)
+        const indexFor = await Promise.all(recipientPubs.map(pubHash))
+        const ref = await client.put(bytes, { indexFor })
+        if (live) setLink(ref.url ?? appShareLink(ref.id))
+      } catch (e) {
+        if (live) setUploadError(e instanceof Error ? e.message : 'Upload failed.')
+      } finally {
+        if (live) setUploading(false)
+      }
+    })()
+    return () => {
+      live = false
+    }
+  }, [blob, registry.client, recipientPubs])
+
+  // What Copy/Download act on: the share link if we have one, else the raw blob.
+  const copyValue = link || blob
+  // Auto-copy once ready (PRD-11 FR-6): the link when there's a registry, else the blob.
+  React.useEffect(() => {
+    if (!hasRegistry) copy(blob)
+    else if (link) copy(link)
+  }, [hasRegistry, link, blob, copy])
 
   const download = () => {
     const url = URL.createObjectURL(new Blob([blob], { type: 'text/plain' }))
@@ -1084,30 +1004,37 @@ function ResultStep({
         </span>
       </DialogTitle>
       <DialogDescription>
-        Drop it anywhere - Slack, email, a file. Only {recipientName} can read it.
+        Only {recipientName} can read it. Share the link, or download the encrypted file.
       </DialogDescription>
 
-      <div className="mt-3 flex items-start gap-2">
-        <code className="block min-w-0 flex-1 max-h-[40vh] overflow-y-auto rounded-sm border border-border bg-bg px-2 py-1.5 font-mono text-body-sm text-text whitespace-pre-wrap break-all">
-          {blob}
-        </code>
-        <div className="flex shrink-0 flex-col gap-2">
-          <Button variant="secondary" size="icon" aria-label="Copy blob" onClick={() => copy(blob)}>
-            {copied ? <Check className="text-success" /> : <Copy />}
-          </Button>
-          <Button variant="secondary" size="icon" aria-label="Download .cpad" onClick={download}>
-            <Download />
-          </Button>
-        </div>
-      </div>
-
-      {registry.client ? (
-        <RegistryUpload blob={blob} registry={registry} recipientPubs={recipientPubs} />
+      {hasRegistry ? (
+        uploading ? (
+          <div className="mt-3 flex items-center gap-2 rounded-md border border-border bg-bg p-2.5 text-body-sm text-muted-foreground">
+            <Loader2 className="size-4 animate-spin" /> Creating share link on {registryName}…
+          </div>
+        ) : link ? (
+          <div className="mt-3 min-w-0 rounded-md border border-border bg-bg p-2.5">
+            <p className="text-label text-muted-foreground">Share link (auto-copied)</p>
+            <code className="mt-1 block min-w-0 truncate font-mono text-body-sm text-text">{link}</code>
+            <p className="mt-1.5 text-label text-muted-foreground">
+              Opening the link loads the session straight away. Stored encrypted on{' '}
+              {registryName}; it still can&rsquo;t read the session.
+            </p>
+          </div>
+        ) : (
+          <div className="mt-3 flex items-start gap-2 rounded-md border border-warn/40 bg-warn/10 p-2.5 text-label text-muted-foreground">
+            <ShieldAlert className="mt-0.5 size-4 shrink-0 text-warn" />
+            <span>
+              Couldn&rsquo;t create a short link{uploadError ? ` (${uploadError})` : ''}. Copy or
+              download the encrypted blob instead.
+            </span>
+          </div>
+        )
       ) : (
         <div className="mt-3 flex items-start gap-2 rounded-md border border-border bg-bg p-2.5 text-label text-muted-foreground">
           <ShieldAlert className="mt-0.5 size-4 shrink-0 text-warn" />
           <span>
-            No server holds this. If it’s lost, it’s gone - it can’t be expired,
+            No server holds this. If it&rsquo;s lost, it&rsquo;s gone - it can&rsquo;t be expired,
             revoked, or recovered. (Connect a registry to share a short link instead.)
           </span>
         </div>
@@ -1118,7 +1045,16 @@ function ResultStep({
       )}
 
       <DialogFooter>
-        <Button onClick={onDone}>Done</Button>
+        <Button variant="ghost" onClick={onDone} className="mr-auto">
+          Done
+        </Button>
+        <Button variant="secondary" onClick={download}>
+          <Download /> Download
+        </Button>
+        <Button onClick={() => copy(copyValue)} disabled={uploading}>
+          {copied ? <Check className="text-success" /> : <Copy />}
+          Copy {link ? 'link' : 'blob'}
+        </Button>
       </DialogFooter>
     </>
   )
@@ -1164,7 +1100,7 @@ function TrustedPublish({
         <ShieldAlert className="size-4 text-warn" /> Publish a readable copy to {name}?
       </p>
       <p className="mt-0.5 text-label text-muted-foreground">
-        Unlike the encrypted blob above, a readable copy <strong>can be read by {name}</strong>
+        Unlike the encrypted blob, a readable copy <strong>can be read by {name}</strong>
         {atRest ? ` (at rest: ${atRest})` : ''}. Use this only for a store your team is meant
         to read. Secrets stay redacted as placeholders.
       </p>
@@ -1194,95 +1130,9 @@ function TrustedPublish({
 }
 
 /**
- * Optional: upload the (already-encrypted) blob to the connected registry and
- * get a short link. In zero-knowledge mode the registry stores opaque ciphertext
- * - it can't read the session. Inbox indexing is off unless the user opts in.
- */
-function RegistryUpload({
-  blob,
-  registry,
-  recipientPubs
-}: {
-  blob: string
-  registry: RegistryApi
-  recipientPubs: string[]
-}) {
-  const [copied, copy] = useCopy()
-  const [link, setLink] = React.useState('')
-  const [busy, setBusy] = React.useState(false)
-  const [error, setError] = React.useState<string | null>(null)
-  const [addToInbox, setAddToInbox] = React.useState(false)
-  const registryName = registry.state.status === 'connected' ? registry.state.manifest.name : 'registry'
-
-  const upload = async () => {
-    if (!registry.client) return
-    setBusy(true)
-    setError(null)
-    try {
-      const bytes = new TextEncoder().encode(blob)
-      const indexFor = addToInbox ? await Promise.all(recipientPubs.map(pubHash)) : undefined
-      const ref = await registry.client.put(bytes, indexFor ? { indexFor } : {})
-      // Prefer the registry's own short link (a `/s/:id` that redirects into the
-      // app); fall back to an app link off our origin if it doesn't issue one.
-      const out = ref.url ?? appShareLink(ref.id)
-      setLink(out)
-      void copy(out)
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Upload failed.')
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  if (link) {
-    return (
-      <div className="mt-3 min-w-0 rounded-md border border-border bg-bg p-2.5">
-        <p className="text-label text-muted-foreground">Share link (auto-copied)</p>
-        <div className="mt-1 flex items-center gap-2">
-          <code className="min-w-0 flex-1 truncate font-mono text-body-sm text-text">{link}</code>
-          <Button variant="secondary" size="icon" aria-label="Copy link" onClick={() => copy(link)}>
-            {copied ? <Check className="text-success" /> : <Copy />}
-          </Button>
-        </div>
-        <p className="mt-1.5 text-label text-muted-foreground">
-          Opening the link loads the session straight away. Stored encrypted on{' '}
-          {registryName}; it still can’t read the session.
-        </p>
-      </div>
-    )
-  }
-
-  return (
-    <div className="mt-3 rounded-md border border-border bg-bg p-2.5">
-      <label className="flex cursor-pointer items-start gap-2 text-label text-muted-foreground">
-        <Checkbox
-          checked={addToInbox}
-          onCheckedChange={(v) => setAddToInbox(v === true)}
-          className="mt-0.5"
-        />
-        <span>
-          Let recipients find this in their inbox on {registryName} (reveals to the
-          registry that you shared with them - not the content).
-        </span>
-      </label>
-      {error && (
-        <p className="mt-2 flex items-center gap-1.5 text-body-sm text-danger">
-          <TriangleAlert className="size-4" /> {error}
-        </p>
-      )}
-      <Button variant="secondary" size="sm" className="mt-2" onClick={upload} disabled={busy}>
-        {busy ? <Loader2 className="animate-spin" /> : <Server className="size-4" />}
-        Upload &amp; get a short link
-      </Button>
-    </div>
-  )
-}
-
-/**
- * A click-to-open link into this same SPA: `<origin><path>?share=<id>`. The
- * recipient opens it and the session auto-loads (App reads `?share=` on boot,
- * fetches the opaque blob from their connected registry, and decrypts it). We
- * link to the app, not the registry's raw blob URL, so a click just works.
+ * A click-to-open link into this same SPA: `<origin><path>?share=<id>`. Used as a
+ * fallback when the registry doesn't issue its own short link (its `/s/:id`
+ * redirect is preferred). The recipient opens it and the session auto-loads.
  */
 function appShareLink(id: string): string {
   const u = new URL(window.location.origin + window.location.pathname)

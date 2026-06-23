@@ -1,12 +1,13 @@
-// The human-verifiable fingerprint, rendered (PRD-10 FR-10…FR-12). Emoji are
-// fast to read aloud; the 8-hex code is ALWAYS shown beside them as the exact,
-// accessible fallback for emoji/color-blind users (FR-12). Shown in three places
-// (FR-11): your own identity, a pasted recipient key (PRD-11), and a decrypted
-// blob's sender (PRD-11).
+// The human-verifiable fingerprint, rendered (PRD-10 FR-10…FR-12). A global
+// setting picks the surface - emoji glyphs (default, fast to read aloud) or the
+// 8-hex code - and the other form is always kept in the aria-label/title so
+// emoji/color-blind users and screen readers get the exact code (FR-12). Shown
+// for your own identity, a pasted recipient key, and a decrypted blob's sender.
 
 import * as React from 'react'
 import { fingerprint } from '@claudepad/crypto'
 import { cn } from '../lib/cn'
+import { useAppSettings } from '../settings/appSettings'
 
 /** Compute a key's fingerprint, recomputing only when the raw key changes. */
 export function useFingerprint(pub: string | undefined): {
@@ -31,16 +32,14 @@ export function useFingerprint(pub: string | undefined): {
 export function Fingerprint({
   pub,
   className,
-  size = 'md',
-  showCode = true
+  size = 'md'
 }: {
   pub: string | undefined
   className?: string
   size?: 'sm' | 'md'
-  /** Hide the hex code visually (still in the aria-label for accessibility). */
-  showCode?: boolean
 }) {
   const fp = useFingerprint(pub)
+  const { fingerprintDisplay } = useAppSettings()
   if (!fp) {
     return (
       <span className={cn('text-body-sm text-muted-foreground', className)} aria-hidden>
@@ -50,16 +49,13 @@ export function Fingerprint({
   }
   return (
     <span
-      className={cn('inline-flex items-center gap-2', className)}
+      className={cn('inline-flex items-center', className)}
       // The emoji+code pair IS the identity check; expose both to screen readers
-      // even when the hex is hidden visually (FR-12).
+      // regardless of which form is shown visually (FR-12).
       aria-label={`Fingerprint ${fp.code}`}
-      title={`Fingerprint ${fp.code}`}
+      title={`Fingerprint ${fp.emoji}  ${fp.code}`}
     >
-      <span className={cn('tracking-[0.15em]', size === 'sm' ? 'text-body-sm' : 'text-body')}>
-        {fp.emoji}
-      </span>
-      {showCode && (
+      {fingerprintDisplay === 'hex' ? (
         <span
           className={cn(
             'font-mono tabular-nums text-muted-foreground',
@@ -67,6 +63,10 @@ export function Fingerprint({
           )}
         >
           {fp.code}
+        </span>
+      ) : (
+        <span className={cn('tracking-[0.15em]', size === 'sm' ? 'text-body-sm' : 'text-body')}>
+          {fp.emoji}
         </span>
       )}
     </span>
