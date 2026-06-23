@@ -29,17 +29,17 @@ If a name describes plumbing, rename it after the user-facing intent - and if yo
 
 **P0 + P1 + P2 + P3 + P4 built; P5 launch hardening in progress.** The production monorepo is scaffolded and the first five ROADMAP phases are done and committed:
 
-- **P0 (Foundation):** `@claudepad/schema` (tolerant parser, PRD-02), `@claudepad/shared` (zero-dep WebCrypto core mirroring `poc/`, PRD-05), and `@claudepad/client` design system (tokens, AppShell, primitives on Base UI, `/gallery`, PRD-01).
-- **P1 (MVP-0):** drop/paste a session → prettified `SessionViewer` (PRD-03, in `client/src/viewer/`) fed by `@claudepad/ingest` (PRD-04). Fully offline, local-only; sharing is surfaced-but-disabled until P3.
-- **Post-P1 (frictionless UX, D-46…D-48):** optional File System Access **folder-connect** - grant `~/.claude` once and the sidebar lists every project/session (titles/branch/size read from the file tail, read-only, Chromium-only) - plus a **unified top bar** (breadcrumbs + context + actions in one surface). `client/src/fs/**` + `@claudepad/ingest` `extractSessionMeta`.
-- **P2 (Identity & Trust, PRD-10):** mint/import a client-side ECDH P-256 identity, persisted in IndexedDB; a `none → locked → unlocked` state machine; public-key card (`cp-pub-…`) + identity secret (`cp-id-…`) export; human-verifiable **fingerprint** (emoji + hex); optional **WebAuthn-PRF device protection** (pattern A, wraps the identity at rest). Lives in `client/src/identity/**`; the trust UI is a one-click sidebar-footer popover (D-51). Consumes the already-proven `@claudepad/shared` crypto.
-- **P3 (Trustless Sharing - the moat, PRD-11 + PRD-06):** the headline. A new **`@claudepad/secrets`** package (pure scanner + redactor: prefix/entropy/.env signals, suppressors, opaque `⟦cp-secret:id:TYPE:len⟧` placeholders, body+secret-map split). The client **share flow** (`client/src/share/**`) is a 4-step dialog - mandatory secret **review** → recipient key + **fingerprint confirm** → **tier** (body / body+secrets) → `cp-blob-…` output (auto-copy + `.cpad`). **Receive** pastes/uploads a blob, decrypts with the current identity (fail-closed for non-recipients), shows the sender's fingerprint, and hands the session to the viewer (body+secrets feeds high-priv reveal). Crypto = the already-proven `createBlob`/`openBlob`. **Deferred (D-58, IDEAS.md):** Web-Worker scan, labeled-corpus recall numbers, advanced review (edit-span/merge/sensitivity slider), multi-recipient single blob.
+- **P0 (Foundation):** the tolerant parser (PRD-02), `@claudepad/crypto` (zero-dep WebCrypto core, PRD-05), and `@claudepad/client` design system (tokens, AppShell, primitives on Base UI, `/gallery`, PRD-01). _(The parser/scanner/ingest libs have since folded into `apps/client/src`; see the layout note above and D-84.)_
+- **P1 (MVP-0):** drop/paste a session → prettified `SessionViewer` (PRD-03, in `client/src/viewer/`) fed by the ingest lib (PRD-04, now `apps/client/src/ingest`). Fully offline, local-only; sharing is surfaced-but-disabled until P3.
+- **Post-P1 (frictionless UX, D-46…D-48):** optional File System Access **folder-connect** - grant `~/.claude` once and the sidebar lists every project/session (titles/branch/size read from the file tail, read-only, Chromium-only) - plus a **unified top bar** (breadcrumbs + context + actions in one surface). `client/src/fs/**` + `client/src/ingest` `extractSessionMeta`.
+- **P2 (Identity & Trust, PRD-10):** mint/import a client-side ECDH P-256 identity, persisted in IndexedDB; a `none → locked → unlocked` state machine; public-key card (`cp-pub-…`) + identity secret (`cp-id-…`) export; human-verifiable **fingerprint** (emoji + hex); optional **WebAuthn-PRF device protection** (pattern A, wraps the identity at rest). Lives in `client/src/identity/**`; the trust UI is a one-click sidebar-footer popover (D-51). Consumes the already-proven `@claudepad/crypto` crypto.
+- **P3 (Trustless Sharing - the moat, PRD-11 + PRD-06):** the headline. The secret **scanner + redactor** (PRD-06, now `apps/client/src/secrets`: prefix/entropy/.env signals, suppressors, opaque `⟦cp-secret:id:TYPE:len⟧` placeholders, body+secret-map split). The client **share flow** (`client/src/share/**`) is a 4-step dialog - mandatory secret **review** → recipient key + **fingerprint confirm** → **tier** (body / body+secrets) → `cp-blob-…` output (auto-copy + `.cpad`). **Receive** pastes/uploads a blob, decrypts with the current identity (fail-closed for non-recipients), shows the sender's fingerprint, and hands the session to the viewer (body+secrets feeds high-priv reveal). Crypto = the already-proven `createBlob`/`openBlob`. **Deferred (D-58, IDEAS.md):** Web-Worker scan, labeled-corpus recall numbers, advanced review (edit-span/merge/sensitivity slider), multi-recipient single blob.
 
 - **P4 (Playback - the delight layer, PRD-08):** a pure timeline engine in **`@claudepad/client` `client/src/playback/**`** - `buildTimeline(session, mode, cfg)` over the viewer's render rows (realtime + presentation pacing, idle-collapse, tool-spam fold, **fast-track of thinking/meta**; FR-1/2/9–13), with a rAF clock (`PlaybackProvider`, single monotonic virtual playhead) and pure `resolveFrame`/seek/step derivations. UI = an **in-flow transport bar** (AppShell footer, right of the sidebar - play/pause, prev/next, ARIA-slider **scrubber** with kind-colored ticks + collapsed-gap bands) with a **settings popover** (pacing mode, speed, **appear: instant/type**, reading-speed), a **keyboard map** + help, and **deep-link** query params (`?play=1&mode=present&speed=1.5&appear=type`, never the key fragment). Integrates into the viewer with **progressive reveal + active highlight (reuses PRD-03's `highlighted` ring) + scroll-to-active + opt-in typing reveal** (only the active turn types, paced to its dwell), reduced-motion-aware - no render fork. Pure client-side, zero network. **Deferred (D-59/D-60, IDEAS.md):** in-transcript "ran X ×k"/"N min later" affordances (folding/idle are in the timeline + scrubber), ghosted previews, pacing tuning + ≥5k-event perf smoke.
 
-**As-built stack** (deviations from the intended-stack sketch are recorded in `docs/DECISIONS.md` D-34…D-44): pnpm workspaces · TS strict · React 19 · **Vite 8 + Tailwind v4 (CSS-first)** · **Vitest 4** · Playwright · shadcn-style primitives hand-composed on Base UI · self-hosted fonts via `@fontsource` · Shiki fine-grained core (no wasm). Gate: `pnpm check` (typecheck + lint + no-raw-hex + WCAG contrast + tests + `poc/verify.mjs`).
+**As-built stack** (deviations from the intended-stack sketch are recorded in `docs/DECISIONS.md` D-34…D-44): pnpm workspaces · TS strict · React 19 · **Vite 8 + Tailwind v4 (CSS-first)** · **Vitest 4** · Playwright · shadcn-style primitives hand-composed on Base UI · self-hosted fonts via `@fontsource` · Shiki fine-grained core (no wasm). Gate: `pnpm check` (typecheck + lint + no-raw-hex + WCAG contrast + tests).
 
-- **P5 (Self-Hosting & Launch, PRD-09 - serverless scope, D-66…D-70):** the v1 deploy path was already shipped (Vite build → `packages/client/dist`, served by anything; `claudepad.io` via `packages/client/wrangler.jsonc`). P5 adds the launch *artifacts*: `LICENSE` (MIT, D-67), public plain-language `docs/THREAT-MODEL.md`, `SECURITY.md`, `CONTRIBUTING.md`, `CHANGELOG.md`, rewritten `README.md`, `docs/self-hosting.md`, `docs/verify-zero-knowledge.md` + `scripts/check-no-external-origins.mjs` (ZK is reproducible, D-68), and CI/CD (`.github/workflows/{ci,release}.yml`; tag → bundle + SHA-256 + `wrangler` deploy, D-70). PRD-09's docker/Postgres/MinIO/Workers-R2 stack stays **vNext** (the optional store addon). 
+- **P5 (Self-Hosting & Launch, PRD-09 - serverless scope, D-66…D-70):** the v1 deploy path was already shipped (Vite build → `apps/client/dist`, served by anything; `claudepad.io` via `apps/client/wrangler.jsonc`). P5 adds the launch *artifacts*: `LICENSE` (MIT, D-67), public plain-language `docs/THREAT-MODEL.md`, `SECURITY.md`, `CONTRIBUTING.md`, `CHANGELOG.md`, rewritten `README.md`, `docs/self-hosting.md`, `docs/verify-zero-knowledge.md` + `scripts/check-no-external-origins.mjs` (ZK is reproducible, D-68), and CI/CD (`.github/workflows/{ci,release}.yml`; tag → bundle + SHA-256 + `wrangler` deploy, D-70). PRD-09's docker/Postgres/MinIO/Workers-R2 stack stays **vNext** (the optional store addon). 
 
 **Next:** the **independent security review** (FR-16 / Q-12) is **no longer a v1.0 gate** - reclassified to a post-launch recommendation (D-78, supersedes D-69); v1.0 may be tagged with an honest "unaudited, audit welcome" label. Everything else for P5 is in place.
 
@@ -47,7 +47,7 @@ If a name describes plumbing, rename it after the user-facing intent - and if yo
 
 **Registry - the optional store/directory addon (vNext, built 2026-06-22, D-74…D-80):** the deferred "store" seam grown into an open **registry** spanning three trust axes - availability (host the blob), authenticity (an identity **directory** with a registry-declared assurance level: `self`/`domain`/`sso`), and confidentiality (**zero-knowledge by default**, explicit opt-in **trusted** mode). Canonical doc: `docs/REGISTRY-SPEC.md` (absorbs/extends `STORE-PROVIDER-SPEC.md`). Built as three packages outside the launch bundle - `@claudepad/registry-spec` (contract: interfaces, wire DTOs, paths, typed errors, HTTPS-only guard, tolerant manifest parser, OpenAPI on a `/openapi` subpath), `@claudepad/registry` (Cloudflare Worker reference impl, R2 + KV, over a storage-agnostic handler + in-memory backend), `@claudepad/registry-client` (generic `fetch` SDK + conformance suite) - plus an **opt-in, null-by-default client integration** (`client/src/registry/**`): connect a registry, short-link upload + receive-by-id, share-by-name, publish-your-identity, opt-in inbox, consent-gated trusted publish. No `claudepad.io` URL is hardwired; sharing still works fully offline; `check-no-external-origins` stays green. The independent security review is **no longer a v1.0 gate** (D-78, post-launch recommendation).
 
-The repo also contains the finalized **PRD set** (`docs/`) and the **proof of concept** (`poc/`, the crypto reference; `poc/verify.mjs` stays green).
+The repo also contains the finalized **PRD set** (`docs/`). The crypto reference is now `packages/crypto` itself, with `test/conformance.test.ts` as the end-to-end anchor (the standalone `poc/` was retired, D-85).
 
 ## The one decision that shapes everything: v1 is serverless & trustless
 
@@ -66,7 +66,7 @@ docs/
   ROADMAP.md            # phases P0–P5 to v1, build order, success metrics
   IDEAS.md              # running idea / future-task tracker (e.g. Show HN launch)
   CONCEPT.md            # the idea + prior-art / competitive landscape
-  TRUSTLESS-MODEL.md    # ★ canonical v1 crypto/identity design (proven by poc/)
+  TRUSTLESS-MODEL.md    # ★ canonical v1 crypto/identity design (proven by packages/crypto conformance test)
   SECURITY-MODEL.md     # threat-model framing (link/lifecycle sections = vNext)
   REGISTRY-SPEC.md      # ★ registry open spec (store + identity directory + opt-in trusted mode; vNext, D-74…D-77)
   STORE-PROVIDER-SPEC.md# the ZK blob-store axis of REGISTRY-SPEC (open spec; vNext)
@@ -75,31 +75,40 @@ docs/
     _context.md         # ★ canonical shared facts (tech stack, tokens, security, schema)
     README.md           # PRD index + briefs
     PRD-01 … PRD-11     # the PRDs (see index below)
-poc/
-  trustless-share.html  # ★ runnable PoC: identity, encrypt-to-recipient, tiers, fingerprints, WebAuthn-PRF
-  verify.mjs            # 21-check headless crypto conformance anchor (`node poc/verify.mjs`)
-  README.md             # how to run (incl. localhost for WebAuthn)
+apps/
+  client/               # the static SPA (deployable). Absorbs the former
+                        #   schema/secrets/ingest libs under src/{schema,secrets,ingest}
+  registry/             # the registry Cloudflare Worker (deployable, vNext addon)
+packages/               # genuinely shared libraries only
+  crypto/               # ★ zero-dep WebCrypto core (was @claudepad/crypto);
+                        #   test/conformance.test.ts is the crypto conformance anchor
+  registry-spec/        # the open registry contract (interfaces, DTOs, OpenAPI)
+  registry-client/      # the fetch SDK for any conformant registry
+eslint.config.base.mjs  # shared @stylistic ruleset (no prettier); per-package configs extend it
 ```
 
-★ = read these first.
+★ = read these first. **Layout note (D-82…D-86):** deployables live in `apps/`,
+libraries in `packages/`. `apps/` and `packages/` packages are both two levels
+deep, so cross-references use `../../`. There is no `poc/` anymore - its crypto
+conformance checks were ported to `packages/crypto/test/conformance.test.ts`,
+which runs against the production core (not a separate reference).
 
 ### PRD index
 - **01** Design System · **02** Parser & Schema · **03** Viewer · **04** Ingest & Share Output · **05** Crypto Core & Recipient Wrapping · **06** Secret Detection & Tiered Reveal · **08** Playback · **09** Self-Hosting (Static) & Launch · **10** Identity, Trust & Device Keys · **11** Trustless Recipient Sharing.
 - **07** (Store Provider Spec & Reference Impl) is **vNext / deferred** - not v1.
 
-## The PoC is the reference implementation
+## The crypto core is the reference (`packages/crypto`)
 
-`poc/` already proves the crypto/identity/sharing core. Production code should mirror it and keep `poc/verify.mjs` green.
+`@claudepad/crypto` (formerly `@claudepad/shared`) is the zero-dependency WebCrypto core. Its `test/conformance.test.ts` runs the full trustless-share narrative end-to-end against the production code (it replaced the old `poc/verify.mjs`, which tested a separate reference). Keep that suite green; don't introduce a crypto library for the v1 core.
 
 - **Crypto (zero-dependency WebCrypto):** AES-256-GCM (content/wrap), ECDH **P-256** (identity + key agreement), HKDF-SHA256 (derivation), SHA-256 (fingerprints). No custom primitives, no `crypto-js`.
 - **Share = ephemeral sealed box:** per share, generate an ephemeral ECDH keypair; `KW = HKDF(ECDH(eph, recipientPub))`; wrap two **independent** content keys `{ K_body, K_secret? }` under `KW`; encrypt body with `K_body`, secret map with `K_secret`. Tier = which keys you wrap (body-only omits the secret layer).
 - **Fingerprint:** `SHA-256(rawPublicKey)` → 6 emoji (palette of 64) + 8-hex code; shown for your key, a recipient's, and a blob's sender.
 - **Device keys:** WebAuthn **PRF** extension as a local key oracle (no server). Pattern A (default) = PRF output → KEK that wraps the stored private key. PRF evaluated **at registration** to avoid a double prompt. Needs a real origin (not `file://`).
-- Run the PoC over localhost for WebAuthn: `cd poc && python3 -m http.server 8782` → `http://localhost:8782/trustless-share.html`. Verify crypto: `node poc/verify.mjs`.
 
 ## Intended tech stack (for the monorepo, next session)
 
-TypeScript (strict) · Vite + React 19 · shadcn/ui on base-ui + Tailwind · WebCrypto (zero-dep core; `@noble/curves` only if the opt-in multi-device "pattern B" identity ships) · Vitest + Playwright. Target a **single static bundle** (self-host = serve files). Planned layout: `packages/{client, shared, cli}` (no `server` in v1).
+TypeScript (strict) · Vite + React 19 · shadcn/ui on base-ui + Tailwind · WebCrypto (zero-dep core; `@noble/curves` only if the opt-in multi-device "pattern B" identity ships) · Vitest + Playwright. Target a **single static bundle** (self-host = serve files). As-built layout: `apps/{client, registry}` (deployables) + `packages/{crypto, registry-spec, registry-client}` (shared libs); no `server` in v1.
 
 ## Working conventions
 
@@ -115,7 +124,7 @@ TypeScript (strict) · Vite + React 19 · shadcn/ui on base-ui + Tailwind · Web
 
 ## Wrapup Config
 
-- check: `pnpm check` (typecheck + lint + no-raw-hex + WCAG contrast + tests + `poc/verify.mjs`)
+- check: `pnpm check` (typecheck + lint + no-raw-hex + WCAG contrast + tests)
 - test: `pnpm test` (covered by `check`)
 - frontend_smoke: yes - `pnpm --filter @claudepad/client run test:e2e` (Playwright)
 - push: yes - remote `origin` = `https://github.com/tobiasstrebitzer/claudepad`
