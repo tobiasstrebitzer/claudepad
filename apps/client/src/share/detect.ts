@@ -11,10 +11,12 @@ export function isShareBlob(text: string): boolean {
 }
 
 /**
- * True when `text` is a registry short link to an opaque blob - a bare https
- * URL whose path is `…/blobs/<id>`. Registry-agnostic on purpose (no hardwired
- * host): it keys off the `/blobs/<id>` path shape so any conformant registry's
- * link routes to receive→fetch-by-id instead of the session parser.
+ * True when `text` is a link that resolves to an opaque share blob. Three shapes,
+ * all registry-agnostic (no hardwired host):
+ *  - an app link `…?share=<id>` (the redirect target - opens straight in the SPA),
+ *  - a registry short link `…/s/<id>` (what we hand out; redirects to the app), or
+ *  - a registry blob link `…/blobs/<id>` (a conformant registry's own URL).
+ * Each routes to receive→fetch-by-id instead of the session parser.
  */
 export function isShareLink(text: string): boolean {
   const t = text.trim()
@@ -22,7 +24,8 @@ export function isShareLink(text: string): boolean {
   try {
     const u = new URL(t)
     if (u.protocol !== 'https:' && u.protocol !== 'http:') return false
-    return /\/blobs\/[^/]+\/?$/.test(u.pathname)
+    if (u.searchParams.get('share')) return true
+    return /\/(?:s|blobs)\/[^/]+\/?$/.test(u.pathname)
   } catch {
     return false
   }

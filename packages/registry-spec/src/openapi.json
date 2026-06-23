@@ -66,6 +66,21 @@
         "responses": { "204": { "description": "Deleted" }, "404": { "$ref": "#/components/responses/Error" } }
       }
     },
+    "/s/{id}": {
+      "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }],
+      "get": {
+        "tags": ["blobs"],
+        "operationId": "openShareLink",
+        "summary": "Redirect a share short link into the paired web app (if manifest.webApp)",
+        "responses": {
+          "302": {
+            "description": "Redirect to webApp?share=<id>&r=<baseUrl>",
+            "headers": { "Location": { "schema": { "type": "string" } } }
+          },
+          "404": { "$ref": "#/components/responses/Error" }
+        }
+      }
+    },
     "/inbox": {
       "get": {
         "tags": ["blobs"],

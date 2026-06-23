@@ -31,11 +31,14 @@ export function useFingerprint(pub: string | undefined): {
 export function Fingerprint({
   pub,
   className,
-  size = 'md'
+  size = 'md',
+  showCode = true
 }: {
   pub: string | undefined
   className?: string
   size?: 'sm' | 'md'
+  /** Hide the hex code visually (still in the aria-label for accessibility). */
+  showCode?: boolean
 }) {
   const fp = useFingerprint(pub)
   if (!fp) {
@@ -48,21 +51,24 @@ export function Fingerprint({
   return (
     <span
       className={cn('inline-flex items-center gap-2', className)}
-      // The emoji+code pair IS the identity check; expose both to screen readers.
+      // The emoji+code pair IS the identity check; expose both to screen readers
+      // even when the hex is hidden visually (FR-12).
       aria-label={`Fingerprint ${fp.code}`}
       title={`Fingerprint ${fp.code}`}
     >
       <span className={cn('tracking-[0.15em]', size === 'sm' ? 'text-body-sm' : 'text-body')}>
         {fp.emoji}
       </span>
-      <span
-        className={cn(
-          'font-mono tabular-nums text-muted-foreground',
-          size === 'sm' ? 'text-label' : 'text-body-sm'
-        )}
-      >
-        {fp.code}
-      </span>
+      {showCode && (
+        <span
+          className={cn(
+            'font-mono tabular-nums text-muted-foreground',
+            size === 'sm' ? 'text-label' : 'text-body-sm'
+          )}
+        >
+          {fp.code}
+        </span>
+      )}
     </span>
   )
 }

@@ -5,3 +5,4 @@
 export { RegistryProvider, useRegistry, type RegistryApi, type RegistryState } from './RegistryProvider'
 export { RegistryControl } from './RegistryControl'
 export { pubHash } from './pubHash'
+export { fetchSharedBlob } from './sharedBlob'

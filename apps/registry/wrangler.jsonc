@@ -8,6 +8,7 @@
     "REGISTRY_ID": "claudepad.io/registry",
     "REGISTRY_NAME": "claudepad.io registry",
     "REGISTRY_BASE_URL": "https://registry.claudepad.io",
+    "REGISTRY_WEB_APP": "https://claudepad.io",
     "REGISTRY_MODES": "zero-knowledge",
     "REGISTRY_DIRECTORY": "true"
   },

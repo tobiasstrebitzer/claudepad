@@ -310,6 +310,7 @@ export function ShareDialog({
         ) : step === 'grant' ? (
           <GrantStep
             recipientName={recipientLabel}
+            recipients={recipients}
             redactedCount={redactedCount}
             tier={tier}
             setTier={setTier}
@@ -914,6 +915,7 @@ function ContactRow({
 
 function GrantStep({
   recipientName,
+  recipients,
   redactedCount,
   tier,
   setTier,
@@ -926,6 +928,7 @@ function GrantStep({
   onEncrypt
 }: {
   recipientName: string
+  recipients: Recipient[]
   redactedCount: number
   tier: Tier
   setTier: (t: Tier) => void
@@ -945,6 +948,19 @@ function GrantStep({
         Choose what {recipientName} can read. This is enforced by cryptography, not
         by the UI.
       </DialogDescription>
+
+      {/* Who you're sharing with - name + emoji fingerprint (hex on hover). */}
+      <ul className="mt-3 flex flex-wrap gap-1.5">
+        {recipients.map((r) => (
+          <li
+            key={r.pub}
+            className="inline-flex items-center gap-2 rounded-full border border-border bg-bg py-1 pl-3 pr-2.5 text-body-sm"
+          >
+            <span className="font-medium text-text">{r.name}</span>
+            <Fingerprint pub={r.pub} size="sm" showCode={false} />
+          </li>
+        ))}
+      </ul>
 
       <div className="mt-3 space-y-2">
         <TierOption
@@ -1206,7 +1222,9 @@ function RegistryUpload({
       const bytes = new TextEncoder().encode(blob)
       const indexFor = addToInbox ? await Promise.all(recipientPubs.map(pubHash)) : undefined
       const ref = await registry.client.put(bytes, indexFor ? { indexFor } : {})
-      const out = ref.url ?? ref.id
+      // Prefer the registry's own short link (a `/s/:id` that redirects into the
+      // app); fall back to an app link off our origin if it doesn't issue one.
+      const out = ref.url ?? appShareLink(ref.id)
       setLink(out)
       void copy(out)
     } catch (e) {
@@ -1219,7 +1237,7 @@ function RegistryUpload({
   if (link) {
     return (
       <div className="mt-3 min-w-0 rounded-md border border-border bg-bg p-2.5">
-        <p className="text-label text-muted-foreground">Short link (auto-copied)</p>
+        <p className="text-label text-muted-foreground">Share link (auto-copied)</p>
         <div className="mt-1 flex items-center gap-2">
           <code className="min-w-0 flex-1 truncate font-mono text-body-sm text-text">{link}</code>
           <Button variant="secondary" size="icon" aria-label="Copy link" onClick={() => copy(link)}>
@@ -1227,7 +1245,8 @@ function RegistryUpload({
           </Button>
         </div>
         <p className="mt-1.5 text-label text-muted-foreground">
-          Stored encrypted on {registryName}; it still can’t read the session.
+          Opening the link loads the session straight away. Stored encrypted on{' '}
+          {registryName}; it still can’t read the session.
         </p>
       </div>
     )
@@ -1257,6 +1276,18 @@ function RegistryUpload({
       </Button>
     </div>
   )
+}
+
+/**
+ * A click-to-open link into this same SPA: `<origin><path>?share=<id>`. The
+ * recipient opens it and the session auto-loads (App reads `?share=` on boot,
+ * fetches the opaque blob from their connected registry, and decrypts it). We
+ * link to the app, not the registry's raw blob URL, so a click just works.
+ */
+function appShareLink(id: string): string {
+  const u = new URL(window.location.origin + window.location.pathname)
+  u.searchParams.set('share', id)
+  return u.toString()
 }
 
 function hashString(s: string): number {

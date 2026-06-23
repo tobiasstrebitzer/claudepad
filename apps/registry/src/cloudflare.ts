@@ -134,6 +134,7 @@ export interface Env {
   REGISTRY_DIRECTORY?: string
   REGISTRY_TRUSTED_AT_REST?: string
   REGISTRY_MAX_BYTES?: string
+  REGISTRY_WEB_APP?: string
 }
 
 const KNOWN_MODES: ReadonlySet<RegistryMode> = new Set<RegistryMode>([
@@ -164,6 +165,7 @@ export function manifestFromEnv(env: Env): RegistryManifest {
     manifest.directory = { enabled: true, assurance: ['self'] }
   }
   if (env.REGISTRY_TRUSTED_AT_REST) manifest.trustedAtRest = env.REGISTRY_TRUSTED_AT_REST
+  if (env.REGISTRY_WEB_APP) manifest.webApp = env.REGISTRY_WEB_APP
   return manifest
 }
 

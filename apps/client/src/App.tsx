@@ -9,7 +9,8 @@ import { TooltipProvider } from './components/ui/Tooltip'
 import { readSessionFile, useVault, type VaultSession } from './fs'
 import { IdentityProvider } from './identity'
 import { OnboardingProvider } from './onboarding'
-import { RegistryProvider } from './registry'
+import { fetchSharedBlob, RegistryProvider } from './registry'
+import { SHARE_ID_PARAM, SHARE_REGISTRY_PARAM } from '@claudepad/registry-client'
 import { SessionExperience, sessionTopBar, useSession } from './ingest'
 import { Gallery } from './pages/Gallery'
 import { PlaybackProvider, TransportBar } from './playback'
@@ -64,6 +65,31 @@ export function App() {
   }, [])
 
   const session = useSession({ onShareBlob })
+
+  // A `?share=<id>[&r=<registry>]` deep link (a registry's `/s/:id` redirect
+  // target) opens the session straight away. With `r`, fetch the opaque blob from
+  // that registry - so the link works even if the recipient never connected it;
+  // without it, hand the bare id to the connected registry. Strip the params so a
+  // reload doesn't re-trigger. Runs once on boot.
+  React.useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const id = params.get(SHARE_ID_PARAM)
+    if (!id) return
+    const registryUrl = params.get(SHARE_REGISTRY_PARAM)
+    params.delete(SHARE_ID_PARAM)
+    params.delete(SHARE_REGISTRY_PARAM)
+    const qs = params.toString()
+    window.history.replaceState(
+      null,
+      '',
+      `${window.location.pathname}${qs ? `?${qs}` : ''}${window.location.hash}`
+    )
+    if (registryUrl) {
+      void fetchSharedBlob(registryUrl, id).then((blob) => onShareBlob(blob ?? id))
+    } else {
+      onShareBlob(id)
+    }
+  }, [onShareBlob])
 
   // A single picker for both `.jsonl` sessions and `.cpad` shares - loadFile
   // routes by content (the blob sniff in useSession sends shares to onShareBlob).

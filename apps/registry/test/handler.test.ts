@@ -77,6 +77,27 @@ describe('zero-knowledge blobs', () => {
     expect((await h(new Request(`${BASE}/blobs/id1`))).status).toBe(404)
   })
 
+  it('without webApp: put returns the raw blob url and /s/:id 404s', async () => {
+    const h = makeHandler(zkManifest())
+    const put = await h(new Request(`${BASE}/blobs`, { method: 'POST', body: new Uint8Array([1]) }))
+    expect((await put.json()).url).toBe(`${BASE}/blobs/id1`)
+    expect((await h(new Request(`${BASE}/s/id1`))).status).toBe(404)
+  })
+
+  it('with webApp: put returns a /s/:id short link that redirects to the app', async () => {
+    const h = makeHandler(zkManifest({ webApp: 'https://app.test' }))
+    const put = await h(new Request(`${BASE}/blobs`, { method: 'POST', body: new Uint8Array([1]) }))
+    const { url } = await put.json()
+    expect(url).toBe(`${BASE}/s/id1`)
+
+    const redirect = await h(new Request(`${BASE}/s/id1`, { redirect: 'manual' }))
+    expect(redirect.status).toBe(302)
+    const location = new URL(redirect.headers.get('location')!)
+    expect(location.origin).toBe('https://app.test')
+    expect(location.searchParams.get('share')).toBe('id1')
+    expect(location.searchParams.get('r')).toBe(BASE)
+  })
+
   it('expires and returns gone', async () => {
     let clock = 1000
     const h = makeHandler(zkManifest(), () => clock)

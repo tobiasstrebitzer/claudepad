@@ -13,6 +13,8 @@ import {
   REGISTRY_PATHS,
   RegistryError,
   registrySupportsMode,
+  SHARE_ID_PARAM,
+  SHARE_REGISTRY_PARAM,
   type DirectoryEntry,
   type DirectorySearchResponse,
   type InboxResponse,
@@ -73,11 +75,18 @@ export function createRegistryHandler(
     return auth
   }
 
+  const base = manifest.baseUrl.replace(/\/$/, '')
   function blobUrl(id: string): string {
-    return `${manifest.baseUrl.replace(/\/$/, '')}${REGISTRY_PATHS.blob(id)}`
+    return `${base}${REGISTRY_PATHS.blob(id)}`
   }
   function sessionUrl(id: string): string {
-    return `${manifest.baseUrl.replace(/\/$/, '')}${REGISTRY_PATHS.session(id)}`
+    return `${base}${REGISTRY_PATHS.session(id)}`
+  }
+  // The link we hand out for a blob: a clickable `/s/:id` short link that
+  // redirects into the paired web app when one is configured, else the raw blob
+  // URL (still openable by paste).
+  function shareUrl(id: string): string {
+    return manifest.webApp ? `${base}${REGISTRY_PATHS.share(id)}` : blobUrl(id)
   }
 
   async function route(request: Request): Promise<Response> {
@@ -114,7 +123,21 @@ export function createRegistryHandler(
       }
       const id = generateId()
       await backend.putBlob(id, { bytes, meta })
-      return json(201, { id, url: blobUrl(id) } satisfies PutResponse)
+      return json(201, { id, url: shareUrl(id) } satisfies PutResponse)
+    }
+
+    // --- Share short link: redirect into the paired web app ---
+    const shareMatch = /^\/s\/([^/]+)$/.exec(path)
+    if (shareMatch && method === 'GET') {
+      if (!manifest.webApp) throw new RegistryError('not_found', 'No web app configured')
+      const id = decodeURIComponent(shareMatch[1] ?? '')
+      const target = new URL(manifest.webApp)
+      target.searchParams.set(SHARE_ID_PARAM, id)
+      target.searchParams.set(SHARE_REGISTRY_PARAM, base)
+      return new Response(null, {
+        status: 302,
+        headers: { location: target.toString(), ...CORS_HEADERS }
+      })
     }
 
     const blobMatch = /^\/blobs\/([^/]+)$/.exec(path)

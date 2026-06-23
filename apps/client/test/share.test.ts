@@ -94,6 +94,17 @@ describe('home-surface sniffing (routes a registry short link to receive)', () =
     expect(isShareLink('http://localhost:8787/blobs/xyz')).toBe(true);
   });
 
+  it('isShareLink matches an app ?share=<id> deep link', () => {
+    expect(isShareLink('https://claudepad.io/?share=f0910ee6-ba1d-451a-89d0')).toBe(true);
+    expect(isShareLink('  https://claudepad.io/app/?share=abc123  ')).toBe(true);
+    expect(isShareLink('http://localhost:5173/?share=xyz')).toBe(true);
+  });
+
+  it('isShareLink matches a registry /s/<id> short link', () => {
+    expect(isShareLink('https://registry.claudepad.io/s/8ca1c2ae-6c96-49b3')).toBe(true);
+    expect(isShareLink('http://localhost:8787/s/xyz')).toBe(true);
+  });
+
   it('isShareLink rejects non-links and non-blob URLs', () => {
     expect(isShareLink('cp-blob-abc')).toBe(false); // an inline blob, not a link
     expect(isShareLink('https://registry.claudepad.io/directory/dana')).toBe(false);

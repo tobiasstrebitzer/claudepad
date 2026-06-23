@@ -103,6 +103,7 @@ export interface RegistryManifest {
   readonly name: string;               // human label shown in the UI
   readonly baseUrl: string;            // MUST be https:// (or http://localhost for dev)
   readonly tls: 'required';            // the only legal value; clients reject otherwise
+  readonly webApp?: string;            // §7.1: the SPA this registry is paired with. Set => it serves a /s/<id> share link that redirects here. Absent => no redirect.
   readonly modes: Array<'zero-knowledge' | 'trusted'>;  // confidentiality (§4)
   readonly directory?: {               // authenticity (§5); absent => no directory
     enabled: boolean;
@@ -152,6 +153,7 @@ All over HTTPS. Endpoints are illustrative; the reference implementation pins th
 | `GET` | `/.well-known/claudepad-registry` | Capability manifest (§6) | any |
 | `POST` | `/blobs` | Upload opaque ciphertext (+ optional `indexFor`) → `{ id, url }` | zero-knowledge |
 | `GET` | `/blobs/{id}` | Fetch opaque bytes | zero-knowledge |
+| `GET` | `/s/{id}` | Share short link: 302 → `webApp?share=<id>&r=<baseUrl>` (only if `webApp` set, §7.1) | zero-knowledge |
 | `GET` | `/inbox` (authn) | List ids addressed to my pub (opt-in index) | zero-knowledge |
 | `POST` | `/sessions` | Upload a **readable** session over TLS → `{ id, url }` | trusted |
 | `GET` | `/sessions/{id}` (authz) | Fetch a readable session (org access control) | trusted |
@@ -162,6 +164,16 @@ All over HTTPS. Endpoints are illustrative; the reference implementation pins th
 | `DELETE` | `/blobs/{id}` / `/sessions/{id}` | Lifecycle, if `capabilities.delete` | any |
 
 Abuse/takedown: in **zero-knowledge** mode an operator acts on **id + reports**, never content (it can't read it); in **trusted** mode the operator can moderate content directly (a property of having chosen to be readable).
+
+### 7.1 Share short links (D-87)
+
+A blob `id` is not friendly to hand to a person. When a registry advertises a `webApp` in its manifest, it also serves a **clickable short link** that opens the session in that app:
+
+- `POST /blobs` returns `url` = `…/s/<id>` (instead of the raw `/blobs/<id>`). This is what the client surfaces as the "Share link".
+- `GET /s/<id>` responds **302** → `webApp?share=<id>&r=<baseUrl>`.
+- The app reads `share` (the blob id) and the optional `r` (the issuing registry), fetches the **opaque** ciphertext from `r`, and decrypts locally. Because the link carries its own registry, it opens even for a recipient who never connected that registry - no prior setup, nothing leaks (the registry only ever serves ciphertext).
+
+The link **points at the registry, not the app**, so the client stays registry-agnostic: the registry (which alone knows its own URL and paired app) owns the redirect. `r` is runtime data over the existing HTTPS-guarded fetch path, so no origin is hardwired and the no-external-origins gate stays green. A registry with no `webApp` simply omits the redirect and returns the raw blob URL (still openable by paste). Pasted `/s/<id>`, `?share=<id>`, and `/blobs/<id>` links all route to receive-by-id too.
 
 ## 8. Transport & security requirements (D-77)
 

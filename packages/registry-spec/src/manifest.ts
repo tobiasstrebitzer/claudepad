@@ -33,6 +33,12 @@ export interface RegistryManifest {
   baseUrl: string
   /** The only legal value; a client rejects a registry that doesn't declare it. */
   tls: 'required'
+  /**
+   * The web app this registry is paired with. When set, the registry serves a
+   * `/s/:id` share short link that 302-redirects here (with `?share=<id>&r=<baseUrl>`)
+   * so a shared link opens straight in the app. Absent => no short-link redirect.
+   */
+  webApp?: string
   /** Confidentiality modes this registry offers (§4). */
   modes: RegistryMode[]
   /** Directory capability (§5); absent => no identity directory. */

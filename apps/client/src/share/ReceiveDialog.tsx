@@ -3,7 +3,7 @@
 // name, trust only on a match), then hand the session to the viewer. A blob not
 // addressed to us fails closed - no partial render (FR-11).
 
-import { Loader2, ShieldCheck, TriangleAlert, Upload } from 'lucide-react'
+import { Loader2, TriangleAlert, Upload } from 'lucide-react'
 import * as React from 'react'
 import { Button } from '../components/ui/Button'
 import {
@@ -14,7 +14,7 @@ import {
   DialogTitle
 } from '../components/ui/Dialog'
 import { Textarea } from '../components/ui/Textarea'
-import { Fingerprint, useIdentityContext } from '../identity'
+import { useIdentityContext } from '../identity'
 import { useRegistry } from '../registry'
 import { openShare, type OpenShareResult } from './blob'
 import { CP_BLOB_PREFIX } from './detect'
@@ -24,11 +24,13 @@ function looksLikeId(text: string): boolean {
   return !text.trim().startsWith(CP_BLOB_PREFIX)
 }
 
-/** Pull the blob id out of a short URL (last path segment) or use the raw id. */
+/** Pull the blob id out of a link (`?share=<id>` or `…/blobs/<id>`) or use the raw id. */
 function blobIdFrom(text: string): string {
   const t = text.trim()
   try {
     const u = new URL(t)
+    const fromQuery = u.searchParams.get('share')
+    if (fromQuery) return fromQuery
     return decodeURIComponent(u.pathname.split('/').filter(Boolean).pop() ?? t)
   } catch {
     return t
@@ -56,7 +58,6 @@ export function ReceiveDialog({
   const [input, setInput] = React.useState('')
   const [busy, setBusy] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
-  const [result, setResult] = React.useState<OpenShareResult | null>(null)
   const unlocked = idState.status === 'unlocked'
   const registryClient = registry.client
   const [inboxIds, setInboxIds] = React.useState<string[]>([])
@@ -92,7 +93,9 @@ export function ReceiveDialog({
           const bytes = await registryClient.get(blobIdFrom(blobText))
           blobText = new TextDecoder().decode(bytes)
         }
-        setResult(await openShare(idState.identity, blobText))
+        // Opening a session is never gated - decrypt and hand it straight to the
+        // viewer (the sender's name rides along as the session label).
+        onReceived(await openShare(idState.identity, blobText))
       } catch {
         // Fail closed: don't distinguish "not for you" from "corrupt" beyond this.
         setError(
@@ -102,7 +105,7 @@ export function ReceiveDialog({
         setBusy(false)
       }
     },
-    [idState, registryClient]
+    [idState, registryClient, onReceived]
   )
 
   // Reset on open; if a blob was handed in, seed the field and auto-decrypt it
@@ -110,7 +113,6 @@ export function ReceiveDialog({
   React.useEffect(() => {
     if (!open) return
     setError(null)
-    setResult(null)
     const seed = initialBlob?.trim() ?? ''
     setInput(seed)
     if (seed && unlocked) void decrypt(seed)
@@ -135,8 +137,6 @@ export function ReceiveDialog({
               unlocked to decrypt it. Set it up from the sidebar.
             </DialogDescription>
           </>
-        ) : result ? (
-          <Received result={result} onView={() => onReceived(result)} />
         ) : (
           <>
             <DialogTitle>Open an encrypted share</DialogTitle>
@@ -210,39 +210,5 @@ export function ReceiveDialog({
         )}
       </DialogContent>
     </Dialog>
-  )
-}
-
-function Received({
-  result,
-  onView
-}: {
-  result: OpenShareResult
-  onView: () => void
-}) {
-  return (
-    <>
-      <DialogTitle>
-        <span className="flex items-center gap-2">
-          <ShieldCheck className="size-5 text-success" /> Decrypted
-        </span>
-      </DialogTitle>
-      <DialogDescription>
-        Claims to be from <span className="font-medium text-text">{result.from.name}</span> -
-        trust the content only if this fingerprint matches theirs.
-      </DialogDescription>
-
-      <div className="mt-3 rounded-md border border-border bg-bg p-3">
-        <Fingerprint pub={result.from.pub} size="sm" />
-        <p className="mt-2 text-label text-muted-foreground">
-          Granted: {result.tier === 'body+secret' ? 'body + secrets' : 'body only'}
-          {result.tier === 'body' && ' - secrets show as placeholders.'}
-        </p>
-      </div>
-
-      <DialogFooter>
-        <Button onClick={onView}>View session</Button>
-      </DialogFooter>
-    </>
   )
 }

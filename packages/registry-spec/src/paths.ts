@@ -21,6 +21,11 @@ export const REGISTRY_PATHS = {
   blob: (id: string) => `/blobs/${encodeURIComponent(id)}`,
   inbox: '/inbox',
 
+  // A human-clickable share short link. GET redirects (302) to the registry's
+  // paired web app (manifest.webApp) with the blob id + this registry's URL, so
+  // a click opens the session in the app. Absent webApp => the route 404s.
+  share: (id: string) => `/s/${encodeURIComponent(id)}`,
+
   // Trusted mode (readable sessions)
   sessions: '/sessions',
   session: (id: string) => `/sessions/${encodeURIComponent(id)}`,
@@ -32,6 +37,14 @@ export const REGISTRY_PATHS = {
 
 /** Query-param name for a directory search. */
 export const DIRECTORY_QUERY_PARAM = 'q'
+
+/**
+ * Query params on the web-app redirect target of a share short link (`/s/:id`).
+ * The app reads the blob id from `share` and the issuing registry from `r`, then
+ * fetches + decrypts locally - so the link opens for anyone, with no prior setup.
+ */
+export const SHARE_ID_PARAM = 'share'
+export const SHARE_REGISTRY_PARAM = 'r'
 
 /** Header carrying the opt-in inbox index on a blob PUT (comma-separated pub hashes). */
 export const INDEX_FOR_HEADER = 'x-claudepad-index-for'
