@@ -14,23 +14,23 @@ export type AssuranceLevel =
   /** Registry verified control of an email domain / DNS. */
   | 'domain'
   /** Registry authenticated the person via an identity provider (OIDC/SAML). */
-  | 'sso';
+  | 'sso'
 
 export interface DirectoryEntry {
   /** Registry-scoped, e.g. "dana@acme". */
-  handle: string;
+  handle: string
   /** Self-claimed display name (asserts nothing on its own). */
-  name: string;
+  name: string
   /** cp-pub-… public-key card (public key only; never a private key). */
-  pub: string;
+  pub: string
   /** SHA-256(rawPub) emoji+hex fingerprint. The client may recompute it from `pub`. */
-  fingerprint: string;
-  assurance: AssuranceLevel;
+  fingerprint: string
+  assurance: AssuranceLevel
   /** e.g. "acme.com" for domain/sso entries; absent for `self`. */
-  verifiedBy?: string;
+  verifiedBy?: string
 }
 
 /** Whether a level lets the client skip the manual out-of-band fingerprint dance. */
 export function isVerifiedAssurance(level: AssuranceLevel): boolean {
-  return level === 'domain' || level === 'sso';
+  return level === 'domain' || level === 'sso'
 }

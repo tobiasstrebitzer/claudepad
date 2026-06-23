@@ -3,18 +3,18 @@
 // the private key is encrypted until a passkey unlock re-derives the same KEK.
 // Verified by test/conformance.test.ts.
 
-import { utf8ToBytes, bytesToUtf8 } from './base64url';
-import { aesEncrypt, aesDecrypt, deriveDeviceKEK, type AesLayer } from './primitives';
-import { type Identity } from './identity';
-import { CryptoFormatError, CryptoVersionError } from './errors';
+import { utf8ToBytes, bytesToUtf8 } from './base64url'
+import { aesEncrypt, aesDecrypt, deriveDeviceKEK, type AesLayer } from './primitives'
+import { type Identity } from './identity'
+import { CryptoFormatError, CryptoVersionError } from './errors'
 
 /** Encrypt a secret identity under a device KEK derived from `prfBytes`. */
 export async function wrapIdentity(
   id: Identity,
-  prfBytes: Uint8Array,
+  prfBytes: Uint8Array
 ): Promise<AesLayer> {
-  const kek = await deriveDeviceKEK(prfBytes);
-  return aesEncrypt(kek, utf8ToBytes(JSON.stringify(id)));
+  const kek = await deriveDeviceKEK(prfBytes)
+  return aesEncrypt(kek, utf8ToBytes(JSON.stringify(id)))
 }
 
 /**
@@ -23,26 +23,26 @@ export async function wrapIdentity(
  */
 export async function unwrapIdentity(
   wrapped: AesLayer,
-  prfBytes: Uint8Array,
+  prfBytes: Uint8Array
 ): Promise<Identity> {
-  const kek = await deriveDeviceKEK(prfBytes);
-  const bytes = await aesDecrypt(kek, wrapped);
-  return parseIdentityJson(bytes);
+  const kek = await deriveDeviceKEK(prfBytes)
+  const bytes = await aesDecrypt(kek, wrapped)
+  return parseIdentityJson(bytes)
 }
 
 function parseIdentityJson(bytes: Uint8Array): Identity {
-  let obj: unknown;
+  let obj: unknown
   try {
-    obj = JSON.parse(bytesToUtf8(bytes));
+    obj = JSON.parse(bytesToUtf8(bytes))
   } catch {
-    throw new CryptoFormatError('unwrapped identity is not valid JSON');
+    throw new CryptoFormatError('unwrapped identity is not valid JSON')
   }
   if (typeof obj !== 'object' || obj === null) {
-    throw new CryptoFormatError('unwrapped identity is not an object');
+    throw new CryptoFormatError('unwrapped identity is not an object')
   }
-  const id = obj as Record<string, unknown>;
+  const id = obj as Record<string, unknown>
   if (id.v !== 1) {
-    throw new CryptoVersionError(`unsupported identity version: ${String(id.v)}`);
+    throw new CryptoVersionError(`unsupported identity version: ${String(id.v)}`)
   }
   if (
     typeof id.name !== 'string' ||
@@ -50,7 +50,7 @@ function parseIdentityJson(bytes: Uint8Array): Identity {
     typeof id.priv !== 'object' ||
     id.priv === null
   ) {
-    throw new CryptoFormatError('unwrapped identity missing name/pub/priv');
+    throw new CryptoFormatError('unwrapped identity missing name/pub/priv')
   }
-  return { v: 1, name: id.name, pub: id.pub, priv: id.priv as JsonWebKey };
+  return { v: 1, name: id.name, pub: id.pub, priv: id.priv as JsonWebKey }
 }

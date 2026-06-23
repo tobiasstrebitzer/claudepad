@@ -16,7 +16,7 @@ export type RegistryErrorCode =
   | 'payload_too_large'
   | 'rate_limited'
   | 'gone' // burned-after-read or expired
-  | 'server_error';
+  | 'server_error'
 
 /** HTTP status a conformant registry returns for each code. */
 export const ERROR_STATUS: Record<RegistryErrorCode, number> = {
@@ -31,36 +31,36 @@ export const ERROR_STATUS: Record<RegistryErrorCode, number> = {
   payload_too_large: 413,
   rate_limited: 429,
   gone: 410,
-  server_error: 500,
-};
+  server_error: 500
+}
 
 export interface ErrorBody {
-  error: { code: RegistryErrorCode; message: string };
+  error: { code: RegistryErrorCode; message: string }
 }
 
 export class RegistryError extends Error {
-  readonly code: RegistryErrorCode;
-  readonly status: number;
+  readonly code: RegistryErrorCode
+  readonly status: number
 
   constructor(code: RegistryErrorCode, message?: string) {
-    super(message ?? code);
-    this.name = 'RegistryError';
-    this.code = code;
-    this.status = ERROR_STATUS[code];
+    super(message ?? code)
+    this.name = 'RegistryError'
+    this.code = code
+    this.status = ERROR_STATUS[code]
   }
 
   toBody(): ErrorBody {
-    return { error: { code: this.code, message: this.message } };
+    return { error: { code: this.code, message: this.message } }
   }
 }
 
 /** Narrow an unknown JSON body to an ErrorBody. */
 export function isErrorBody(value: unknown): value is ErrorBody {
-  if (typeof value !== 'object' || value === null) return false;
-  const err = (value as { error?: unknown }).error;
+  if (typeof value !== 'object' || value === null) return false
+  const err = (value as { error?: unknown }).error
   return (
     typeof err === 'object' &&
     err !== null &&
     typeof (err as { code?: unknown }).code === 'string'
-  );
+  )
 }

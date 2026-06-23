@@ -4,30 +4,30 @@
  * the wire. Blob bodies are raw octet-stream; everything else is JSON.
  */
 
-import type { AssuranceLevel, DirectoryEntry } from './directory';
+import type { AssuranceLevel, DirectoryEntry } from './directory'
 
 /** Response to a blob/session PUT. */
 export interface PutResponse {
-  id: string;
-  url?: string;
+  id: string
+  url?: string
 }
 
 /** Response to a directory search. */
 export interface DirectorySearchResponse {
-  entries: DirectoryEntry[];
+  entries: DirectoryEntry[]
 }
 
 /** Request body for publishing/claiming an identity card. */
 export interface PublishIdentityRequest {
   /** cp-pub-… public-key card. */
-  card: string;
+  card: string
   /** Handle the caller wants; the registry may scope/override it. */
-  handle?: string;
+  handle?: string
   /** Assurance the caller claims; the registry verifies and may downgrade it. */
-  assurance?: AssuranceLevel;
+  assurance?: AssuranceLevel
 }
 
 /** Response listing inbox ids addressed to the authenticated identity. */
 export interface InboxResponse {
-  ids: string[];
+  ids: string[]
 }

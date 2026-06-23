@@ -1,4 +1,6 @@
-// For more info, see https://github.com/storybookjs/eslint-plugin-storybook#configuration-flat-config-format
+// The client layers React + type-checked rules on the shared base. Formatting
+// (@stylistic) comes from eslint.config.base.mjs so it has one home; there is no
+// prettier and no root `eslint .`.
 import eslint from '@eslint/js'
 import stylistic from '@stylistic/eslint-plugin'
 import jsxA11y from 'eslint-plugin-jsx-a11y'
@@ -6,6 +8,7 @@ import react from 'eslint-plugin-react'
 import reactHooks from 'eslint-plugin-react-hooks'
 import { defineConfig } from 'eslint/config'
 import tseslint from 'typescript-eslint'
+import { stylisticRules } from '../../eslint.config.base.mjs'
 
 export default defineConfig(eslint.configs.recommended, tseslint.configs.recommendedTypeChecked, tseslint.configs.stylisticTypeChecked, {
   languageOptions: {
@@ -22,29 +25,7 @@ export default defineConfig(eslint.configs.recommended, tseslint.configs.recomme
     'react-hooks': reactHooks
   },
   rules: {
-    '@stylistic/space-in-parens': ['error'],
-    '@stylistic/comma-spacing': ['error'],
-    '@stylistic/no-multi-spaces': ['error'],
-    '@stylistic/no-trailing-spaces': ['error'],
-    '@stylistic/no-whitespace-before-property': ['error'],
-    '@stylistic/array-bracket-newline': ['error', 'consistent'],
-    '@stylistic/array-bracket-spacing': ['error'],
-    '@stylistic/arrow-spacing': ['error'],
-    '@stylistic/arrow-parens': ['error', 'always'],
-    '@stylistic/block-spacing': ['error', 'always'],
-    '@stylistic/brace-style': ['error', '1tbs', { 'allowSingleLine': true }],
-    '@stylistic/comma-dangle': ['error', 'never'],
-    '@stylistic/key-spacing': ['error'],
-    '@stylistic/keyword-spacing': ['error'],
-    '@stylistic/member-delimiter-style': ['error', { 'multiline': { 'delimiter': 'none' } }],
-    '@stylistic/no-extra-semi': ['error'],
-    '@stylistic/indent': ['error', 2],
-    '@stylistic/no-multiple-empty-lines': ['error', { 'max': 1, 'maxEOF': 0, 'maxBOF': 0 }],
-    '@stylistic/object-curly-spacing': ['error', 'always'],
-    '@stylistic/quotes': ['error', 'single'],
-    '@stylistic/semi': ['error', 'never'],
-    '@stylistic/space-before-blocks': ['error', 'always'],
-    '@stylistic/space-before-function-paren': ['error', { 'anonymous': 'always', 'named': 'never', 'asyncArrow': 'always' }],
+    ...stylisticRules,
     '@typescript-eslint/adjacent-overload-signatures': 'error',
     '@typescript-eslint/array-type': 'off',
     '@typescript-eslint/await-thenable': 'off',

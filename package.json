@@ -14,9 +14,7 @@
     "typecheck": "pnpm -r run typecheck",
     "test": "vitest run",
     "test:watch": "vitest",
-    "lint": "eslint . && pnpm --filter @claudepad/client run lint && node scripts/check-no-raw-hex.mjs && node scripts/check-contrast.mjs",
-    "format": "prettier --write .",
-    "format:check": "prettier --check .",
+    "lint": "pnpm -r run lint && node scripts/check-no-raw-hex.mjs && node scripts/check-contrast.mjs",
     "verify:no-phone-home": "node scripts/check-no-external-origins.mjs",
     "dev": "pnpm --filter @claudepad/client run dev",
     "check": "pnpm run build && pnpm run typecheck && pnpm run lint && pnpm run test"
@@ -29,7 +27,6 @@
     "eslint-plugin-jsx-a11y": "^6.10.2",
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^7.1.1",
-    "prettier": "^3.4.2",
     "typescript": "^5.7.2",
     "typescript-eslint": "^8.18.1",
     "vitest": "^4.1.9",

@@ -29,7 +29,7 @@
     "source.organizeImports": "explicit"
   },
   "eslint.workingDirectories": [
-    "apps/client"
+    { "mode": "auto" }
   ],
   "editor.formatOnSave": true,
   "editor.rulers": [80],

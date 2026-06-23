@@ -8,8 +8,8 @@ export {
   RegistryClient,
   type RegistryClientOptions,
   type AuthTokenProvider,
-  type FetchLike,
-} from './client';
+  type FetchLike
+} from './client'
 
 // Re-export the contract surface so consumers need a single import.
-export * from '@claudepad/registry-spec';
+export * from '@claudepad/registry-spec'

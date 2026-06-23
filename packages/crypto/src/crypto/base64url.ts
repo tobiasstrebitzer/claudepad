@@ -5,54 +5,54 @@
 // mapping `+/` <-> `-_` and stripping `=` padding. Large inputs are chunked to avoid
 // blowing the argument limit of `String.fromCharCode`.
 
-import { CryptoFormatError } from './errors';
+import { CryptoFormatError } from './errors'
 
-const CHUNK = 0x8000; // 32k bytes per fromCharCode call - safely under arg limits.
+const CHUNK = 0x8000 // 32k bytes per fromCharCode call - safely under arg limits.
 
 /** Encode bytes as base64url (no padding). */
 export function bytesToB64url(u8: Uint8Array): string {
-  let binary = '';
+  let binary = ''
   for (let i = 0; i < u8.length; i += CHUNK) {
-    const slice = u8.subarray(i, i + CHUNK);
-    binary += String.fromCharCode(...slice);
+    const slice = u8.subarray(i, i + CHUNK)
+    binary += String.fromCharCode(...slice)
   }
-  const b64 = btoa(binary);
-  return b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  const b64 = btoa(binary)
+  return b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
 }
 
 /** Decode base64url (padding optional) to bytes. Throws CryptoFormatError on malformed input. */
 export function b64urlToBytes(s: string): Uint8Array {
   if (typeof s !== 'string') {
-    throw new CryptoFormatError('base64url input must be a string');
+    throw new CryptoFormatError('base64url input must be a string')
   }
   if (/[^A-Za-z0-9\-_=]/.test(s)) {
-    throw new CryptoFormatError('malformed base64url: invalid characters');
+    throw new CryptoFormatError('malformed base64url: invalid characters')
   }
-  const b64 = s.replace(/-/g, '+').replace(/_/g, '/');
-  const padLen = (4 - (b64.length % 4)) % 4;
-  const padded = b64 + '='.repeat(padLen);
-  let binary: string;
+  const b64 = s.replace(/-/g, '+').replace(/_/g, '/')
+  const padLen = (4 - (b64.length % 4)) % 4
+  const padded = b64 + '='.repeat(padLen)
+  let binary: string
   try {
-    binary = atob(padded);
+    binary = atob(padded)
   } catch {
-    throw new CryptoFormatError('malformed base64url: cannot decode');
+    throw new CryptoFormatError('malformed base64url: cannot decode')
   }
-  const out = new Uint8Array(binary.length);
+  const out = new Uint8Array(binary.length)
   for (let i = 0; i < binary.length; i++) {
-    out[i] = binary.charCodeAt(i);
+    out[i] = binary.charCodeAt(i)
   }
-  return out;
+  return out
 }
 
-const encoder = new TextEncoder();
-const decoder = new TextDecoder();
+const encoder = new TextEncoder()
+const decoder = new TextDecoder()
 
 /** Encode a string to UTF-8 bytes. */
 export function utf8ToBytes(s: string): Uint8Array {
-  return encoder.encode(s);
+  return encoder.encode(s)
 }
 
 /** Decode UTF-8 bytes to a string. */
 export function bytesToUtf8(u8: Uint8Array): string {
-  return decoder.decode(u8);
+  return decoder.decode(u8)
 }

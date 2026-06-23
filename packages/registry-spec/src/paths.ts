@@ -4,13 +4,13 @@
  */
 
 /** Bumped only on a breaking wire change. */
-export const REGISTRY_PROTOCOL_VERSION = 1;
+export const REGISTRY_PROTOCOL_VERSION = 1
 
 /** Where a registry serves its capability manifest. */
-export const MANIFEST_PATH = '/.well-known/claudepad-registry';
+export const MANIFEST_PATH = '/.well-known/claudepad-registry'
 
 /** Media type for opaque blob bodies (octet-stream by another name). */
-export const BLOB_CONTENT_TYPE = 'application/octet-stream';
+export const BLOB_CONTENT_TYPE = 'application/octet-stream'
 
 export const REGISTRY_PATHS = {
   manifest: MANIFEST_PATH,
@@ -27,11 +27,11 @@ export const REGISTRY_PATHS = {
 
   // Authenticity (directory)
   directory: '/directory',
-  directoryEntry: (handle: string) => `/directory/${encodeURIComponent(handle)}`,
-} as const;
+  directoryEntry: (handle: string) => `/directory/${encodeURIComponent(handle)}`
+} as const
 
 /** Query-param name for a directory search. */
-export const DIRECTORY_QUERY_PARAM = 'q';
+export const DIRECTORY_QUERY_PARAM = 'q'
 
 /** Header carrying the opt-in inbox index on a blob PUT (comma-separated pub hashes). */
-export const INDEX_FOR_HEADER = 'x-claudepad-index-for';
+export const INDEX_FOR_HEADER = 'x-claudepad-index-for'
