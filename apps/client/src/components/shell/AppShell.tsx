@@ -21,6 +21,8 @@ interface AppShellProps {
   /** Pinned below the scrolling canvas, inside the content column (e.g. the
    * playback transport bar) - sits right of the sidebar and never overlaps. */
   footer?: React.ReactNode
+  /** Open the receive flow (inbox + paste a share) from the sidebar footer. */
+  onOpenReceive?: () => void
   children: React.ReactNode
 }
 
@@ -35,6 +37,7 @@ export function AppShell({
   route,
   topbar,
   footer,
+  onOpenReceive,
   children
 }: AppShellProps) {
   const [drawerOpen, setDrawerOpen] = React.useState(false)
@@ -64,6 +67,7 @@ export function AppShell({
           onCollapse={() => setCollapsed(true)}
           vault={vault}
           route={route}
+          onOpenReceive={onOpenReceive}
         />
       </aside>
 
@@ -83,6 +87,7 @@ export function AppShell({
               onSelect={onSelect}
               vault={vault}
               route={route}
+              onOpenReceive={onOpenReceive}
             />
           </div>
         </div>

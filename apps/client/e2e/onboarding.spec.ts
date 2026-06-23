@@ -22,6 +22,8 @@ test.describe('onboarding', () => {
     // Identity step (name only).
     await expect(page.getByRole('heading', { name: 'Create your identity' })).toBeVisible();
     await page.getByLabel('Display name').fill('Tester');
+    // Stay local + hermetic: opt out of the (default-on) registry registration.
+    await page.getByRole('checkbox').uncheck();
     await page.getByRole('button', { name: 'Create identity' }).click();
 
     // Minted -> success, then finish.

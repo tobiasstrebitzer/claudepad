@@ -55,7 +55,7 @@ v1 is **entirely client-side**. There is **no backend**. "The host can't read it
 
 **In v1:** session parsing & prettify · client-minted identity (ECDH P-256 keypair, no account) · encrypt-to-recipient sharing with per-recipient secret tiering · key fingerprints for trust · optional WebAuthn-PRF device protection of the identity · playback. All in the browser.
 
-**Deferred to vNext (consciously giving up):** any server/blob store, hosted `/s/<id>` URLs, fragment-link "share with anyone" mode, expiry / burn / revocation, inbox/discovery, pinning. When a store returns it is an **optional, opt-in addon defined by an open spec** (Bitwarden/Headscale model) - `claudepad.io/store` would be just a reference implementation. **Never put store-specific code or a `claudepad.io/store` URL in the v1 client.**
+**Deferred to vNext (consciously giving up):** any server/blob store, hosted `/s/<id>` URLs, fragment-link "share with anyone" mode, expiry / burn / revocation, inbox/discovery, pinning. When a store returns it is an **optional, opt-in addon defined by an open spec** (Bitwarden/Headscale model) - `claudepad.io/store` would be just a reference implementation. _(Updated by D-88: the now-built `registry.claudepad.io` is referenced as a single constant and recommended as an opt-out default; it stays swappable and offline-capable. Keep store/registry specifics behind that one constant + the open spec, not scattered through the client.)_
 
 See `docs/DECISIONS.md` D-20…D-33 for the full rationale.
 
@@ -114,7 +114,7 @@ TypeScript (strict) · Vite + React 19 · shadcn/ui on base-ui + Tailwind · Web
 
 - **Conform to the canonical docs.** If a PRD conflicts with `docs/prd/_context.md` or `docs/TRUSTLESS-MODEL.md`, those win (or update them deliberately and note it in `DECISIONS.md`).
 - **Keep the crypto zero-dependency and auditable.** Don't introduce a crypto lib for the v1 core.
-- **No server assumptions.** Every flow must work fully offline. No `claudepad.io/store` URL or store code in the client (D-33).
+- **No server assumptions.** Every flow must work fully offline. The client ships no *automatic* server dependency. **Exception (D-88):** `registry.claudepad.io` is now referenced as a single constant (`apps/client/src/registry/defaults.ts`) and recommended as a one-click, opt-out default during onboarding + in the registry popover - still swappable, still offline-capable, and allow-listed in `check-no-external-origins`. Don't scatter the URL elsewhere or assume a registry exists in any flow.
 - **Honesty over polish in security claims.** Surface trade-offs (no recall/expiry, self-claimed names, best-effort redaction) - see `TRUSTLESS-MODEL.md` §7.
 - **Design language:** warm-minimal (paige/white canvas, clay-orange accent), serif display + clean sans, per `_context.md` §4 - Anthropic-inspired but a distinct claudepad identity.
 - Some PRD sections (PRD-05 §4/§7.3/§7.4/§6.6, PRD-07 entirely, parts of PRD-09) describe the **vNext** link/store path and are explicitly banner-tagged - don't implement them for v1.

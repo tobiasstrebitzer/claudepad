@@ -33,7 +33,8 @@ export interface IdentityApi {
   state: IdentityState
   /** True when device protection (WebAuthn PRF on a real origin) can be offered. */
   deviceAvailable: boolean
-  mint(name: string): Promise<void>
+  /** Mint a fresh identity, adopt it, and return it (for immediate publish, etc.). */
+  mint(name: string): Promise<Identity>
   /** Adopt a pasted `cp-id-…` secret. Throws a friendly Error on bad input. */
   importSecret(input: string): Promise<void>
   /** The `cp-pub-…` card to give to others (only meaningful when unlocked). */
@@ -86,7 +87,9 @@ export function useIdentity(storage: IdentityStorage = indexedDbStorage): Identi
 
   const mint = React.useCallback(
     async (name: string) => {
-      await adopt(await mintIdentity(name.trim() || 'anon'))
+      const identity = await mintIdentity(name.trim() || 'anon')
+      await adopt(identity)
+      return identity
     },
     [adopt]
   )

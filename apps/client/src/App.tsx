@@ -201,8 +201,8 @@ export function App() {
   return (
     <TooltipProvider>
       <IdentityProvider>
-        <OnboardingProvider>
-          <RegistryProvider>
+        <RegistryProvider>
+          <OnboardingProvider>
             <RevealProvider secretMap={secretMap}>
               <ExpandProvider>
                 <EventFilterProvider>
@@ -216,6 +216,7 @@ export function App() {
                       }
                       topbar={topbar}
                       footer={<TransportBar />}
+                      onOpenReceive={() => setReceiveOpen(true)}
                     >
                       {isGallery ? (
                         <Gallery />
@@ -246,8 +247,8 @@ export function App() {
                 </EventFilterProvider>
               </ExpandProvider>
             </RevealProvider>
-          </RegistryProvider>
-        </OnboardingProvider>
+          </OnboardingProvider>
+        </RegistryProvider>
       </IdentityProvider>
     </TooltipProvider>
   )

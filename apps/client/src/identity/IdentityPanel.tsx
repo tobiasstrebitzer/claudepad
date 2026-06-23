@@ -107,7 +107,9 @@ function NonePanel() {
         className="space-y-2"
         onSubmit={(e) => {
           e.preventDefault()
-          void mintAction.run(() => mint(name))
+          void mintAction.run(async () => {
+            await mint(name)
+          })
         }}
       >
         <label className="text-label text-muted-foreground" htmlFor="cp-id-name">

@@ -6,6 +6,7 @@ import {
   FileText,
   Folder,
   FolderInput,
+  Inbox,
   Loader2,
   PanelLeftClose,
   RefreshCw,
@@ -43,6 +44,8 @@ interface SidebarProps {
   route: string
   /** Folder-backed navigation (Chromium only); falls back to `recent` when absent. */
   vault?: VaultNav
+  /** Open the receive flow (inbox + paste a share) from the footer. */
+  onOpenReceive?: () => void
   className?: string
 }
 
@@ -56,6 +59,7 @@ export function Sidebar({
   onCollapse,
   route,
   vault,
+  onOpenReceive,
   className
 }: SidebarProps) {
   return (
@@ -94,7 +98,7 @@ export function Sidebar({
         <RecentList recent={recent} activeId={activeId} onSelect={onSelect} />
       )}
 
-      <SidebarFooter route={route} />
+      <SidebarFooter route={route} onOpenReceive={onOpenReceive} />
     </nav>
   )
 }
@@ -401,22 +405,32 @@ function Hint({ icon, children }: { icon?: React.ReactNode; children: React.Reac
   )
 }
 
-function SidebarFooter(_params: { route: string }) {
+function SidebarFooter({ onOpenReceive }: { route: string; onOpenReceive?: () => void }) {
   return (
     <div className="px-2 py-2 border-t border-border flex flex-col gap-0.5">
-      {/* <a
-        href="#/gallery"
-        className={cn(
-          'flex items-center gap-2 rounded-md px-3 py-2 text-body-sm text-muted-foreground',
-          'transition-colors hover:bg-accent-tint hover:text-text',
-          route === '#/gallery' && 'bg-accent-tint text-text'
-        )}
-      >
-        <Palette className="size-4" />
-        Gallery
-      </a> */}
       <IdentityControl />
       <RegistryControl />
+      {onOpenReceive && (
+        <button
+          type="button"
+          onClick={onOpenReceive}
+          className={cn(
+            'flex w-full items-center gap-2 rounded-md px-3 py-2 text-left',
+            'transition-colors hover:bg-accent-tint focus-visible:outline-none',
+            'focus-visible:ring-2 focus-visible:ring-ring'
+          )}
+        >
+          <span className="grid size-7 shrink-0 place-items-center rounded-full bg-accent-tint text-muted-foreground">
+            <Inbox className="size-3.5" />
+          </span>
+          <span className="flex min-w-0 flex-col leading-tight">
+            <span className="truncate text-body-sm text-text">Open a share</span>
+            <span className="truncate text-label text-muted-foreground">
+              paste a blob, or see what&rsquo;s shared with you
+            </span>
+          </span>
+        </button>
+      )}
       <OnboardingControl />
     </div>
   )

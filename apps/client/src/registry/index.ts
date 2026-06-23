@@ -6,3 +6,4 @@ export { RegistryProvider, useRegistry, type RegistryApi, type RegistryState } f
 export { RegistryControl } from './RegistryControl'
 export { pubHash } from './pubHash'
 export { fetchSharedBlob } from './sharedBlob'
+export { DEFAULT_REGISTRY_URL, DEFAULT_REGISTRY_LABEL } from './defaults'

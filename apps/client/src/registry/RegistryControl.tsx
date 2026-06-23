@@ -3,13 +3,14 @@
 // the connected registry can and can't read before you rely on it.
 
 import type { RegistryClient } from '@claudepad/registry-client'
-import { Check, Loader2, Server, TriangleAlert, UploadCloud } from 'lucide-react'
+import { Check, Loader2, Server, Sparkles, TriangleAlert, UploadCloud } from 'lucide-react'
 import * as React from 'react'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
 import { Popover, PopoverContent, PopoverTrigger } from '../components/ui/Popover'
 import { useIdentityContext } from '../identity'
 import { cn } from '../lib/cn'
+import { DEFAULT_REGISTRY_LABEL, DEFAULT_REGISTRY_URL } from './defaults'
 import { useRegistry } from './RegistryProvider'
 
 export function RegistryControl() {
@@ -50,42 +51,74 @@ export function RegistryControl() {
 
 function RegistryPanel() {
   const { url, state, configure, disconnect } = useRegistry()
+  const [custom, setCustom] = React.useState(false)
   const [draft, setDraft] = React.useState(url)
   React.useEffect(() => setDraft(url), [url])
 
-  const connect = () => configure(draft)
+  const connecting = state.status === 'connecting'
+  const isDefault = url.trim() === DEFAULT_REGISTRY_URL
 
   return (
     <div className="flex flex-col gap-3">
       <div>
         <h3 className="text-body font-medium text-text">Registry</h3>
         <p className="mt-0.5 text-label text-muted-foreground">
-          Optional. Point claudepad at a registry to get short links, share by
-          name, and (if the registry offers it) a shared archive. Sharing still
-          works with no registry.
+          Optional. A registry gives you short links and share-by-name. Sharing
+          still works with no registry.
         </p>
       </div>
 
-      <div className="flex gap-2">
-        <Input
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          placeholder="https://registry.example.com"
-          className="font-mono text-body-sm"
-          spellCheck={false}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') {
-              e.preventDefault()
-              connect()
-            }
-          }}
-        />
-        <Button variant="secondary" onClick={connect} disabled={draft.trim() === url.trim()}>
-          Connect
-        </Button>
-      </div>
+      {state.status === 'connected' ? (
+        <>
+          <ConnectedSummary state={state} onDisconnect={disconnect} />
+          {state.manifest.directory?.enabled && <PublishIdentity client={state.client} />}
+        </>
+      ) : custom ? (
+        <>
+          <div className="flex gap-2">
+            <Input
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              placeholder="https://registry.example.com"
+              className="font-mono text-body-sm"
+              spellCheck={false}
+              autoFocus
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault()
+                  configure(draft)
+                }
+              }}
+            />
+            <Button variant="secondary" onClick={() => configure(draft)} disabled={!draft.trim() || connecting}>
+              Connect
+            </Button>
+          </div>
+          <button
+            type="button"
+            onClick={() => setCustom(false)}
+            className="self-start text-label text-muted-foreground hover:text-text"
+          >
+            Use {DEFAULT_REGISTRY_LABEL} instead
+          </button>
+        </>
+      ) : (
+        <>
+          <Button onClick={() => configure(DEFAULT_REGISTRY_URL)} disabled={connecting && isDefault}>
+            {connecting && isDefault ? <Loader2 className="animate-spin" /> : <Sparkles className="size-4" />}
+            Use {DEFAULT_REGISTRY_LABEL}
+          </Button>
+          <button
+            type="button"
+            onClick={() => setCustom(true)}
+            className="self-start text-label text-muted-foreground hover:text-text"
+          >
+            Add a custom registry
+          </button>
+        </>
+      )}
 
-      {state.status === 'connecting' && (
+      {connecting && (
         <p className="flex items-center gap-1.5 text-body-sm text-muted-foreground">
           <Loader2 className="size-4 animate-spin" /> Connecting…
         </p>
@@ -95,11 +128,6 @@ function RegistryPanel() {
         <p className="flex items-start gap-1.5 text-body-sm text-danger">
           <TriangleAlert className="mt-0.5 size-4 shrink-0" /> {state.message}
         </p>
-      )}
-
-      {state.status === 'connected' && <ConnectedSummary state={state} onDisconnect={disconnect} />}
-      {state.status === 'connected' && state.manifest.directory?.enabled && (
-        <PublishIdentity client={state.client} />
       )}
     </div>
   )

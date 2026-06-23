@@ -7,6 +7,13 @@ All notable changes to claudepad are documented here. The format is based on
 
 ## [Unreleased]
 
+### Added
+- **Recommended registry default** (D-88, relaxes D-33): `registry.claudepad.io` is now an easy, opt-out default. Onboarding's name step has a pre-checked "List me on registry.claudepad.io" box (with a Learn-more link) that, on create, checks the handle is free, mints, and publishes your public card; the registry popover leads with a one-click "Use registry.claudepad.io" plus a smaller "Add a custom registry". Sharing still works fully offline; the URL is a single swappable constant, allow-listed in the no-external-origins gate.
+- **Inbox entry point**: a sidebar-footer **"Open a share"** opens the receive flow, which lists what's shared with you on the connected registry ("Shared with me") and accepts a pasted blob / link.
+
+### Changed
+- The share dialog's fingerprint-confirm step is gone (recipients insta-add); fingerprints render as emoji or hex per a new Settings toggle (emoji default); the tier picker moved into the recipient step's footer; the result step auto-creates a share link with Copy/Download. (Carried from the share-flow rework.)
+
 ## [0.10.0] - 2026-06-23 - Share short links + frictionless open
 
 ### Added

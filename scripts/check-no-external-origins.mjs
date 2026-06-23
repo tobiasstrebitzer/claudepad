@@ -28,6 +28,7 @@ const ALLOW = [
   'http://localhost',          // dev/self-host hints
   'https://localhost',
   'https://claudepad.io',      // own canonical origin (links/meta, not a fetch)
+  'https://registry.claudepad.io', // recommended registry (D-88): opt-in/opt-out default, only fetched after user consent
   'https://github.com/',       // repo links in UI text
   'https://developer.mozilla.org/', // doc links in UI text
   'https://tailwindcss.com',   // banner comment in generated CSS
