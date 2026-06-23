@@ -7,6 +7,8 @@ All notable changes to claudepad are documented here. The format is based on
 
 ## [Unreleased]
 
+## [0.11.0] - 2026-06-23 - Easy registry default + streamlined sharing
+
 ### Added
 - **Recommended registry default** (D-88, relaxes D-33): `registry.claudepad.io` is now an easy, opt-out default. Onboarding's name step has a pre-checked "List me on registry.claudepad.io" box (with a Learn-more link) that, on create, checks the handle is free, mints, and publishes your public card; the registry popover leads with a one-click "Use registry.claudepad.io" plus a smaller "Add a custom registry". Sharing still works fully offline; the URL is a single swappable constant, allow-listed in the no-external-origins gate.
 - **Inbox entry point**: a sidebar-footer **"Open a share"** opens the receive flow, which lists what's shared with you on the connected registry ("Shared with me") and accepts a pasted blob / link.

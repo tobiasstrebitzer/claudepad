@@ -1,6 +1,6 @@
 {
   "name": "@claudepad/crypto",
-  "version": "0.10.0",
+  "version": "0.11.0",
   "private": true,
   "description": "Zero-dependency WebCrypto core (PRD-05): ECDH P-256, HKDF-SHA256, AES-256-GCM content/wrap encryption, recipient-wrapped sealed-box blobs, and key fingerprints. Isomorphic (browser + Node). Verified by an end-to-end conformance suite.",
   "license": "MIT",
