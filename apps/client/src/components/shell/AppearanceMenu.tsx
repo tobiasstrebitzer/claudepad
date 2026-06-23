@@ -65,7 +65,7 @@ export function AppearanceMenu() {
           </Button>
         }
       />
-      <PopoverContent align="end" className="w-60 gap-3.5 p-3">
+      <PopoverContent align="end" className="w-70 gap-3.5 p-3">
         <div role="group" aria-label="Mode" className="flex flex-col gap-1.5">
           <span className="text-label uppercase tracking-[0.02em] text-muted-foreground">Mode</span>
           <div className="flex gap-1">
@@ -79,14 +79,14 @@ export function AppearanceMenu() {
                   aria-pressed={active}
                   onClick={() => pickMode(m)}
                   className={cn(
-                    'inline-flex flex-1 items-center justify-center gap-1.5 rounded-md border px-2 py-1 text-body-sm transition-colors',
+                    'inline-flex min-w-0 flex-1 items-center justify-center gap-1 rounded-md border px-1.5 py-1 text-body-sm transition-colors',
                     active
                       ? 'border-accent bg-accent-tint text-accent'
                       : 'border-border text-text hover:bg-accent-tint'
                   )}
                 >
-                  <Icon className="size-3.5" />
-                  {MODE_LABEL[m]}
+                  <Icon className="size-3.5 shrink-0" />
+                  <span className="truncate">{MODE_LABEL[m]}</span>
                 </button>
               )
             })}
@@ -107,7 +107,7 @@ export function AppearanceMenu() {
                   aria-pressed={active}
                   onClick={() => pickPalette(p)}
                   className={cn(
-                    'inline-flex items-center gap-2 rounded-md border px-2 py-1.5 text-body-sm transition-colors',
+                    'inline-flex min-w-0 items-center gap-1.5 rounded-md border px-2 py-1.5 text-body-sm transition-colors',
                     active
                       ? 'border-accent bg-accent-tint text-accent'
                       : 'border-border text-text hover:bg-accent-tint'
@@ -124,7 +124,7 @@ export function AppearanceMenu() {
                   >
                     <span className="size-2 rounded-full" style={{ background: 'var(--accent)' }} />
                   </span>
-                  <span className="flex-1 text-left">{PALETTE_LABEL[p]}</span>
+                  <span className="flex-1 truncate text-left">{PALETTE_LABEL[p]}</span>
                   {active && <Check className="size-3.5 shrink-0" />}
                 </button>
               )
