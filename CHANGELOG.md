@@ -7,6 +7,19 @@ All notable changes to claudepad are documented here. The format is based on
 
 ## [Unreleased]
 
+## [0.14.0] - 2026-06-27 - Claude scorecard generator
+
+### Added
+- **Shareable scorecard (D-94):** a "Scorecard" button in the Usage Insights header opens a dialog that renders a fixed 1200×630 social-share card on a hand-rolled canvas (2× → a 2400×1260 PNG), with Download and Copy-to-clipboard. It pairs vanity metrics (total tokens, est. cost, sessions, projects, active days, top model) with the **metrics that matter** - cache-read ratio + an A–E cache grade, average context/turn, and reset discipline (share of sessions kept under a 1M-token lean line). Colors and fonts come from the live design tokens so the card matches your theme. **Anonymous by default** (no project names, only the count); an opt-in toggle stamps your identity's emoji fingerprint + name. Rendered entirely locally - nothing is uploaded.
+
+## [0.13.0] - 2026-06-26 - Usage Insights dashboard
+
+### Added
+- **Usage Insights (PRD-13, D-91…D-93):** a local, private analytics view (`#/usage`) over the sessions the vault already reads - where your tokens, cost, and time went, global vs per project, computed in the browser with nothing uploaded. Token usage is lifted into the normalized schema, rolled up under a Web-Worker compute with a per-file aggregate cache, and priced from a bundled, dated, editable table (cache-tier-aware). Includes day-granular project/date filtering, a Recharts trend/histogram/model breakdown, a weekday×hour heatmap, and labeled Real Spend / effort estimates.
+
+### Fixed
+- **Cross-file token dedup (D-93):** Claude Code copies the same assistant turn into resumed/sidechain files with fresh UUIDs; the roll-up now deduplicates on `message.id` (matching `ccusage`), fixing a >2× over-count of totals and cost.
+
 ## [0.12.1] - 2026-06-26 - Docs cleanup + code-quality pass
 
 ### Changed
