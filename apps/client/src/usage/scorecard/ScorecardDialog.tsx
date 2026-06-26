@@ -104,7 +104,16 @@ export function ScorecardDialog({ open, onOpenChange, view, rangeLabel }: Scorec
   }, [open, card, identity, rangeLabel])
 
   const toBlob = (): Promise<Blob | null> =>
-    new Promise((resolve) => canvasRef.current?.toBlob(resolve, 'image/png') ?? resolve(null))
+    new Promise((resolve) => {
+      const canvas = canvasRef.current
+      if (!canvas) {
+        resolve(null)
+        return
+      }
+      // toBlob returns void, so the result must come from its callback - not a
+      // `?? resolve(null)` fallback (that would resolve null before the callback).
+      canvas.toBlob(resolve, 'image/png')
+    })
 
   const download = async (): Promise<void> => {
     const blob = await toBlob()
