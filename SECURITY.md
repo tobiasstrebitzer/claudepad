@@ -19,20 +19,20 @@ Please include, as far as you can:
 - reproduction steps or a proof of concept,
 - and any suggested remediation.
 
-If your report concerns the crypto core ([`packages/shared`](packages/shared)) or secret detection ([`packages/secrets`](packages/secrets)), a self-contained failing case against [`poc/verify.mjs`](poc/verify.mjs) or a unit test is the most actionable form.
+If your report concerns the crypto core ([`packages/crypto`](packages/crypto)) or secret detection ([`apps/client/src/secrets`](apps/client/src/secrets)), a self-contained failing case against the crypto conformance suite ([`packages/crypto/test/conformance.test.ts`](packages/crypto/test/conformance.test.ts)) or a unit test is the most actionable form.
 
 ## What's in scope
 
 claudepad v1 is **entirely client-side** - there is no server. The highest-value reports concern:
 
-- **Crypto core** ([`packages/shared`](packages/shared)) - identity, ECDH-to-recipient wrapping, the two-key tiered envelope, fingerprints. Anything that lets a non-recipient decrypt a blob, lets a body-only recipient recover secrets, or weakens the envelope is **critical**.
-- **Secret detection & redaction** ([`packages/secrets`](packages/secrets)) - a missed secret that should plausibly have been caught, a placeholder that leaks the underlying value, or a way to defeat the review step.
+- **Crypto core** ([`packages/crypto`](packages/crypto)) - identity, ECDH-to-recipient wrapping, the two-key tiered envelope, fingerprints. Anything that lets a non-recipient decrypt a blob, lets a body-only recipient recover secrets, or weakens the envelope is **critical**.
+- **Secret detection & redaction** ([`apps/client/src/secrets`](apps/client/src/secrets)) - a missed secret that should plausibly have been caught, a placeholder that leaks the underlying value, or a way to defeat the review step.
 - **Identity & device keys** - key extraction, weakening of WebAuthn-PRF wrapping, or storage that exposes an at-rest private key.
 - **Client web hygiene** - XSS, content-injection, or any third-party-script/CDN path that could exfiltrate an unlocked key. The single-static-bundle, no-CDN posture is a security property; regressions to it are in scope.
 
 ## What's out of scope
 
-These are documented non-goals of v1 (see [`docs/THREAT-MODEL.md`](docs/THREAT-MODEL.md)), not vulnerabilities:
+These are documented non-goals of v1 (see [`docs/threat-model.md`](docs/threat-model.md)), not vulnerabilities:
 
 - Availability / loss of a blob the user didn't keep (no server by design).
 - Revocation, expiry, or burn-after-read (no server by design).
@@ -46,7 +46,7 @@ These are documented non-goals of v1 (see [`docs/THREAT-MODEL.md`](docs/THREAT-M
 - We aim to **acknowledge** a report within **5 business days**.
 - We aim to provide an initial **assessment** within **10 business days**.
 - We practice **coordinated disclosure**: we'll agree on a disclosure timeline with you and credit you (unless you prefer otherwise) once a fix or mitigation is available.
-- Critical/high findings in the crypto core or secret handling are **launch-blocking** for any v1.0 tag (see [`docs/prd/PRD-09-selfhost-launch.md`](docs/prd/PRD-09-selfhost-launch.md) FR-16).
+- Critical/high findings in the crypto core or secret handling are treated as **release-blocking** until fixed. (An independent external security review is a published post-launch recommendation, not a v1.0 gate - see [`docs/threat-model.md`](docs/threat-model.md) and decision D-78.)
 
 ## Supported versions
 
@@ -61,5 +61,5 @@ claudepad is pre-1.0. Only the **latest released version** (and `master`) receiv
 
 You don't have to trust us:
 
-- Run the crypto conformance anchor: `node poc/verify.mjs` (non-recipient lockout, tiered decrypt, no-plaintext-in-blob, fingerprint stability, device-key wrap).
-- Verify zero-knowledge for yourself: follow [`docs/VERIFY_ZERO_KNOWLEDGE.md`](docs/VERIFY_ZERO_KNOWLEDGE.md) (a network capture shows nothing leaves the browser).
+- Run the crypto conformance anchor: `pnpm --filter @claudepad/crypto test` (`packages/crypto/test/conformance.test.ts` - non-recipient lockout, tiered decrypt, no-plaintext-in-blob, fingerprint stability, device-key wrap).
+- Verify zero-knowledge for yourself: follow [`docs/verify-zero-knowledge.md`](docs/verify-zero-knowledge.md) (a network capture shows nothing leaves the browser).

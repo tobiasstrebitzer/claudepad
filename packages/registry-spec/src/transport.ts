@@ -1,5 +1,5 @@
 /**
- * Over-the-wire JSON shapes (REGISTRY-SPEC.md §7). The provider interface deals
+ * Over-the-wire JSON shapes (registry-spec.md §7). The provider interface deals
  * in rich values (Uint8Array, parsed entries); these are what actually crosses
  * the wire. Blob bodies are raw octet-stream; everything else is JSON.
  */

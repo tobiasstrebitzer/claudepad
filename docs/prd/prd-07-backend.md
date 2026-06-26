@@ -5,9 +5,9 @@
 >
 > **What this PRD now is:** the **Store Provider Specification** - an *open HTTP contract* for an **optional, opt-in, zero-knowledge blob store** - plus a **reference implementation** hosted at `claudepad.io/store`. The store is a **spec, not a proprietary service** (Bitwarden / Headscale model): any org can implement it; trusting users can point at `claudepad.io/store`. It stores the opaque encrypted blobs from **PRD-11** (which are already client-side-encrypted) and serves them back by id - adding *convenience* (short URLs) and optional lifecycle, **never** changing the trust model.
 >
-> **v1 ships none of this.** v1 ships only the client seam - the `StoreProvider` interface + `NoStoreProvider` default - per **`../STORE-PROVIDER-SPEC.md`** (the design note). The v1 client contains **no provider implementation and no `claudepad.io/store` URL or store-specific code** (D-33). The endpoint/storage/lifecycle design below is the blueprint for the **reference implementation** when the addon is built; read it through that lens. The "envelope"/"link" references predate the pivot - substitute "the PRD-11 `cp-blob` (opaque ciphertext)" and note that fragment-link URLs are themselves vNext.
+> **v1 ships none of this.** v1 ships only the client seam - the `StoreProvider` interface + `NoStoreProvider` default - per **`../store-provider-spec.md`** (the design note). The v1 client contains **no provider implementation and no `claudepad.io/store` URL or store-specific code** (D-33). The endpoint/storage/lifecycle design below is the blueprint for the **reference implementation** when the addon is built; read it through that lens. The "envelope"/"link" references predate the pivot - substitute "the PRD-11 `cp-blob` (opaque ciphertext)" and note that fragment-link URLs are themselves vNext.
 >
-> Read `_context.md` and `../STORE-PROVIDER-SPEC.md` first.
+> Read `_context.md` and `../store-provider-spec.md` first.
 
 ---
 
@@ -90,7 +90,7 @@ GET /s/<id>            (HTML app shell; key is in #fragment, server never sees i
 - **FR-11** Conditional fetch via `If-None-Match`/`ETag` (ETag = a non-reversible content hash, e.g. truncated SHA-256 of ciphertext) MAY be supported for caching; ETag MUST NOT leak plaintext (ciphertext hash is safe).
 
 ### Lifecycle enforcement
-- **FR-12** **Expiry** is enforced server-side on metadata. A blob whose `expiresAt < now` MUST be treated as `410 Gone` on fetch and SHOULD be deleted lazily on access and proactively by a sweeper (FR-16). Content stays encrypted regardless (`SECURITY-MODEL.md` §"Lifecycle controls").
+- **FR-12** **Expiry** is enforced server-side on metadata. A blob whose `expiresAt < now` MUST be treated as `410 Gone` on fetch and SHOULD be deleted lazily on access and proactively by a sweeper (FR-16). Content stays encrypted regardless (`security-model.md` §"Lifecycle controls").
 - **FR-13** **Burn-after-read**: a blob with `burnAfterRead = true` MUST be deleted after the **first successful body fetch** via `GET /v1/blobs/<id>` (not `/meta`).
 - **FR-14** The burn read path MUST perform a **conditional/atomic claim** so that at most one fetch is served the body when possible: e.g. an atomic `UPDATE … SET burned = 1 WHERE id = ? AND burned = 0` (D1/Postgres) gating whether this request is allowed to read+serve. The winning request serves the body and schedules ciphertext deletion; losers get `410`.
 - **FR-15** Where the storage backend cannot guarantee a single-winner claim (e.g. KV's eventual consistency), the server MUST document the **at-most-but-not-exactly-once** caveat (a brief race window may serve the body to ≤ N concurrent readers) and still delete promptly. This is an honest-limits item, surfaced in docs (§8, §11).
@@ -332,11 +332,11 @@ export interface AbuseStore {
 - **Self-host adapter:** R2→S3-compatible (`@aws-sdk/client-s3` / MinIO), D1→Postgres (same SQL), rate-limit → in-process token bucket. Wired by PRD-09's `docker compose`.
 
 ### 7.5 ID & URL scheme (coordinated with PRD-05)
-- `id` = 22-char base62, ≥128-bit CSPRNG (FR-19). Share URL (PRD-05 builds): `https://<host>/s/<id>#<K_body>[.<K_secret>]`. The server only ever sees the path; the `#`-fragment (the key material) is never transmitted (`SECURITY-MODEL.md` §"Layer 1"). `/s/:id` serves the SPA (FR-25); the SPA fetches `/v1/blobs/:id`.
+- `id` = 22-char base62, ≥128-bit CSPRNG (FR-19). Share URL (PRD-05 builds): `https://<host>/s/<id>#<K_body>[.<K_secret>]`. The server only ever sees the path; the `#`-fragment (the key material) is never transmitted (`security-model.md` §"Layer 1"). `/s/:id` serves the SPA (FR-25); the SPA fetches `/v1/blobs/:id`.
 
 ## 8. Security & privacy
 
-Conforms to `_context.md` §5 / `SECURITY-MODEL.md`:
+Conforms to `_context.md` §5 / `security-model.md`:
 - **Zero-knowledge (§5.1):** the body is opaque ciphertext; no endpoint, log, or metric ever sees plaintext or keys. Keys travel only in the fragment, which never reaches the server. The server stores `{id → ciphertext + metadata}` and "nothing else sensitive." **PRD-07 conforms; it does not weaken the model.**
 - **Lifecycle (§5.6):** TTL and burn enforced on metadata only; ciphertext is never decrypted to enforce them (FR-12–FR-16).
 - **Content-blind observability (FR-27):** no body, no full `id` at info level (salted-hash/prefix only), no key-bearing headers, no query strings, no `Referer`, no fragment (the server can't see it anyway, but we don't log paths in a way that could correlate). Metrics = counts/sizes/status/latency/backend name. This directly protects the §5.7 metadata-leak surface from being *amplified* by our own logs.
@@ -352,7 +352,7 @@ Conforms to `_context.md` §5 / `SECURITY-MODEL.md`:
 
 **Upstream**
 - **PRD-05 (Crypto Core):** owns and defines the **envelope wire format** stored by this API; agrees the `/s/<id>#<key>` URL scheme and `id` shape (§7.5). PRD-07 treats the envelope as opaque.
-- **`_context.md` §3/§5, `SECURITY-MODEL.md`:** tech stack and the security model this conforms to.
+- **`_context.md` §3/§5, `security-model.md`:** tech stack and the security model this conforms to.
 
 **Downstream**
 - **PRD-09 (Self-Hosting & Launch):** wires the self-host `StorageAdapter` (Postgres + S3/MinIO) into `docker compose`, owns the config/env reference (FR-26), deploys the Cloudflare target, and publishes the operator abuse/takedown policy. Runs the security review gating the API.

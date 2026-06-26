@@ -1,5 +1,5 @@
 /**
- * The HTTP contract surface (REGISTRY-SPEC.md §7). One source of truth for
+ * The HTTP contract surface (registry-spec.md §7). One source of truth for
  * paths, shared by the reference Worker and the client SDK so they can't drift.
  */
 

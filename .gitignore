@@ -35,3 +35,6 @@ test-results/
 *.cpblob
 *.cpad
 claudepad-identity-*.txt
+
+# roam local cache
+.roam/

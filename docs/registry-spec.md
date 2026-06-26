@@ -2,7 +2,7 @@
 
 > **Status:** open spec, **vNext** (the optional addon). **v1 ships the seam, not the registry** - the static client contains no registry implementation and no `claudepad.io` registry URL (extends DECISIONS D-30…D-33, D-74).
 > **Principle:** a registry is an **open contract, not a proprietary service**. Like Bitwarden (point your client at any server URL) or Tailscale↔Headscale (open protocol + reference control server), `claudepad.io/registry` would be *one* free, open-source reference implementation - vendors and teams run their own.
-> **Supersedes scope:** this absorbs and extends `STORE-PROVIDER-SPEC.md` (the zero-knowledge blob store is now one axis of a registry).
+> **Supersedes scope:** this absorbs and extends `store-provider-spec.md` (the zero-knowledge blob store is now one axis of a registry).
 
 ## 0. One paragraph
 
@@ -22,13 +22,13 @@ A registry is trusted along (at most) three **independent** axes. A registry adv
 | **Authenticity** | Does pubkey X really belong to person Y? | Out-of-band **fingerprint** only | A **directory** that vouches at a declared assurance level |
 | **Confidentiality** | Can the registry read the session? | No host exists, so no | **Default: no** (opaque ciphertext). **Opt-in trusted mode: yes** |
 
-The existing `STORE-PROVIDER-SPEC.md` covered a zero-knowledge slice of **Availability** only. This spec keeps that and adds **Authenticity** (the directory) and an explicit, opt-in relaxation of **Confidentiality** (trusted mode).
+The existing `store-provider-spec.md` covered a zero-knowledge slice of **Availability** only. This spec keeps that and adds **Authenticity** (the directory) and an explicit, opt-in relaxation of **Confidentiality** (trusted mode).
 
 ## 3. Principles
 
 1. **Spec, not service.** What we publish is an HTTP contract. `claudepad.io/registry` is one reference implementation; anyone can run their own.
 2. **Opt-in, pluggable, null by default.** No registry is configured out of the box. A user/org points the client at a registry by URL. The v1 client ships only the *interface*.
-3. **Honest about trust.** A registry declares its modes and per-identity assurance in a capability manifest; the client **shows the trust level before any action that depends on it** (publishing a readable session, or trusting a directory key). Honesty over polish (`TRUSTLESS-MODEL.md` §7).
+3. **Honest about trust.** A registry declares its modes and per-identity assurance in a capability manifest; the client **shows the trust level before any action that depends on it** (publishing a readable session, or trusting a directory key). Honesty over polish (`trustless-model.md` §7).
 4. **Zero-knowledge is the default, not the ceiling.** The default publish path is the proven encrypt-to-recipient blob - the registry stores ciphertext. Readable storage is a separate, clearly-labeled opt-in.
 5. **TLS is mandatory, always.** Every registry interaction is HTTPS. The client **rejects a non-`https://` registry URL** (except an explicit `http://localhost` dev allowance). See §8.
 6. **No lock-in.** The v1 client contains no registry implementation and no `claudepad.io` registry URL or registry-specific code (D-33, D-74). The registry URL is plain config with an empty default.
@@ -50,7 +50,7 @@ The registry is a directory + a dumb CDN for ciphertext. It cannot read sessions
 4. Recipient: get(id) -> opaqueBlob -> openBlob with their identity
 ```
 
-The crypto is **identical** to carry-the-blob sharing (`TRUSTLESS-MODEL.md` §3); the registry only *transports* the bytes. A non-recipient (including the registry operator) derives a different `KW` and AES-GCM auth fails - `poc/verify.mjs` already proves this.
+The crypto is **identical** to carry-the-blob sharing (`trustless-model.md` §3); the registry only *transports* the bytes. A non-recipient (including the registry operator) derives a different `KW` and AES-GCM auth fails - `packages/crypto/test/conformance.test.ts` already proves this.
 
 **Honest metadata trade-off.** If the registry offers an *inbox* ("everything shared with me"), the upload must carry a recipient index (e.g. a hash of the recipient's public key) so it can be served back. That reveals the **social graph** (who shares with whom, and when) to the registry, even though content stays encrypted. This is opt-in per-put (`indexFor`), off by default, and surfaced in the UI. Content confidentiality is preserved either way.
 
@@ -64,7 +64,7 @@ For orgs that legitimately want server-side reading - archive search, org-wide a
 
 ## 5. Authenticity: the identity directory (D-76)
 
-A registry **may** expose a directory mapping a human-resolvable handle/name to a **public-key card** plus an **assurance level** describing *how the registry verified that binding*. This consciously relaxes `TRUSTLESS-MODEL.md` §8 ("not a key directory or PKI") - **for the opt-in addon only**, and only as honestly-labeled trust, never silent.
+A registry **may** expose a directory mapping a human-resolvable handle/name to a **public-key card** plus an **assurance level** describing *how the registry verified that binding*. This consciously relaxes `trustless-model.md` §8 ("not a key directory or PKI") - **for the opt-in addon only**, and only as honestly-labeled trust, never silent.
 
 ### 5.1 Assurance levels
 
@@ -115,7 +115,7 @@ export interface RegistryManifest {
 }
 ```
 
-`StoreProvider` (from `STORE-PROVIDER-SPEC.md`) is unchanged for the blob-transport surface and is extended with the directory + manifest surface:
+`StoreProvider` (from `store-provider-spec.md`) is unchanged for the blob-transport surface and is extended with the directory + manifest surface:
 
 ```ts
 export interface RegistryProvider extends StoreProvider {
@@ -181,7 +181,7 @@ The link **points at the registry, not the app**, so the client stays registry-a
 - **No mixed content / no downgrade.** A manifest must declare `tls: 'required'`; the client refuses to proceed otherwise. HSTS is expected on real registries.
 - **The registry is in the data path only for transport (ZK) or by explicit consent (trusted).** TLS protects bytes in flight; in ZK mode the payload is *already* ciphertext, so TLS termination at the registry reveals nothing. In trusted mode TLS protects the plaintext upload, and at-rest protection is the registry operator's responsibility (and trust assumption).
 - **Identity keys never leave the client.** The directory holds public cards only.
-- **CSP unchanged.** Configuring a registry adds exactly one allowed connect-src origin (the registry URL); the bundle still ships no third-party scripts/CDNs (`TRUSTLESS-MODEL.md` §7).
+- **CSP unchanged.** Configuring a registry adds exactly one allowed connect-src origin (the registry URL); the bundle still ships no third-party scripts/CDNs (`trustless-model.md` §7).
 
 ## 9. What v1 ships vs. vNext
 
@@ -211,4 +211,4 @@ Still open here: real `domain`/`sso` assurance verification (the reference impl 
 
 ## 11. Decisions
 
-See `DECISIONS.md` **D-74** (registry = the store seam extended along the authenticity + availability axes; spec-not-service; v1 ships nothing registry-specific), **D-75** (ZK-default + opt-in trusted mode), **D-76** (directory declares per-identity assurance; client always shows assurance + fingerprint; `self` keeps the v1 fingerprint ritual), **D-77** (TLS mandatory, social-graph metadata trade-off documented). Reconciles open question **Q-10**.
+See `decisions.md` **D-74** (registry = the store seam extended along the authenticity + availability axes; spec-not-service; v1 ships nothing registry-specific), **D-75** (ZK-default + opt-in trusted mode), **D-76** (directory declares per-identity assurance; client always shows assurance + fingerprint; `self` keeps the v1 fingerprint ritual), **D-77** (TLS mandatory, social-graph metadata trade-off documented). Reconciles open question **Q-10**.

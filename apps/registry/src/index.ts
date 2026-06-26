@@ -1,6 +1,6 @@
 /**
  * @claudepad/registry - reference implementation of the registry contract
- * (REGISTRY-SPEC.md). The Cloudflare Worker is the default export of
+ * (registry-spec.md). The Cloudflare Worker is the default export of
  * `./cloudflare`; the handler + in-memory backend are exported for tests, local
  * dev, and the SDK conformance suite.
  */

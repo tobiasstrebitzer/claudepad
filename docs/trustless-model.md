@@ -1,6 +1,6 @@
 # claudepad - Trustless & Identity Model
 
-> The canonical design for claudepad's **serverless, client-side** sharing. This is the spine of v1. It is **proven by `poc/`** (`poc/trustless-share.html` + `poc/verify.mjs`, 21/21 checks). PRD-05 (crypto core), PRD-10 (identity), and PRD-11 (sharing) implement this; `SECURITY-MODEL.md` holds the threat-model framing it conforms to.
+> The canonical design for claudepad's **serverless, client-side** sharing. This is the spine of v1. It is **proven by the crypto conformance suite** (`packages/crypto/test/conformance.test.ts`), which runs the full trustless-share narrative end-to-end against the production crypto. `security-model.md` holds the threat-model framing it conforms to.
 
 ## 0. One paragraph
 
@@ -39,7 +39,7 @@ Hybrid encryption ("encrypt to recipient," `age`/sealed-box style). Per share:
             secret: AES-GCM(K_secret, secretMap) | null }
 ```
 
-The recipient computes the **same** `KW = HKDF(ECDH(Recipient_priv, E_pub))` (ECDH is symmetric), unwraps the content keys, and decrypts. A non-recipient derives a different `KW`, so AES-GCM auth fails - they get nothing (`poc/verify.mjs` test [3]).
+The recipient computes the **same** `KW = HKDF(ECDH(Recipient_priv, E_pub))` (ECDH is symmetric), unwraps the content keys, and decrypts. A non-recipient derives a different `KW`, so AES-GCM auth fails - they get nothing (`packages/crypto/test/conformance.test.ts` test [3]).
 
 ### Per-recipient tiering
 The tier is *which keys you wrap*: **body-only** wraps `kb` (and omits the secret ciphertext entirely); **body+secrets** wraps `kb` and `ks`. Same content design as the original two-key envelope (DECISIONS D-13/D-23), now delivered by wrapping instead of by handing out two URLs. Different recipients can get different tiers of the same session - just build a blob per (recipient, tier).
@@ -73,7 +73,7 @@ This is the Signal "safety number" pattern. Honest framing: it's **good for frie
 
 WebAuthn credentials *sign*; they don't decrypt. The **PRF extension** (`hmac-secret`) turns a passkey/security key into a deterministic secret oracle: give it a salt, the user verifies (biometric/PIN), and you get back 32 stable, hardware-gated bytes - entirely client-side, **no relying-party server, no attestation sent anywhere**. Two patterns:
 
-- **Pattern A - PRF as KEK (v1 default).** Mint the ECDH identity normally; store the private key **encrypted under a KEK = HKDF(PRF output)**. On reload the identity is *locked* until a passkey unlock re-derives the KEK and decrypts it. Zero-dependency; device-bound. Proven (wrapping layer) in `poc/verify.mjs` test [6]; live in `poc/trustless-share.html`. To avoid a double prompt, **PRF is evaluated during registration** (`create()` with `prf.eval`), falling back to one `get()` only on authenticators that can't eval-at-create.
+- **Pattern A - PRF as KEK (v1 default).** Mint the ECDH identity normally; store the private key **encrypted under a KEK = HKDF(PRF output)**. On reload the identity is *locked* until a passkey unlock re-derives the KEK and decrypts it. Zero-dependency; device-bound. Proven (wrapping layer) in `packages/crypto/test/conformance.test.ts`; live in `apps/client`. To avoid a double prompt, **PRF is evaluated during registration** (`create()` with `prf.eval`), falling back to one `get()` only on authenticators that can't eval-at-create.
 - **Pattern B - PRF as seed (opt-in, multi-device).** Derive the keypair deterministically from the PRF output. Nothing secret is stored locally; if the passkey **syncs** (iCloud Keychain / Google Password Manager), the identity roams to your other devices with no server. Cost: deterministic P-256 keygen from a scalar needs `@noble/curves` (WebCrypto can't seed `generateKey`).
 
 **Constraints (honest):** WebAuthn needs a real origin - it does **not** run from `file://` (works on `localhost`, self-host, `claudepad.io`). PRF support varies by browser/authenticator; the exported identity secret (§2) is always the recovery fallback. Pattern choice: Q-15.
@@ -101,6 +101,6 @@ Not E2E *messaging* (no transport, no delivery, no groups, no ratchet). Not a ke
 
 ## 9. Reference implementation
 
-`poc/` is the executable spec:
-- `poc/trustless-share.html` - identity (mint/import/export), public-key + fingerprint, encrypt-to-recipient with tier, blob output (clipboard/file), receive/decrypt, and WebAuthn-PRF device protection.
-- `poc/verify.mjs` - 16 headless checks: tiered decrypt, non-recipient lockout, no-plaintext-in-blob, fingerprint stability/distinctness, and the device-key wrap/unwrap. Production code must keep these green.
+The production code is the implementation; its conformance test is the executable spec:
+- `packages/crypto` - the zero-dependency WebCrypto core: identity (mint/import/export), public-key + fingerprint, encrypt-to-recipient with tier, blob output, receive/decrypt, and WebAuthn-PRF device-key wrapping. The live app (`apps/client`) drives it end-to-end.
+- `packages/crypto/test/conformance.test.ts` - the headless conformance suite running the full trustless-share narrative against the production crypto: tiered decrypt, non-recipient lockout, no-plaintext-in-blob, fingerprint stability/distinctness, and the device-key wrap/unwrap. Production code must keep these green.

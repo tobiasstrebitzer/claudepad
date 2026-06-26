@@ -4,10 +4,10 @@ claudepad's central claim is: **nothing leaves your browser, and only the intend
 
 ## 1. Crypto conformance (30 seconds, headless)
 
-The crypto core is anchored by a headless conformance script. It proves the properties that matter:
+The crypto core is anchored by a headless conformance suite. It proves the properties that matter:
 
 ```sh
-node poc/verify.mjs
+pnpm --filter @claudepad/crypto test
 ```
 
 Among its checks:
@@ -18,7 +18,7 @@ Among its checks:
 - **fingerprint stability & distinctness** - the same key always fingerprints the same; different keys differ.
 - **device-key wrap/unwrap** - the WebAuthn-PRF wrapping layer round-trips.
 
-The production crypto in [`packages/shared`](../packages/shared) mirrors this reference and the same suite runs in CI (`pnpm verify:poc`).
+The suite ([`packages/crypto/test/conformance.test.ts`](../packages/crypto/test/conformance.test.ts)) runs directly against the production crypto in [`packages/crypto`](../packages/crypto) - not a separate reference - and is part of `pnpm check` in CI.
 
 ## 2. The bundle makes no third-party fetches (automatable)
 
@@ -29,7 +29,7 @@ pnpm build
 node scripts/check-no-external-origins.mjs
 ```
 
-It scans `packages/client/dist` for absolute external origins in the shipped JS/CSS/HTML and fails on anything that isn't an inert allow-listed reference (XML namespaces, the project's own links rendered as text). A clean run means the bundle has no runtime network surface to leak through.
+It scans `apps/client/dist` for absolute external origins in the shipped JS/CSS/HTML and fails on anything that isn't an inert allow-listed reference (XML namespaces, the project's own links rendered as text). A clean run means the bundle has no runtime network surface to leak through.
 
 ## 3. Watch the network during a real share (manual, most convincing)
 
@@ -37,7 +37,7 @@ This is the one that convinces a skeptic, because it observes the running app.
 
 1. Build and serve the bundle (or use a self-hosted/`claudepad.io` instance):
    ```sh
-   pnpm build && npx serve packages/client/dist
+   pnpm build && npx serve apps/client/dist
    ```
 2. Open the served URL in a browser and open **DevTools → Network**. Tick **"Preserve log"** and clear the list.
 3. Perform a full sensitive flow:
@@ -63,4 +63,4 @@ You will see no flow carrying the transcript or secret bytes during share creati
 ## What this does and doesn't prove
 
 - ✅ It proves the **claudepad client** uploads nothing and that a non-recipient cannot decrypt a blob.
-- ⚠️ It does **not** govern where *you* then carry the blob. If you paste it into Slack, Slack sees a blob (ciphertext) and its metadata. That's expected - the blob is inert to anyone but the recipient, but your transport still logs that a message of some size was sent. See [`THREAT-MODEL.md`](./THREAT-MODEL.md#metadata).
+- ⚠️ It does **not** govern where *you* then carry the blob. If you paste it into Slack, Slack sees a blob (ciphertext) and its metadata. That's expected - the blob is inert to anyone but the recipient, but your transport still logs that a message of some size was sent. See [`threat-model.md`](./threat-model.md#metadata).

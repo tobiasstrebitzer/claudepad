@@ -1,5 +1,5 @@
 /**
- * The capability manifest (REGISTRY-SPEC.md §6).
+ * The capability manifest (registry-spec.md §6).
  *
  * Served at `/.well-known/claudepad-registry` so a client can feature-detect and
  * label trust honestly before any action that depends on it. Clients treat
@@ -9,7 +9,7 @@
 import type { AssuranceLevel } from './directory'
 import type { StoreCapabilities } from './store'
 
-/** Confidentiality mode (REGISTRY-SPEC.md §4). */
+/** Confidentiality mode (registry-spec.md §4). */
 export type RegistryMode =
   /** Default: the registry stores opaque ciphertext and cannot read sessions. */
   | 'zero-knowledge'

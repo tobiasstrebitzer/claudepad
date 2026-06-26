@@ -1,6 +1,6 @@
 # claudepad - Threat Model (plain language)
 
-> This is the public, plain-language threat model for **claudepad v1**. It explains, honestly, what claudepad protects, what it does **not**, and why. It is consistent with the canonical design docs - [`TRUSTLESS-MODEL.md`](./TRUSTLESS-MODEL.md) (the v1 spine, proven by [`../poc/`](../poc/)) and [`SECURITY-MODEL.md`](./SECURITY-MODEL.md) (threat-model framing) - and condensed from them for a general audience. Where this document and those disagree, those win.
+> This is the public, plain-language threat model for **claudepad v1**. It explains, honestly, what claudepad protects, what it does **not**, and why. It is consistent with the canonical design docs - [`trustless-model.md`](./trustless-model.md) (the v1 spine, proven by the crypto conformance suite [`packages/crypto/test/conformance.test.ts`](../packages/crypto/test/conformance.test.ts)) and [`security-model.md`](./security-model.md) (threat-model framing) - and condensed from them for a general audience. Where this document and those disagree, those win.
 
 ## The one-sentence version
 
@@ -17,7 +17,7 @@ claudepad turns a Claude Code session into an encrypted blob that **only one cho
 
 ## The crypto, named
 
-Zero-dependency [WebCrypto](https://developer.mozilla.org/docs/Web/API/Web_Crypto_API) only - no custom primitives, no third-party crypto library. Auditable and proven by [`poc/verify.mjs`](../poc/verify.mjs).
+Zero-dependency [WebCrypto](https://developer.mozilla.org/docs/Web/API/Web_Crypto_API) only - no custom primitives, no third-party crypto library. Auditable and proven by [`packages/crypto/test/conformance.test.ts`](../packages/crypto/test/conformance.test.ts).
 
 | Purpose | Primitive |
 |---|---|
@@ -31,9 +31,9 @@ Envelope: `ECDH-P256+HKDF-SHA256+AES-256-GCM`, version `1`. See [§ Wire format]
 
 ## What claudepad defends against
 
-- **A curious or compromised host reading your session or its secrets.** There is no host in the data path. The blob you hand someone contains only ciphertext plus your *public* card - no plaintext transcript, no secret values. ([`poc/verify.mjs`](../poc/verify.mjs) test "no plaintext in blob".)
+- **A curious or compromised host reading your session or its secrets.** There is no host in the data path. The blob you hand someone contains only ciphertext plus your *public* card - no plaintext transcript, no secret values. ([`packages/crypto/test/conformance.test.ts`](../packages/crypto/test/conformance.test.ts) test "no plaintext in blob".)
 - **A non-recipient who gets the blob.** Without the recipient's private key, the derived wrapping key is different and decryption fails. They get nothing. (test "non-recipient lockout".)
-- **A network observer.** Nothing is uploaded, so there is nothing on the wire to observe. You can verify this yourself - see [`VERIFY_ZERO_KNOWLEDGE.md`](./VERIFY_ZERO_KNOWLEDGE.md).
+- **A network observer.** Nothing is uploaded, so there is nothing on the wire to observe. You can verify this yourself - see [`verify-zero-knowledge.md`](./verify-zero-knowledge.md).
 - **A low-privilege recipient trying to read secrets.** Body-only blobs omit the secret ciphertext entirely; the secret key is never wrapped to them. (test "tiered decrypt".)
 - **A forged sender name.** Anyone can mint an identity named "Anthropic". The fingerprint - shown when you decrypt - is what you verify; a swapped key produces a different fingerprint.
 - **A swapped recipient key (MITM before encryption).** The pre-encryption fingerprint check catches a key that doesn't match what your recipient told you.
@@ -41,7 +41,7 @@ Envelope: `ECDH-P256+HKDF-SHA256+AES-256-GCM`, version `1`. See [§ Wire format]
 
 ## What claudepad does NOT defend against (by design, v1)
 
-We give these up consciously in exchange for "no server, nothing to trust." Each returns only if an **optional, opt-in store addon** ships in a later version (see [`ROADMAP.md`](./ROADMAP.md) §6).
+We give these up consciously in exchange for "no server, nothing to trust." Each returns only if an **optional, opt-in store addon** ships in a later version (see [`roadmap.md`](./roadmap.md) §6).
 
 - **Availability.** With no host, a blob can be lost if you don't keep it. It is your artifact to store. (Optional pinning = vNext.)
 - **Revocation / expiry / burn-after-read.** Once a blob is shared and decrypted, it cannot be recalled. There is no TTL. (Needs a server = vNext.)
@@ -87,4 +87,4 @@ claudepad is a **client-side tool that makes one encrypted artifact for one reci
 
 ## Audit status
 
-claudepad's crypto core, identity/recipient crypto, and secret handling have **not** had an independent third-party security audit. We think the design is sound - it's zero-dependency WebCrypto, reproducibly verified in-repo by [`poc/verify.mjs`](../poc/verify.mjs) and the no-external-origins gate - but we'd rather say plainly that no external auditor has signed off than imply otherwise. **An independent review is recommended and welcome** (it was previously a launch gate; see DECISIONS D-78). If you're a security researcher, see [`SECURITY.md`](../SECURITY.md) for how to report findings.
+claudepad's crypto core, identity/recipient crypto, and secret handling have **not** had an independent third-party security audit. We think the design is sound - it's zero-dependency WebCrypto, reproducibly verified in-repo by [`packages/crypto/test/conformance.test.ts`](../packages/crypto/test/conformance.test.ts) and the no-external-origins gate - but we'd rather say plainly that no external auditor has signed off than imply otherwise. **An independent review is recommended and welcome** (it was previously a launch gate; see DECISIONS D-78). If you're a security researcher, see [`SECURITY.md`](../SECURITY.md) for how to report findings.

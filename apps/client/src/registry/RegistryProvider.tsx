@@ -1,4 +1,4 @@
-// Optional registry connection (REGISTRY-SPEC.md), opt-in and null by default.
+// Optional registry connection (registry-spec.md), opt-in and null by default.
 // Holds the configured URL (persisted, https-only), connects via the SDK, and
 // exposes the connected provider + manifest. The auth token for authenticated
 // routes is our own pubHash, read live so identity changes don't reconnect.

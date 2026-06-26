@@ -4,7 +4,7 @@ import type { SessionEvent } from '@/schema'
  * Pure session-metadata and UI-internal telemetry that only adds noise when
  * rendered inline in the transcript. These are still preserved in the raw
  * session view (nothing is lost) - the viewer just doesn't surface them as
- * conversation rows. See DECISIONS.md D-61.
+ * conversation rows. See decisions.md D-61.
  *
  * Matched on a meta event's `subtype` (the schema sets subtype === the source
  * record `type` for session-meta records, and the system `subtype` for system

@@ -44,18 +44,18 @@ claudepad solves this with an easy, secure, hosted (and self-hostable) viewer:
 
 ## Our differentiation (the wedge) - as chosen for v1
 
-The brainstorm converged on a **serverless, trustless** v1 (DECISIONS D-20…D-33), validated by a working proof of concept (`poc/`):
+The brainstorm converged on a **serverless, trustless** v1 (DECISIONS D-20…D-33), validated first by a proof of concept and now by the production crypto core and its conformance suite (`packages/crypto/test/conformance.test.ts`):
 
 1. **No server at all** - v1 is a static client. "The host can't read it" because there is no host. Self-host = serve files.
-2. **Trustless recipient sharing** - encrypt a session *to a person's public key*; the blob is the message, droppable anywhere; only the invited recipient can read it. (See `TRUSTLESS-MODEL.md`.)
+2. **Trustless recipient sharing** - encrypt a session *to a person's public key*; the blob is the message, droppable anywhere; only the invited recipient can read it. (See `trustless-model.md`.)
 3. **Tiered secret reveal** - per-recipient, via wrapping two independent content keys (body vs body+secrets).
 4. **Verifiable identity** - client-minted keypair, fingerprint verification, optional passkey/device protection (WebAuthn PRF) - no accounts.
-5. **Pluggable, open-spec store (vNext)** - an *optional* zero-knowledge blob store defined by an open contract (reference impl `claudepad.io/store`), Bitwarden/Headscale-style - never a proprietary dependency. (See `STORE-PROVIDER-SPEC.md`.)
+5. **Pluggable, open-spec store (vNext)** - an *optional* zero-knowledge blob store defined by an open contract (reference impl `claudepad.io/store`), Bitwarden/Headscale-style - never a proprietary dependency. (See `store-provider-spec.md`.)
 6. **Playback with presentation mode** - delight layer.
 
 ## Honest correction carried forward
 
-The original "replace secret with `[SHA512:…]`" idea was refined: a hash is one-way (can't be revealed to high-priv viewers) and brute-forceable for low-entropy secrets. We instead use **opaque random placeholders indexing an encrypted secret map**, displaying only a type+length label. Full reasoning in `SECURITY-MODEL.md`.
+The original "replace secret with `[SHA512:…]`" idea was refined: a hash is one-way (can't be revealed to high-priv viewers) and brute-forceable for low-entropy secrets. We instead use **opaque random placeholders indexing an encrypted secret map**, displaying only a type+length label. Full reasoning in `security-model.md`.
 
 ## MVP order (as finalized in the roadmap)
 
@@ -65,6 +65,6 @@ The original "replace secret with `[SHA512:…]`" idea was refined: a hash is on
 4. Playback
 5. Optional pluggable store (hosted URLs) ← **vNext, open spec**
 
-> The architecture flipped during the brainstorm: the once-"vNext" named-recipient model **became** the v1 sharing mechanism (minus the server), and PrivateBin-style link sharing + the backend moved to the optional store addon. See `ROADMAP.md` for phases, `TRUSTLESS-MODEL.md` for the design, and `prd/` for detailed PRDs.
+> The architecture flipped during the brainstorm: the once-"vNext" named-recipient model **became** the v1 sharing mechanism (minus the server), and PrivateBin-style link sharing + the backend moved to the optional store addon. See `roadmap.md` for phases, `trustless-model.md` for the design, and `prd/` for detailed PRDs.
 
-See `ROADMAP.md` for phases and `prd/` for detailed PRDs.
+See `roadmap.md` for phases and `prd/` for detailed PRDs.

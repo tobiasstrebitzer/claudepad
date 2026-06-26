@@ -1,5 +1,5 @@
 /**
- * Authenticity axis - the identity directory (REGISTRY-SPEC.md §5).
+ * Authenticity axis - the identity directory (registry-spec.md §5).
  *
  * A directory maps a human-resolvable handle to a public-key card plus an
  * assurance level describing HOW the registry verified that binding. Trust in

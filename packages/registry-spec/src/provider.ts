@@ -1,6 +1,6 @@
 /**
  * RegistryProvider - the store seam extended along the authenticity (directory)
- * and trusted-publish axes (REGISTRY-SPEC.md §6). A client talks to any
+ * and trusted-publish axes (registry-spec.md §6). A client talks to any
  * conformant registry through this interface; the v1 default is none.
  */
 
@@ -10,7 +10,7 @@ import type { StoreProvider, StorePutOptions, StoredRef } from './store'
 
 export interface RegistryPutOptions extends StorePutOptions {
   /**
-   * Opt-in inbox index (REGISTRY-SPEC.md §4.1): recipient public-key hashes the
+   * Opt-in inbox index (registry-spec.md §4.1): recipient public-key hashes the
    * registry may index so `inbox()` can serve this blob back. Off by default -
    * supplying it reveals the social graph (not content) to the registry.
    */

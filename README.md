@@ -4,7 +4,7 @@ Turn a raw Claude Code session (`~/.claude/projects/*.jsonl`) into a clean, shar
 
 Open source and self-hostable. [`claudepad.io`](https://claudepad.io) is a free hosted instance running the identical static bundle.
 
-> **Status:** an early, open-source developer demo - v1 feature-complete (phases P0-P5 built), shared to gather feedback and find the use cases worth building. The crypto core is intentionally small and auditable, but it has **not** had an independent security review yet; treat claudepad as a capable demo rather than a vault for your most sensitive secrets. An audit is welcome. See [`docs/ROADMAP.md`](docs/ROADMAP.md).
+> **Status:** an early, open-source developer demo - v1 feature-complete (phases P0-P5 built), shared to gather feedback and find the use cases worth building. The crypto core is intentionally small and auditable, but it has **not** had an independent security review yet; treat claudepad as a capable demo rather than a vault for your most sensitive secrets. An audit is welcome. See [`docs/roadmap.md`](docs/roadmap.md).
 
 ## What it does
 
@@ -21,11 +21,11 @@ Open source and self-hostable. [`claudepad.io`](https://claudepad.io) is a free 
 - **Trust is verifiable** - a self-claimed name is paired with a key **fingerprint** (6 emoji + hex) for out-of-band verification.
 - **Zero-dependency crypto** - WebCrypto only (AES-256-GCM, ECDH P-256, HKDF, SHA-256), so the core is auditable. Proven end-to-end by [`packages/crypto/test/conformance.test.ts`](packages/crypto/test/conformance.test.ts).
 - **Single static bundle** - self-hosting is "serve some files"; no CDNs, fonts self-hosted, no third-party runtime fetches.
-- **Honesty over polish** in security claims - the [threat model](docs/THREAT-MODEL.md) states the trade-offs plainly.
+- **Honesty over polish** in security claims - the [threat model](docs/threat-model.md) states the trade-offs plainly.
 
 ## Use it
 
-The fastest path is the hosted instance: open [`claudepad.io`](https://claudepad.io) and drop a session. Nothing you do there leaves your browser - [verify that yourself](docs/VERIFY_ZERO_KNOWLEDGE.md).
+The fastest path is the hosted instance: open [`claudepad.io`](https://claudepad.io) and drop a session. Nothing you do there leaves your browser - [verify that yourself](docs/verify-zero-knowledge.md).
 
 ## Self-host (serve a static bundle)
 
@@ -46,7 +46,7 @@ pnpm test                                    # crypto conformance: non-recipient
 pnpm build && pnpm run verify:no-phone-home  # the built bundle makes no third-party fetches
 ```
 
-Plus a live network-capture procedure in [`docs/VERIFY_ZERO_KNOWLEDGE.md`](docs/VERIFY_ZERO_KNOWLEDGE.md).
+Plus a live network-capture procedure in [`docs/verify-zero-knowledge.md`](docs/verify-zero-knowledge.md).
 
 ## Monorepo layout
 
@@ -60,7 +60,7 @@ packages/
                                                  AES-256-GCM, sealed-box blobs, fingerprints. test/conformance.test.ts is the anchor.
   registry-spec/    @claudepad/registry-spec   - the open registry contract (interfaces, DTOs, OpenAPI).
   registry-client/  @claudepad/registry-client - fetch SDK + conformance suite for any conformant registry.
-docs/       PRDs + canonical design/security/decision docs (start with ROADMAP, TRUSTLESS-MODEL, THREAT-MODEL).
+docs/       canonical design/security/decision docs (start with roadmap.md, trustless-model.md, threat-model.md).
 ```
 
 There is **no `server`** in the launch bundle by design. The optional **registry** (`apps/registry` + the `registry-*` packages) is a separate, opt-in addon for short-links and a public-key directory; it stores only opaque blobs it cannot read, and sharing works fully offline without it (DECISIONS D-20…D-33, D-74…D-88).
@@ -80,11 +80,11 @@ See [`CONTRIBUTING.md`](CONTRIBUTING.md) for the full contributor guide and [`SE
 
 ## Docs
 
-- [`docs/ROADMAP.md`](docs/ROADMAP.md) - phases and success metrics
-- [`docs/THREAT-MODEL.md`](docs/THREAT-MODEL.md) - what's defended, what isn't, in plain language
-- [`docs/TRUSTLESS-MODEL.md`](docs/TRUSTLESS-MODEL.md) - the canonical v1 crypto/identity design
-- [`docs/self-hosting.md`](docs/self-hosting.md) · [`docs/VERIFY_ZERO_KNOWLEDGE.md`](docs/VERIFY_ZERO_KNOWLEDGE.md)
-- [`docs/prd/`](docs/prd/) - the full PRD set · [`docs/DECISIONS.md`](docs/DECISIONS.md) - decision log
+- [`docs/roadmap.md`](docs/roadmap.md) - phases and success metrics
+- [`docs/threat-model.md`](docs/threat-model.md) - what's defended, what isn't, in plain language
+- [`docs/trustless-model.md`](docs/trustless-model.md) - the canonical v1 crypto/identity design
+- [`docs/self-hosting.md`](docs/self-hosting.md) · [`docs/verify-zero-knowledge.md`](docs/verify-zero-knowledge.md)
+- [`docs/prd/_context.md`](docs/prd/_context.md) - canonical shared facts (tech stack, tokens, schema) · [`docs/decisions.md`](docs/decisions.md) - decision log
 
 ## License
 

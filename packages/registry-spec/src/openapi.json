@@ -3,7 +3,7 @@
   "info": {
     "title": "claudepad Registry Protocol",
     "version": "1.0.0",
-    "description": "Open HTTP contract for a claudepad registry (REGISTRY-SPEC.md): a zero-knowledge blob store, an optional identity directory, and an optional trusted (vendor-readable) session store. All interactions are HTTPS-only (D-77).",
+    "description": "Open HTTP contract for a claudepad registry (registry-spec.md): a zero-knowledge blob store, an optional identity directory, and an optional trusted (vendor-readable) session store. All interactions are HTTPS-only (D-77).",
     "license": { "name": "MIT" }
   },
   "servers": [{ "url": "https://{host}", "variables": { "host": { "default": "registry.example.com" } } }],

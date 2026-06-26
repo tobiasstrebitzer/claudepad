@@ -32,14 +32,14 @@ All notable changes to claudepad are documented here. The format is based on
 ## [0.9.0] - 2026-06-22 - Registry (optional store + identity directory addon)
 
 ### Added
-- **`docs/REGISTRY-SPEC.md`** - the open registry contract (absorbs/extends `STORE-PROVIDER-SPEC.md`): three trust axes (availability / authenticity / confidentiality), zero-knowledge by default with an opt-in trusted mode, and an identity directory with a registry-declared assurance level (`self`/`domain`/`sso`). Decisions D-74…D-80.
+- **`docs/registry-spec.md`** - the open registry contract (absorbs/extends `store-provider-spec.md`): three trust axes (availability / authenticity / confidentiality), zero-knowledge by default with an opt-in trusted mode, and an identity directory with a registry-declared assurance level (`self`/`domain`/`sso`). Decisions D-74…D-80.
 - **`@claudepad/registry-spec`** - the contract as a zero-dep package: provider interfaces, wire DTOs, endpoint paths, typed errors, the HTTPS-only guard, a tolerant manifest parser, and the OpenAPI 3.1 document (on a `/openapi` subpath, kept off the client bundle).
 - **`@claudepad/registry`** - Cloudflare Worker reference implementation (R2 blobs/sessions + KV directory/inbox) over a storage-agnostic handler, with an in-memory backend for tests/local dev.
 - **`@claudepad/registry-client`** - framework-agnostic `fetch` SDK that works against any conformant registry (no hardwired URL, HTTPS-only at connect), with a conformance suite run against the reference impl.
 - **Client integration** (opt-in, null by default): connect a registry, short-link upload + receive-by-id, share-by-name via the directory, publish-your-identity, opt-in inbox, and consent-gated trusted-mode publish. Every flow still works with no registry; `check-no-external-origins` stays green.
 
 ### Changed
-- The independent security review is **reclassified from a v1.0 hard gate to a post-launch recommendation** (D-78); `docs/THREAT-MODEL.md` now states plainly that the crypto is unaudited and an audit is welcome.
+- The independent security review is **reclassified from a v1.0 hard gate to a post-launch recommendation** (D-78); `docs/threat-model.md` now states plainly that the crypto is unaudited and an audit is welcome.
 
 ## [0.8.0] - 2026-06-22 - Viewer themes (aesthetic palette axis)
 
@@ -50,11 +50,11 @@ All notable changes to claudepad are documented here. The format is based on
 
 ### Added
 - `LICENSE` (MIT) at the repo root.
-- Public, plain-language `docs/THREAT-MODEL.md` - what v1 defends, what it consciously gives up, and the crypto, named.
+- Public, plain-language `docs/threat-model.md` - what v1 defends, what it consciously gives up, and the crypto, named.
 - `SECURITY.md` - vulnerability-disclosure policy, scope, and supported versions.
 - `CONTRIBUTING.md` - setup, monorepo layout, the gate, conventions, and the release process.
 - `docs/self-hosting.md` - self-host = serve the static bundle (any host / Cloudflare), no server, no DB.
-- `docs/VERIFY_ZERO_KNOWLEDGE.md` + `scripts/check-no-external-origins.mjs` - reproducible zero-knowledge verification (crypto conformance, bundle has no third-party fetches, live network capture).
+- `docs/verify-zero-knowledge.md` + `scripts/check-no-external-origins.mjs` - reproducible zero-knowledge verification (crypto conformance, bundle has no third-party fetches, live network capture).
 - `CHANGELOG.md` (this file).
 - GitHub Actions CI (gate + E2E) and tag-driven release/deploy workflows.
 

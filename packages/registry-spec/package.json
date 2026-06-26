@@ -2,7 +2,7 @@
   "name": "@claudepad/registry-spec",
   "version": "0.12.0",
   "private": true,
-  "description": "The open registry contract (REGISTRY-SPEC.md): provider interfaces (store + identity directory + opt-in trusted mode), wire DTOs, endpoint constants, the TLS-only guard, a tolerant manifest parser, and the OpenAPI document. Zero runtime dependencies; shared by the client SDK and any conformant registry.",
+  "description": "The open registry contract (registry-spec.md): provider interfaces (store + identity directory + opt-in trusted mode), wire DTOs, endpoint constants, the TLS-only guard, a tolerant manifest parser, and the OpenAPI document. Zero runtime dependencies; shared by the client SDK and any conformant registry.",
   "license": "MIT",
   "type": "module",
   "main": "./src/index.ts",

@@ -2,7 +2,7 @@
 
 Thanks for considering a contribution. claudepad is open source and self-hostable; the value is the auditable, zero-knowledge architecture, so contributions that keep it small, honest, and auditable are especially welcome.
 
-Please read [`docs/THREAT-MODEL.md`](docs/THREAT-MODEL.md) and the design principles in [`CLAUDE.md`](CLAUDE.md) before working on anything touching crypto, secrets, or the share flow.
+Please read [`docs/threat-model.md`](docs/threat-model.md) and the design principles in [`CLAUDE.md`](CLAUDE.md) before working on anything touching crypto, secrets, or the share flow.
 
 ## Prerequisites
 
@@ -20,28 +20,30 @@ pnpm install
 ## Monorepo layout
 
 ```
+apps/
+  client/    @claudepad/client    - the web client (deployable SPA): design system, parser/schema,
+                                    secret scanner, ingest, viewer, identity, share, playback.
+  registry/  @claudepad/registry  - the optional registry reference impl (Cloudflare Worker, vNext addon).
 packages/
-  schema/   @claudepad/schema   - tolerant Claude Code JSONL → normalized Session model (PRD-02). Zero deps, isomorphic.
-  shared/   @claudepad/shared   - zero-dependency WebCrypto core (PRD-05): ECDH P-256, HKDF, AES-256-GCM,
-                                  recipient-wrapped sealed-box blobs, fingerprints. Mirrors poc/.
-  secrets/  @claudepad/secrets  - pure secret scanner + redactor, opaque placeholders, body/secret-map split (PRD-06).
-  ingest/   @claudepad/ingest   - drop/paste/folder-connect ingest + session metadata extraction (PRD-04).
-  client/   @claudepad/client   - the web client: design system, viewer, identity, share, playback (PRD-01/03/08/10/11).
-docs/       PRDs + canonical design/security/decision docs.
-poc/        the runnable proof of concept + verify.mjs (the crypto conformance anchor).
+  crypto/          @claudepad/crypto          - zero-dependency WebCrypto core: ECDH P-256, HKDF,
+                                                AES-256-GCM, recipient-wrapped sealed-box blobs, fingerprints.
+                                                `test/conformance.test.ts` is the crypto conformance anchor.
+  registry-spec/   @claudepad/registry-spec   - the open registry contract (interfaces, wire DTOs, OpenAPI).
+  registry-client/ @claudepad/registry-client - generic fetch SDK for any conformant registry.
+docs/        canonical design/security/decision docs + the surviving store-addon PRD (prd/).
 ```
 
-Shared normalized-session types and the crypto envelope live in **one** package each (`schema`, `shared`) and are consumed everywhere - don't duplicate them.
+Deployables live in `apps/`, shared libraries in `packages/`. The normalized-session schema and secret scanner live under `apps/client/src/{schema,secrets,ingest}`; the crypto envelope lives once in `packages/crypto` and is consumed everywhere - don't duplicate them.
 
 ## Develop
 
 ```sh
 pnpm dev                 # run the client (Vite) at http://localhost:5173
-pnpm build               # build all packages → packages/client/dist (single static bundle)
-pnpm test                # the whole Vitest suite (schema + shared + secrets + ingest + client)
+pnpm build               # build all packages → apps/client/dist (single static bundle)
+pnpm test                # the whole Vitest suite (client + crypto + registry packages)
 pnpm typecheck           # tsc across all packages
 pnpm lint                # eslint + no-raw-hex + WCAG contrast checks
-pnpm verify:poc          # node poc/verify.mjs - the crypto conformance anchor
+pnpm --filter @claudepad/crypto test       # crypto conformance anchor (packages/crypto/test/conformance.test.ts)
 pnpm --filter @claudepad/client test:e2e   # Playwright (responsive shell, viewer, playback)
 ```
 
@@ -50,16 +52,16 @@ pnpm --filter @claudepad/client test:e2e   # Playwright (responsive shell, viewe
 Before opening a PR, the full gate must pass:
 
 ```sh
-pnpm check               # typecheck + lint + test + verify:poc
+pnpm check               # build + typecheck + lint + test
 ```
 
 `pnpm check` is what CI runs on every PR (plus Playwright E2E). A red pipeline blocks merge.
 
 ### House rules enforced by the gate
 
-- **Zero-dependency crypto.** Don't add a crypto library for the v1 core - WebCrypto only. `pnpm verify:poc` must stay green.
-- **No server assumptions.** Every flow must work fully offline. No `claudepad.io/store` URL or store-specific code in the client (DECISIONS D-33).
-- **No raw color hex** outside `packages/client/src/styles/tokens.css` (`scripts/check-no-raw-hex.mjs`).
+- **Zero-dependency crypto.** Don't add a crypto library for the v1 core - WebCrypto only. The crypto conformance suite (`packages/crypto/test/conformance.test.ts`) must stay green.
+- **No server assumptions.** Every flow must work fully offline. The registry is referenced as a single opt-in constant (`apps/client/src/registry/defaults.ts`), unchecked by default - don't scatter store/registry URLs elsewhere or assume a registry exists in any flow (DECISIONS D-33, relaxed by D-88/D-89).
+- **No raw color hex** outside `apps/client/src/styles/tokens.css` (`scripts/check-no-raw-hex.mjs`).
 - **WCAG contrast** on the token palette (`scripts/check-contrast.mjs`).
 - **No third-party fetches** in the built bundle (`scripts/check-no-external-origins.mjs`, run after `pnpm build`).
 
@@ -73,7 +75,7 @@ pnpm check               # typecheck + lint + test + verify:poc
 
 ## Conforming to the canonical docs
 
-If a PRD conflicts with [`docs/prd/_context.md`](docs/prd/_context.md) or [`docs/TRUSTLESS-MODEL.md`](docs/TRUSTLESS-MODEL.md), those win - or update them deliberately and record the change in [`docs/DECISIONS.md`](docs/DECISIONS.md). Record any as-built deviation from a PRD in `DECISIONS.md`.
+If a PRD conflicts with [`docs/prd/_context.md`](docs/prd/_context.md) or [`docs/trustless-model.md`](docs/trustless-model.md), those win - or update them deliberately and record the change in [`docs/decisions.md`](docs/decisions.md). Record any as-built deviation from a PRD in `decisions.md`.
 
 ## Security issues
 

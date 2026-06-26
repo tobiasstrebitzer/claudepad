@@ -18,7 +18,7 @@ It ships as an open-source project anyone can self-host (it's a static site - "s
 
 ## 2. The serverless decision (what v1 is and isn't)
 
-After a working proof of concept (`poc/`), v1 commits to a **pure-client, trustless** architecture (DECISIONS D-20…D-29):
+After a working proof of concept (since folded into the production crypto core and its conformance suite), v1 commits to a **pure-client, trustless** architecture (DECISIONS D-20…D-29):
 
 **v1 IS:** identity minted in-browser (an ECDH keypair), encrypt-to-recipient sharing with per-recipient secret tiering, human-verifiable key fingerprints, optional passkey/device protection of your identity, full session prettify, and playback - **all in the browser, zero backend.**
 
@@ -38,7 +38,7 @@ After a working proof of concept (`poc/`), v1 commits to a **pure-client, trustl
 
 | Phase | Theme | Milestone | PRDs |
 |-------|-------|-----------|------|
-| **P0** | Foundation | Repo scaffold, design system, tolerant parser, the WebCrypto crypto core (proven by `poc/`). | PRD-01, PRD-02, PRD-05 |
+| **P0** | Foundation | Repo scaffold, design system, tolerant parser, the WebCrypto crypto core (proven by its conformance suite). | PRD-01, PRD-02, PRD-05 |
 | **P1** | Local Prettify (**MVP-0**) | Drop/paste a session → see it beautifully, fully offline. No identity, no sharing yet. Single static page. | PRD-03, PRD-04 |
 | **P2** | Identity & Trust | Mint/import an identity, share your public key, verify keys by fingerprint, optionally protect the identity with a passkey (WebAuthn PRF). | PRD-10 |
 | **P3** | Trustless Sharing (**the moat**) | Encrypt a session to a recipient at a chosen tier (body / body+secrets), output a blob (clipboard/file); recipient decrypts. Client-side secret detection + tiering. | PRD-11, PRD-06 |
@@ -66,7 +66,7 @@ P1 (PRD-01–04) is a usable offline prettifier. P2–P3 are the trustless-shari
 | 11 | Trustless Recipient Sharing | P3 | The share/receive flow: encrypt-to-recipient, tiers, drop-anywhere blob. |
 | ~~07~~ | ~~Backend Blob Store & API~~ | **vNext** | Deferred - kept for when an optional convenience store returns. |
 
-Full briefs in `docs/prd/README.md`; canonical shared facts in `docs/prd/_context.md`; the crypto/identity design in `docs/TRUSTLESS-MODEL.md`. The reference implementation is `poc/` (`poc/verify.mjs` = 21-check conformance anchor).
+Canonical shared facts in `docs/prd/_context.md`; the crypto/identity design in `docs/trustless-model.md`. The crypto conformance anchor is `packages/crypto/test/conformance.test.ts` (the trustless-share narrative end-to-end against the production crypto). The per-phase PRDs were implemented and then removed; git history retains them.
 
 ## 6. Out of scope for v1 (vNext)
 
@@ -79,7 +79,7 @@ Full briefs in `docs/prd/README.md`; canonical shared facts in `docs/prd/_contex
 ## 7. Success metrics (v1)
 
 - **Time-to-share** < 20s from "have a `.jsonl`" to "encrypted blob on my clipboard."
-- **Trustless verifiable**: nothing is uploaded anywhere; a non-recipient provably cannot decrypt a blob (see `poc/verify.mjs`).
+- **Trustless verifiable**: nothing is uploaded anywhere; a non-recipient provably cannot decrypt a blob (see `packages/crypto/test/conformance.test.ts`).
 - **Self-host in < 5 min** by serving static files (no DB, no services).
 - **Parser resilience**: renders recent Claude Code session formats without crashing; unknown fields degrade gracefully.
 - **Secret recall** on a labeled test corpus ≥ a documented threshold, with false positives reviewable/dismissable.
@@ -94,4 +94,4 @@ Full briefs in `docs/prd/README.md`; canonical shared facts in `docs/prd/_contex
 | Identity loss (cleared browser) | Exportable secret + optional synced-passkey (pattern B) recovery (PRD-10). |
 | Missed secret leaks into the all-tiers body | Mandatory review-before-share UI; document best-effort limits (PRD-06). |
 | Giving up availability (no host) means a blob can be "lost" | It's the user's artifact to keep; documented trade-off. Optional pinning is vNext. |
-| Crypto subtlety | Zero-dep WebCrypto core, proven by `poc/`; independent security review **recommended post-launch** (D-78), with an honest "unaudited" label until then (PRD-09). |
+| Crypto subtlety | Zero-dep WebCrypto core, proven by its conformance suite; independent security review **recommended post-launch** (D-78), with an honest "unaudited" label until then (see `security-model.md`). |

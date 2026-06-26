@@ -1,5 +1,5 @@
 /**
- * Availability axis - the zero-knowledge blob-store seam (STORE-PROVIDER-SPEC.md).
+ * Availability axis - the zero-knowledge blob-store seam (store-provider-spec.md).
  *
  * A store only ever transports opaque, already-encrypted bytes. It never sees
  * plaintext or keys, so any third party can host it without being trusted.

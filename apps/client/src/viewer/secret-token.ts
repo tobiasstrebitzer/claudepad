@@ -3,7 +3,7 @@
 // PRD-06 (secret detection) is NOT built yet. PRD-03 only RENDERS placeholders,
 // so we define a stable, self-describing token here and document it as the
 // contract. When PRD-06 lands it MUST emit this exact serialized form (or this
-// module is updated deliberately and noted in DECISIONS.md).
+// module is updated deliberately and noted in decisions.md).
 //
 // Token text form (lives inside a `text` content block, post-markdown text node):
 //

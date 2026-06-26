@@ -7,8 +7,8 @@ claudepad v1 is **entirely client-side**: there is no server, no database, no bl
 ```sh
 pnpm install
 pnpm build                       # builds packages → client static bundle
-# the bundle is at packages/client/dist - serve it with any static host:
-npx serve packages/client/dist   # or nginx, Caddy, GitHub Pages, S3+CloudFront, …
+# the bundle is at apps/client/dist - serve it with any static host:
+npx serve apps/client/dist   # or nginx, Caddy, GitHub Pages, S3+CloudFront, …
 ```
 
 Open the served URL. Drop a `~/.claude/projects/*.jsonl` session, prettify, mint an identity, share. Done.
@@ -23,7 +23,7 @@ Everything runs in the browser:
 - decryption of received blobs,
 - playback.
 
-No flow contacts a network service. The client contains **no `claudepad.io/store` URL and no store-specific code** by design (DECISIONS D-33). Fonts are self-hosted (`@fontsource`), there are no CDN or third-party script fetches - which is also a [security property](./THREAT-MODEL.md#web-hygiene-is-part-of-the-model).
+No flow contacts a network service unless you explicitly opt into a registry. By default the client ships **no active store/registry connection** - the registry is a single opt-in constant, unchecked in onboarding (DECISIONS D-33, relaxed to opt-in by D-88/D-89). Fonts are self-hosted (`@fontsource`), there are no CDN or third-party script fetches - which is also a [security property](./threat-model.md#web-hygiene-is-part-of-the-model).
 
 ## Build the bundle
 
@@ -34,16 +34,16 @@ pnpm install
 pnpm build
 ```
 
-Output: `packages/client/dist/` - a self-contained static site (HTML + hashed JS/CSS/font assets). Serve that directory from anything that serves files.
+Output: `apps/client/dist/` - a self-contained static site (HTML + hashed JS/CSS/font assets). Serve that directory from anything that serves files.
 
 ## Serving options
 
 ### Any static file server
 
 ```sh
-npx serve packages/client/dist
+npx serve apps/client/dist
 # or
-python3 -m http.server --directory packages/client/dist 8080
+python3 -m http.server --directory apps/client/dist 8080
 ```
 
 The app is a single-page app; configure your host to **fall back to `index.html`** for unknown routes so deep links (`#/…`) resolve.
@@ -59,7 +59,7 @@ server {
 
 ### Cloudflare Workers / Pages (what `claudepad.io` uses)
 
-The repo ships a [`packages/client/wrangler.jsonc`](../packages/client/wrangler.jsonc) that serves `./dist` as SPA assets:
+The repo ships a [`apps/client/wrangler.jsonc`](../apps/client/wrangler.jsonc) that serves `./dist` as SPA assets:
 
 ```sh
 pnpm build
@@ -74,8 +74,8 @@ Optional passkey protection of your identity (WebAuthn PRF) requires a **real or
 
 ## What you do NOT need
 
-No Postgres, no S3/MinIO, no Docker, no API server, no accounts, no environment variables, no secrets to manage. The `docker compose` + Postgres + MinIO + Workers/R2 path described in [PRD-09](./prd/PRD-09-selfhost-launch.md) is for the **optional, deferred store addon** (vNext), not for running v1.
+No Postgres, no S3/MinIO, no Docker, no API server, no accounts, no environment variables, no secrets to manage. The `docker compose` + Postgres + MinIO + Workers/R2 path described in the [store-addon PRD](./prd/prd-07-backend.md) is for the **optional, deferred store addon** (vNext), not for running v1.
 
 ## Verify there's really no server
 
-Don't take our word for it - see [`VERIFY_ZERO_KNOWLEDGE.md`](./VERIFY_ZERO_KNOWLEDGE.md) to confirm with your browser's network panel that nothing leaves the page.
+Don't take our word for it - see [`verify-zero-knowledge.md`](./verify-zero-knowledge.md) to confirm with your browser's network panel that nothing leaves the page.

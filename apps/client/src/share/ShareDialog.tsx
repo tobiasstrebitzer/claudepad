@@ -1061,7 +1061,7 @@ function ResultStep({
 }
 
 /**
- * Trusted mode (REGISTRY-SPEC.md §4.2): publish a READABLE copy of the redacted
+ * Trusted mode (registry-spec.md §4.2): publish a READABLE copy of the redacted
  * session to a registry that can read it. Gated behind explicit consent because
  * it is a real trust shift - the registry operator can read what you publish.
  */

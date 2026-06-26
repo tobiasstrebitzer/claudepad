@@ -1,4 +1,4 @@
-// Optional registry integration (REGISTRY-SPEC.md) - opt-in, null by default.
+// Optional registry integration (registry-spec.md) - opt-in, null by default.
 // The crypto/contract live in @claudepad/registry-client; this layer is the
 // React wiring + UI.
 

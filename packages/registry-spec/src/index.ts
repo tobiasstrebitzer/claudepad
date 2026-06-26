@@ -1,5 +1,5 @@
 /**
- * @claudepad/registry-spec - the open registry contract (REGISTRY-SPEC.md).
+ * @claudepad/registry-spec - the open registry contract (registry-spec.md).
  *
  * Provider interfaces, wire DTOs, endpoint constants, the TLS-only guard, a
  * tolerant manifest parser, typed errors, and the OpenAPI document. Zero runtime

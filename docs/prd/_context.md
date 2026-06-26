@@ -20,19 +20,19 @@ claudepad turns a raw Claude Code session file (`~/.claude/projects/*.jsonl`) in
 - **Language:** TypeScript (strict).
 - **Build/Runtime:** Vite + React 19.
 - **UI:** shadcn/ui built on **base-ui** primitives (Base UI, the unstyled primitives), Tailwind for styling. Prefer composing shadcn components over hand-rolled ones.
-- **Crypto (v1, zero-dependency WebCrypto):** `crypto.subtle` only - **AES-256-GCM** content/wrap encryption, **ECDH P-256** identity + key agreement, **HKDF-SHA256** derivation, **SHA-256** fingerprints. No custom primitives, no `crypto-js`. `@noble/curves` enters *only* for the opt-in pattern-B deterministic identity (X25519). See `../TRUSTLESS-MODEL.md`.
+- **Crypto (v1, zero-dependency WebCrypto):** `crypto.subtle` only - **AES-256-GCM** content/wrap encryption, **ECDH P-256** identity + key agreement, **HKDF-SHA256** derivation, **SHA-256** fingerprints. No custom primitives, no `crypto-js`. `@noble/curves` enters *only* for the opt-in pattern-B deterministic identity (X25519). See `../trustless-model.md`.
 - **Identity & device keys:** keypair minted client-side, stored in IndexedDB, exportable; optional **WebAuthn PRF** device protection (no server). Needs a real origin (not `file://`).
 - **State:** keep it light - React state + a small store (Zustand) if needed. No data layer (no server in v1).
 - **Backend:** **NONE in v1.** v1 is a static client; `claudepad.io` is static hosting. A server blob store (Cloudflare Workers + R2 + D1/KV, with a Node/Hono + Postgres + S3 self-host adapter) is **vNext** (PRD-07, DECISIONS D-29).
-- **Packaging goal:** the client builds as a **single static bundle** (ideally one page) so self-hosting is "serve some files" and the crypto is auditable. The reference implementation is `poc/`.
+- **Packaging goal:** the client builds as a **single static bundle** (ideally one page) so self-hosting is "serve some files" and the crypto is auditable. The crypto conformance anchor is `../../packages/crypto/test/conformance.test.ts`.
 - **Testing:** Vitest for units (parser, crypto, secret scanner are the high-value targets); Playwright for the critical share/view flows.
-- **Repo conventions:** monorepo-friendly layout (`packages/` for client, shared types, CLI; `server` is vNext for the store addon). Shared types - the normalized `Session`, the `ShareBlob` (PRD-11), and the `StoreProvider` interface (`../STORE-PROVIDER-SPEC.md`) - live in one package consumed by client, CLI, and tests.
+- **Repo conventions (as-built):** `apps/` for deployables (`client` SPA, `registry` Worker), `packages/` for shared libs (`crypto`, `registry-spec`, `registry-client`); no `server` in v1 (the store addon is vNext). The normalized `Session` schema lives in `apps/client/src/schema`; the `ShareBlob` envelope and crypto in `packages/crypto`; the `StoreProvider`/registry interface in `packages/registry-spec` (`../store-provider-spec.md`, `../registry-spec.md`).
 
 ## 4. Design system (Anthropic-inspired, distinct)
 
 > Capture the *feeling* - warm, calm, minimal, fast - without cloning it.
 
-**North-star principle - frictionless-first: every unnecessary click is a bug.** Remove steps, prompts, and manual choices at all costs; prefer *connect-once* (not repeat-the-action), *derive-don't-ask* (read metadata from the files), and *one-surface* (not stacked chrome). Pay implementation/browser-reach cost to delete a user step, and surface the trade-off honestly (§7-style) rather than padding the UI. Embodied by the `~/.claude` folder-connect sidebar and the unified top bar. See `CLAUDE.md → Design principles` and `DECISIONS.md` D-45.
+**North-star principle - frictionless-first: every unnecessary click is a bug.** Remove steps, prompts, and manual choices at all costs; prefer *connect-once* (not repeat-the-action), *derive-don't-ask* (read metadata from the files), and *one-surface* (not stacked chrome). Pay implementation/browser-reach cost to delete a user step, and surface the trade-off honestly (§7-style) rather than padding the UI. Embodied by the `~/.claude` folder-connect sidebar and the unified top bar. See `CLAUDE.md → Design principles` and `decisions.md` D-45.
 
 **Palette (warm neutrals + clay accent):**
 
@@ -61,9 +61,9 @@ Provide a dark theme as a token swap (warm dark, not pure black) but light is th
 
 ## 5. Security & crypto model (canonical)
 
-> **v1 = serverless & trustless.** The authoritative design is **[`../TRUSTLESS-MODEL.md`](../TRUSTLESS-MODEL.md)** (identity, encrypt-to-recipient, fingerprints, WebAuthn-PRF device keys), proven by `poc/`. The §5.1/§5.2 framing below is updated for the no-server model; the placeholder rules (§5.3) and best-effort honesty (§5.4) are unchanged.
+> **v1 = serverless & trustless.** The authoritative design is **[`../trustless-model.md`](../trustless-model.md)** (identity, encrypt-to-recipient, fingerprints, WebAuthn-PRF device keys), proven by the crypto conformance suite. The §5.1/§5.2 framing below is updated for the no-server model; the placeholder rules (§5.3) and best-effort honesty (§5.4) are unchanged.
 
-This is the spine of the product. Every security-relevant PRD must conform to this and to `TRUSTLESS-MODEL.md`.
+This is the spine of the product. Every security-relevant PRD must conform to this and to `trustless-model.md`.
 
 ### 5.1 Trustless baseline (no server)
 - There is **no server** in v1. Parsing, identity, encryption, and decryption are all client-side.
@@ -91,7 +91,7 @@ Tier is decided by **which content keys get wrapped to the recipient**:
 
 ### 5.5 Identity & trust (v1 core)
 - **Identity** = client-minted ECDH P-256 keypair + self-claimed display name; exportable; no server account (PRD-10).
-- **Fingerprints** (SHA-256 over the public key → emoji + hex) verify a key out-of-band - the self-claimed name asserts nothing (`TRUSTLESS-MODEL.md` §5).
+- **Fingerprints** (SHA-256 over the public key → emoji + hex) verify a key out-of-band - the self-claimed name asserts nothing (`trustless-model.md` §5).
 - **Optional device protection** via WebAuthn PRF (no server) locks the identity at rest (PRD-10 §6).
 
 ### 5.6 Lifecycle controls - deferred (vNext)
@@ -101,14 +101,14 @@ Tier is decided by **which content keys get wrapped to the recipient**:
 - **No availability/recall:** no host means a blob can be lost, and cannot be expired/burned/revoked once shared (accepted trade-off).
 - **Self-claimed names** are unverified; trust requires the fingerprint check, which is "good for friends," not MITM-proof.
 - **Sealed-box is anonymous-sender:** the embedded sender name/fingerprint are informational, not signature-verified (optional signatures = vNext).
-- **Best-effort redaction ≠ guarantee;** an unlocked private key lives in JS memory (XSS hygiene matters). See `../TRUSTLESS-MODEL.md` §7 and `../SECURITY-MODEL.md`.
+- **Best-effort redaction ≠ guarantee;** an unlocked private key lives in JS memory (XSS hygiene matters). See `../trustless-model.md` §7 and `../security-model.md`.
 
 ### 5.8 Promoted to v1
 The named-recipient model that was once "vNext, don't preclude" **is now the v1 sharing mechanism** (recipient-wrapped keys, PRD-11) - minus the server. What remains vNext: a server to *store* blobs (hosted URLs), and the server-only features (expiry/burn/revoke/inbox/pinning).
 
 ## 6. Normalized session model (shared types)
 
-> **Authoritative spec: [`PRD-02`](./PRD-02-parser-schema.md).** PRD-02's author inspected ~60 real Claude Code session files and finalized a richer schema than the sketch below (it adds `EventBase` with `id`/`parentId`/`lane`, a `ParseResult` envelope with `diagnostics`+`stats`, `toolId` correlation, DAG `parentUuid→uuid` ordering, signed/`redacted` thinking blocks, and `SCHEMA_VERSION`). The sketch here remains a quick mental model; **where it differs from PRD-02, PRD-02 wins.** Two facts the real format forced that downstream PRDs depend on: ordering is **topo-sort → timestamp → file-order** (not pure timestamp - load-bearing for PRD-08 playback), and `tool_use`↔`tool_result` correlation uses a `toolId` (load-bearing for PRD-03).
+> **Authoritative spec: the implemented schema in `../../apps/client/src/schema`** (originally PRD-02, since removed - in git history). It inspected ~60 real Claude Code session files and finalized a richer schema than the sketch below (it adds `EventBase` with `id`/`parentId`/`lane`, a `ParseResult` envelope with `diagnostics`+`stats`, `toolId` correlation, DAG `parentUuid→uuid` ordering, signed/`redacted` thinking blocks, and `SCHEMA_VERSION`). The sketch here remains a quick mental model; **where it differs from the implemented schema, the code wins.** Two facts the real format forced that downstream PRDs depend on: ordering is **topo-sort → timestamp → file-order** (not pure timestamp - load-bearing for PRD-08 playback), and `tool_use`↔`tool_result` correlation uses a `toolId` (load-bearing for PRD-03).
 
 The parser (PRD-02) converts source-specific JSONL into one normalized, source-agnostic model consumed by viewer, playback, secret scanner, and crypto. Indicative shape:
 

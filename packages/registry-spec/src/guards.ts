@@ -1,5 +1,5 @@
 /**
- * Client-side guards (REGISTRY-SPEC.md §8, D-77). The load-bearing rule: a
+ * Client-side guards (registry-spec.md §8, D-77). The load-bearing rule: a
  * registry URL MUST be https://, with a single localhost exception for dev. No
  * plaintext HTTP, ever. Also a tolerant manifest parser that fails closed on a
  * registry that doesn't declare TLS.
