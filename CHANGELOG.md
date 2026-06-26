@@ -7,6 +7,11 @@ All notable changes to claudepad are documented here. The format is based on
 
 ## [Unreleased]
 
+## [0.14.1] - 2026-06-27 - Scorecard export fix
+
+### Fixed
+- **Scorecard Download / Copy buttons did nothing:** the canvas `toBlob` wrapper resolved to `null` before the image was ready (`toBlob` returns void, so a `?? resolve(null)` fallback always fired first), so both actions bailed silently. Both now produce the PNG.
+
 ## [0.14.0] - 2026-06-27 - Claude scorecard generator
 
 ### Added
