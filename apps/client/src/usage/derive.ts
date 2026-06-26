@@ -57,6 +57,8 @@ export interface DashboardView {
   sessionCount: number
   projectCount: number
   activeDays: number
+  /** Usage-bearing turns summed across the scoped sessions (for per-turn averages). */
+  messageCount: number
   topModel?: { model: string; tokenShare: number }
   effortHours: number
   unpricedModels: string[]
@@ -161,6 +163,7 @@ export function buildDashboard(
     sessionCount: scoped.sessions.length,
     projectCount: scoped.projects.length,
     activeDays,
+    messageCount: scoped.sessions.reduce((n: number, s: SessionUsage) => n + s.messages, 0),
     ...(topModelOf(scoped.byModel) ? { topModel: topModelOf(scoped.byModel) } : {}),
     effortHours: effortHours(scoped.global.totals.output, settings.effort),
     unpricedModels,

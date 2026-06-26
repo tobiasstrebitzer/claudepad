@@ -2,7 +2,7 @@
 // vault already reads. Where your tokens, cost, and time went - global vs per
 // project - computed in the browser, nothing uploaded. Reached at #/usage.
 
-import { Check, ChevronDown, FolderOpen, Info, Loader2, Upload } from 'lucide-react'
+import { Check, ChevronDown, FolderOpen, Image, Info, Loader2, Upload } from 'lucide-react'
 import * as React from 'react'
 import { Button } from '../components/ui/Button'
 import {
@@ -24,6 +24,7 @@ import { dataColor, formatCost, formatCount, formatHours, formatTokens, shortPro
 import { ASOF_NOTE } from '../usage/pricing'
 import { EFFORT_DISCLAIMER, effortFormula } from '../usage/effort'
 import { spendMethodLabel } from '../usage/attribution'
+import { ScorecardDialog } from '../usage/scorecard'
 import type { FileAggregate } from '../usage/types'
 import { useUsageSettings } from '../usage/useUsageSettings'
 import { useVaultUsage } from '../usage/useVaultUsage'
@@ -154,6 +155,7 @@ function Header({
   partial: boolean
 }): React.JSX.Element {
   const selected = filters.project ? shortProject(filters.project) : 'Global - all projects'
+  const [scorecardOpen, setScorecardOpen] = React.useState(false)
   return (
     <div className="flex flex-wrap items-center justify-between gap-3">
       <div>
@@ -164,6 +166,16 @@ function Header({
         </p>
       </div>
       <div className="flex items-center gap-2">
+        <Button variant="secondary" size="sm" className="gap-1.5" onClick={() => setScorecardOpen(true)}>
+          <Image className="size-4" />
+          Scorecard
+        </Button>
+        <ScorecardDialog
+          open={scorecardOpen}
+          onOpenChange={setScorecardOpen}
+          view={view}
+          rangeLabel={rangeLabel(filters)}
+        />
         <DropdownMenu>
           <DropdownMenuTrigger
             render={
@@ -510,6 +522,14 @@ function InfoDot({ text }: { text: string }): React.JSX.Element {
 
 function shortModel(model: string): string {
   return model.replace(/^claude-/, '').replace(/-\d{8}$/, '')
+}
+
+/** Human label for the active date filter, stamped onto the scorecard. */
+function rangeLabel(filters: UsageFilters): string {
+  if (filters.fromDay && filters.toDay) return `${filters.fromDay} - ${filters.toDay}`
+  if (filters.fromDay) return `since ${filters.fromDay}`
+  if (filters.toDay) return `through ${filters.toDay}`
+  return 'all time'
 }
 
 // --- empty / loading states ------------------------------------------------
