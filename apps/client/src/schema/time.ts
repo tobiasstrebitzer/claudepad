@@ -15,22 +15,3 @@ export function normalizeTimestamp(value: unknown): string | undefined {
   if (Number.isNaN(ms)) return undefined
   return new Date(ms).toISOString()
 }
-
-/** True when `a` is strictly earlier than `b` (both ISO strings). */
-export function isBefore(a: string, b: string): boolean {
-  return Date.parse(a) < Date.parse(b)
-}
-
-/** Earliest of two ISO strings (either may be undefined). */
-export function minIso(a: string | undefined, b: string | undefined): string | undefined {
-  if (a === undefined) return b
-  if (b === undefined) return a
-  return isBefore(a, b) ? a : b
-}
-
-/** Latest of two ISO strings (either may be undefined). */
-export function maxIso(a: string | undefined, b: string | undefined): string | undefined {
-  if (a === undefined) return b
-  if (b === undefined) return a
-  return isBefore(a, b) ? b : a
-}

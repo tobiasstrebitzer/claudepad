@@ -5,6 +5,7 @@ export { bytesToB64url, b64urlToBytes, utf8ToBytes, bytesToUtf8 } from './base64
 export { CryptoFormatError, CryptoAuthError, CryptoVersionError } from './errors'
 
 export {
+  ab,
   ECDH,
   randomBytes,
   aesEncrypt,

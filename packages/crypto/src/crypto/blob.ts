@@ -93,7 +93,7 @@ export interface CreateBlobOpts {
  * the secret key is only generated and wrapped at the 'body+secret' tier.
  */
 export async function createBlob(opts: CreateBlobOpts): Promise<ShareBlob> {
-  const recipientPubB64 = resolveRecipientPub(opts)
+  const recipientPubB64 = recipientPubOf(opts)
   const recipientPub = await importPublicKey(recipientPubB64)
 
   // Ephemeral keypair, fresh per share.
@@ -236,10 +236,6 @@ function recipientPubOf(ref: RecipientRef): string {
     return decodePublicCard(ref.recipientCard).pub
   }
   throw new CryptoFormatError('recipient requires recipientPub or recipientCard')
-}
-
-function resolveRecipientPub(opts: CreateBlobOpts): string {
-  return recipientPubOf(opts)
 }
 
 export interface CreateMultiBlobOpts {

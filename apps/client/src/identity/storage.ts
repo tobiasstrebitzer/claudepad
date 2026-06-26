@@ -7,6 +7,7 @@
 
 import type { Identity } from '@claudepad/crypto'
 import type { AesLayer } from '@claudepad/crypto'
+import { createIdbKv } from '../lib/idbKv'
 
 /** An identity stored unprotected - the secret, plus a discriminant. */
 export type StoredUnprotected = Identity & { protected: false }
@@ -36,40 +37,12 @@ export interface IdentityStorage {
   clear(): Promise<void>
 }
 
-const DB_NAME = 'claudepad-identity'
-const STORE = 'identity'
 const KEY = 'self'
-
-function openDb(): Promise<IDBDatabase> {
-  return new Promise((resolve, reject) => {
-    const req = indexedDB.open(DB_NAME, 1)
-    req.onupgradeneeded = () => req.result.createObjectStore(STORE)
-    req.onsuccess = () => resolve(req.result)
-    req.onerror = () => reject(req.error ?? new Error('Could not open IndexedDB.'))
-  })
-}
-
-async function withStore<T>(
-  mode: IDBTransactionMode,
-  run: (store: IDBObjectStore) => IDBRequest<T>
-): Promise<T> {
-  const db = await openDb()
-  try {
-    return await new Promise<T>((resolve, reject) => {
-      const req = run(db.transaction(STORE, mode).objectStore(STORE))
-      req.onsuccess = () => resolve(req.result)
-      req.onerror = () => reject(req.error ?? new Error('IndexedDB request failed.'))
-    })
-  } finally {
-    db.close()
-  }
-}
+const kv = createIdbKv('claudepad-identity', 'identity')
 
 /** The production IndexedDB-backed identity store. */
 export const indexedDbStorage: IdentityStorage = {
-  load: () =>
-    withStore<StoredIdentity | undefined>('readonly', (s) => s.get(KEY)),
-  save: (identity) =>
-    withStore('readwrite', (s) => s.put(identity, KEY)).then(() => undefined),
-  clear: () => withStore('readwrite', (s) => s.delete(KEY)).then(() => undefined)
+  load: () => kv.get<StoredIdentity>(KEY),
+  save: (identity) => kv.set(KEY, identity),
+  clear: () => kv.delete(KEY)
 }

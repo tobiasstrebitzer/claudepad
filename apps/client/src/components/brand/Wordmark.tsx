@@ -80,64 +80,6 @@ export function Mark({
   )
 }
 
-/**
- * Candidate B (Q-A alternative): three descending transcript lines, the top one
- * tipped by an accent dot - "a session resolving into clean lines." Shown in the
- * gallery alongside the page-glyph mark so a final direction can be picked (PRD-09).
- */
-export function MarkLines({
-  size = 24,
-  variant = 'mono',
-  className,
-  title = 'claudepad'
-}: MarkProps) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      role="img"
-      aria-label={title}
-      className={cn('shrink-0', className)}
-    >
-      <line
-        x1="5"
-        y1="7"
-        x2="15"
-        y2="7"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-      />
-      <line
-        x1="5"
-        y1="12"
-        x2="19"
-        y2="12"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-      />
-      <line
-        x1="5"
-        y1="17"
-        x2="12"
-        y2="17"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-      />
-      <circle
-        cx="18"
-        cy="7"
-        r="2.3"
-        fill={variant === 'spark' ? 'var(--accent)' : 'currentColor'}
-      />
-    </svg>
-  )
-}
-
 interface WordmarkProps {
   /** `full` = mark + wordmark; `small` = compact mark + wordmark; `mark` = glyph only. */
   size?: 'full' | 'small' | 'mark'

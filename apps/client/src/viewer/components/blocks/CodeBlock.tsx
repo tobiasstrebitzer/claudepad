@@ -1,5 +1,6 @@
 import { Check, Copy } from 'lucide-react'
 import * as React from 'react'
+import { useCopy } from '../../../ingest/useCopy'
 import { cn } from '../../../lib/cn'
 import { highlightToHtml, resolveLang } from '../../highlighter'
 import { hasSecretToken } from '../../secret-token'
@@ -105,26 +106,12 @@ export function CopyButton({
   className?: string
   label?: string
 }) {
-  const [copied, setCopied] = React.useState(false)
-  const timer = React.useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
-
-  React.useEffect(() => () => clearTimeout(timer.current), [])
-
-  const onCopy = React.useCallback(async () => {
-    try {
-      await navigator.clipboard?.writeText(text)
-    } catch {
-      // Best-effort; clipboard may be unavailable (e.g. jsdom).
-    }
-    setCopied(true)
-    clearTimeout(timer.current)
-    timer.current = setTimeout(() => setCopied(false), 1500)
-  }, [text])
+  const [copied, copy] = useCopy()
 
   return (
     <button
       type="button"
-      onClick={onCopy}
+      onClick={() => copy(text)}
       aria-label={copied ? 'Copied' : label}
       className={cn(
         'inline-flex items-center gap-1 rounded-sm px-1.5 py-0.5 text-label text-muted-foreground',

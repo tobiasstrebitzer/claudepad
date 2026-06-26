@@ -9,6 +9,7 @@
 // This mirrors the proven poc/ flow exactly.
 
 import {
+  ab,
   wrapIdentity,
   unwrapIdentity,
   bytesToB64url,
@@ -43,15 +44,6 @@ async function prfSalt(): Promise<Uint8Array> {
 
 function randomBytes(n: number): Uint8Array {
   return crypto.getRandomValues(new Uint8Array(n))
-}
-
-// Coerce to an exact ArrayBuffer-backed view so it satisfies BufferSource
-// (TS's lib.dom rejects the `ArrayBufferLike` generic, which admits
-// SharedArrayBuffer). Mirrors the shared crypto core's `ab` helper.
-function ab(bytes: Uint8Array): ArrayBuffer {
-  const out = new ArrayBuffer(bytes.byteLength)
-  new Uint8Array(out).set(bytes)
-  return out
 }
 
 // The PRF extension is newer than some TS lib.dom versions; describe just the

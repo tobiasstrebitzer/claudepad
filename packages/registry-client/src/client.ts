@@ -1,6 +1,6 @@
 /**
  * RegistryClient - a fetch-based implementation of {@link RegistryProvider} that
- * talks to ANY conformant registry (REGISTRY-SPEC.md). It hardwires no URL: you
+ * talks to ANY conformant registry (registry-spec.md). It hardwires no URL: you
  * point it at a registry you choose, and the HTTPS-only guard (D-77) is enforced
  * at connect. Inject `fetch` for tests/SSR.
  */
@@ -24,7 +24,6 @@ import {
   type RegistryProvider,
   type RegistryPutOptions,
   type StoreCapabilities,
-  type StorePutOptions,
   type StoredRef
 } from '@claudepad/registry-spec'
 
@@ -145,7 +144,7 @@ export class RegistryClient implements RegistryProvider {
 
   // --- Trusted mode (readable sessions) ---
 
-  async putSession(session: unknown, _opts?: StorePutOptions): Promise<StoredRef> {
+  async putSession(session: unknown): Promise<StoredRef> {
     const res = await this.fetchImpl(this.url(REGISTRY_PATHS.sessions), {
       method: 'POST',
       headers: { 'content-type': 'application/json', ...(await this.authHeaders()) },

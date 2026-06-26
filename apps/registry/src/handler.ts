@@ -1,5 +1,5 @@
 /**
- * The registry contract logic (REGISTRY-SPEC.md §7), as a pure
+ * The registry contract logic (registry-spec.md §7), as a pure
  * `(Request) => Promise<Response>` over a {@link RegistryBackend}. Storage and
  * runtime are injected, so the same handler serves the Cloudflare Worker and the
  * in-memory test/conformance backend.
@@ -113,7 +113,13 @@ export function createRegistryHandler(
       }
       const meta: BlobMeta = {}
       const expires = url.searchParams.get('expiresInSeconds')
-      if (expires && manifest.store.expiry) meta.expiresAt = now() + Number(expires) * 1000
+      if (expires && manifest.store.expiry) {
+        const seconds = Number(expires)
+        if (!Number.isFinite(seconds) || seconds <= 0) {
+          throw new RegistryError('bad_request', 'Invalid expiresInSeconds')
+        }
+        meta.expiresAt = now() + seconds * 1000
+      }
       if (url.searchParams.get('burnAfterRead') === 'true' && manifest.store.burnAfterRead) {
         meta.burnAfterRead = true
       }

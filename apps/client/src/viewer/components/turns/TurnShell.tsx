@@ -1,5 +1,6 @@
 import * as React from 'react'
 import { Link2, Check, UserRound, Sparkles, Info } from 'lucide-react'
+import { useCopy } from '../../../ingest/useCopy'
 import { cn } from '../../../lib/cn'
 import { formatClock, formatAbsolute } from '../../format'
 import { Tooltip, TooltipContent, TooltipTrigger } from '../../../components/ui/Tooltip'
@@ -94,25 +95,15 @@ function Avatar({ variant }: { variant: 'user' | 'assistant' | 'system' }) {
 }
 
 function CopyLinkButton({ anchorId }: { anchorId: string }) {
-  const [copied, setCopied] = React.useState(false)
-  const timer = React.useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
-  React.useEffect(() => () => clearTimeout(timer.current), [])
+  const [copied, copy] = useCopy()
 
-  const onCopy = React.useCallback(async () => {
+  const onCopy = React.useCallback(() => {
     const base =
       typeof window !== 'undefined'
         ? (window.location.href.split('#')[0]?.split('?')[0] ?? '')
         : ''
-    const link = `${base}#msg=${anchorId}`
-    try {
-      await navigator.clipboard?.writeText(link)
-    } catch {
-      /* best effort */
-    }
-    setCopied(true)
-    clearTimeout(timer.current)
-    timer.current = setTimeout(() => setCopied(false), 1500)
-  }, [anchorId])
+    copy(`${base}#msg=${anchorId}`)
+  }, [anchorId, copy])
 
   return (
     <button

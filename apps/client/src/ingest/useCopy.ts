@@ -1,7 +1,8 @@
 import * as React from 'react'
 
-// Small clipboard helper with a transient "copied" flag (used by code copy, the
-// onboarding one-liner, and deep links). Falls back gracefully if clipboard is denied.
+// Small clipboard helper with a transient "copied" flag (used by code copy,
+// turn deep links, the onboarding one-liner, identity/key cards, and share
+// blobs). Falls back gracefully if clipboard is denied.
 export function useCopy(resetMs = 1500): [copied: boolean, copy: (text: string) => void] {
   const [copied, setCopied] = React.useState(false)
   const timer = React.useRef<ReturnType<typeof setTimeout> | null>(null)
