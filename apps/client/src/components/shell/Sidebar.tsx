@@ -20,8 +20,8 @@ import {
   type VaultSession
 } from '../../fs'
 import { IdentityControl } from '../../identity'
-import { OnboardingControl } from '../../onboarding'
 import { cn } from '../../lib/cn'
+import { OnboardingControl } from '../../onboarding'
 import { Wordmark } from '../brand/Wordmark'
 import { Button } from '../ui/Button'
 
@@ -353,7 +353,7 @@ function SessionRow({
           <span className="min-w-0 flex-1">
             <span
               className={cn(
-                'mb-[3px] block truncate text-body-sm leading-[18px] text-text',
+                'mb-[3px] block truncate leading-[18px] text-body-sm',
                 active && 'font-medium'
               )}
               title={session.title}
