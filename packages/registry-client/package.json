@@ -1,6 +1,6 @@
 {
   "name": "@claudepad/registry-client",
-  "version": "0.12.0",
+  "version": "0.12.1",
   "private": true,
   "description": "Framework-agnostic client SDK for the registry contract (registry-spec.md): a fetch-based RegistryClient that works against ANY conformant registry (no hardwired URL), with the HTTPS-only guard enforced at connect. Implements RegistryProvider.",
   "license": "MIT",

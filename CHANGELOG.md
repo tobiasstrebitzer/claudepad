@@ -7,6 +7,17 @@ All notable changes to claudepad are documented here. The format is based on
 
 ## [Unreleased]
 
+## [0.12.1] - 2026-06-26 - Docs cleanup + code-quality pass
+
+### Changed
+- **Docs reorganized (D-90):** the implemented per-phase PRDs were removed (only the vNext `prd-07-backend` and the canonical `_context` survive; `prd/README` is now a pointer); every `docs/` file was renamed to lower-case-dash (`registry-spec.md`, `trustless-model.md`, `verify-zero-knowledge.md`, ...), with root files keeping the standard uppercase. Retired `poc/` references now point to `packages/crypto/test/conformance.test.ts`, and stale `packages/{client,shared,secrets}` paths, the dropped `verify:poc` command, and the security-review-as-hard-gate framing (now post-launch per D-78) were corrected across CLAUDE.md, README, CONTRIBUTING, SECURITY, and the docs set.
+
+### Fixed
+- **Registry blob expiry:** a non-numeric `expiresInSeconds` no longer produces a blob that never expires; the value is validated and rejected when invalid.
+
+### Internal
+- Code-quality pass from a session audit: a shared `idbKv` helper (dedups identical IndexedDB code), `useCopy` reuse in the code/link copy buttons, dead-export removal (`MarkLines`, `minIso`/`maxIso`/`isBefore`), dropping the no-op `resolveRecipientPub` wrapper, and deduping the `ab()` helper via `@claudepad/crypto`.
+
 ## [0.11.0] - 2026-06-23 - Easy registry default + streamlined sharing
 
 ### Added
