@@ -35,6 +35,11 @@ const ALLOW = [
   'https://react.dev/errors/', // React minified-error decoder link (string, not a fetch)
   'https://base-ui.com/production-error', // Base UI minified-error link (string, not a fetch)
   'https://registry.example.com', // registry-URL input placeholder (RFC-2606 reserved; never a real host)
+  // Recharts v3 bundles Redux/Redux-Toolkit for internal chart state; these are
+  // inert error/warning links inside throw/console.warn strings, never fetched.
+  'https://redux.js.org/Errors', // Redux minified-error decoder link (string, not a fetch)
+  'https://redux-toolkit.js.org/Errors', // Redux Toolkit minified-error link (string, not a fetch)
+  'https://bit.ly/3cXEKWf', // RTK dev-mode middleware warning link (console.warn string, not a fetch)
 ];
 
 const SCAN_EXT = new Set(['.js', '.mjs', '.css', '.html']);

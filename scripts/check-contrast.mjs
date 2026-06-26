@@ -21,6 +21,13 @@ const PAIRINGS = [
   { fg: '--success', bg: '--bg', min: 3, note: 'success on canvas' },
   { fg: '--warn', bg: '--bg', min: 3, note: 'warn on canvas' },
   { fg: '--danger', bg: '--bg', min: 3, note: 'danger on canvas' },
+  // Data-viz palette (PRD-13): each categorical hue as a chart fill on a card.
+  { fg: '--data-1', bg: '--surface', min: 3, note: 'data-1 on surface' },
+  { fg: '--data-2', bg: '--surface', min: 3, note: 'data-2 on surface' },
+  { fg: '--data-3', bg: '--surface', min: 3, note: 'data-3 on surface' },
+  { fg: '--data-4', bg: '--surface', min: 3, note: 'data-4 on surface' },
+  { fg: '--data-5', bg: '--surface', min: 3, note: 'data-5 on surface' },
+  { fg: '--data-6', bg: '--surface', min: 3, note: 'data-6 on surface' },
 ];
 
 // Parse every CSS rule into { selector (whitespace-normalized), decls }.

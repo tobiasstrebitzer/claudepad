@@ -1,6 +1,14 @@
 # PRD-13 - Usage Insights ("Usage Stats")
 
-> **Phase:** Post-launch feature (the first new feature after the v1.0 launch). · **Status:** Draft. · **Owner:** next session.
+> **Phase:** Post-launch feature (the first new feature after the v1.0 launch). · **Status:** ✅ Built 2026-06-26 (OQs resolved, see §11; as-built notes below). · **Owner:** current session.
+>
+> **As-built (2026-06-26):** Shipped in `apps/client/src/usage/**` + `pages/UsageInsights.tsx`, route `#/usage`, sidebar-footer entry. Pure spine (`aggregate`/`pricing`/`attribution`/`effort`/`derive`) is fully unit-tested (24 usage tests); compute runs in `usage.worker.ts` with an `idbKv` per-file cache (`cache.ts`) keyed by `(fileId,size,lastModified)`. Categorical `--data-1..6` token palette validated by `check-contrast` across all 4 palettes × light/dark. Playwright smoke covers the drop-fallback dashboard. `pnpm check` + e2e green.
+>
+> **Revisions after first build (2026-06-26, owner-requested - see D-92):**
+> - **OQ-6 reversed → Recharts.** The hand-rolled SVG charts lacked tooltips/axes; the trend, histogram, and model breakdown now use **Recharts 3** (themed entirely with `var(--data-N)`/`var(--text-muted)`/`var(--border)`, so no-raw-hex + contrast stay green). The weekday×hour **heatmap and the project-table proportion bars stay hand-rolled** (no native Recharts heatmap). Bundle cost: ~130 KB gzip (Recharts pulls Redux); three inert Redux error-link strings added to `check-no-external-origins`'s allow-list.
+> - **Day-granular exact filtering (supersedes the earlier month-range limit).** The per-file cache now holds **day buckets** (`DayUsage`: totals + model split + 24-slot hour histogram); `rollupVault(files, {fromDay,toDay})` derives every figure - cards, trend, **heatmap**, per-project-month Real Spend, histogram - from the in-range day buckets, so a start/end down to the day yields **exact** usage across *all* cards and charts (the prior FR-17 heatmap caveat is gone).
+> - **Top-bar controls:** a shadcn **DropdownMenu** project selector + a shadcn **date-range picker** (`ui/Calendar.tsx` on react-day-picker v10, themed via its `--rdp-*` vars; `usage/DateRangeControl.tsx` with presets) drive `fromDay`/`toDay`. Tokens-vs-cost toggle added to the trend.
+> - **Cross-file dedup (D-93).** Claude Code copies the same assistant turn into resumed/sidechain session files (fresh `uuid` each), so the original per-file-sum roll-up over-counted **2.26×** on a real vault. Now each turn carries a `usageKey` (`message.id`[`:requestId`], lifted onto `EventBase`) and `rollupVault` dedups globally (first-seen wins, keyless turns kept). `FileAggregate` switched from pre-summed day buckets to a per-turn `UsageRecord` list (dedup must precede summing); per-file cache bumped to `…-v2`. Matches `ccusage`-style counting.
 >
 > A local, private analytics surface over the sessions claudepad already reads. Connect `~/.claude` once (the vault we already have) and see **where your tokens, cost, and time went** - global vs per-project - without anything leaving the browser.
 >
@@ -77,7 +85,7 @@ Drill-in: clicking a project row scopes every card/chart to that project and lis
 ## 5. Functional requirements
 
 **Data model & extraction**
-- **FR-1** Extend the normalized schema (tolerant, per PRD-02 ethos): lift `message.usage` and `message.model` into a typed `usage?: TokenUsage` on `AssistantEvent`. Capture `input`, `output`, `cacheCreate` (`cache_creation_input_tokens`), `cacheRead` (`cache_read_input_tokens`), the `ephemeral_1h`/`ephemeral_5m` split, and `serviceTier`. Unknown sub-fields are ignored, not dropped (raw is still preserved); sessions without usage parse fine with `usage` absent. Add fixtures from the real corpus (`apps/client/test/schema/fixtures/real-*.jsonl` already contain usage).
+- **FR-1** Extend the normalized schema (tolerant, per PRD-02 ethos): lift `message.usage` into a typed `usage?: TokenUsage`. **Built on `EventBase`, not `AssistantEvent`** (deviation from the first draft): one source assistant record can split into thinking/tool_use events with *no* `AssistantEvent` (a tool-only turn), and those turns still consume tokens - so `usage` is attached **exactly once per source record, to its first emitted event**, and the aggregator sums it across all events. Captures `input`, `output`, `cacheCreate` (`cache_creation_input_tokens`), `cacheRead` (`cache_read_input_tokens`), the `ephemeral_1h`/`ephemeral_5m` split, `serviceTier`, and the `server_tool_use` web-search/web-fetch request counts. Unknown sub-fields are ignored, not dropped (raw is still preserved); sessions without usage parse fine with `usage` absent. Tested in `apps/client/test/schema/usage.test.ts` against the real corpus (`real-*.jsonl`) with a once-per-record sum invariant.
 - **FR-2** A **pure** aggregation module `usage/aggregate.ts`: fold a `Session` (or an event iterator) into a `SessionUsage` - totals per token-kind, per model, message count, first/last timestamp, active duration (idle-collapsed). No I/O, fully unit-tested.
 - **FR-3** A vault roll-up `VaultUsage`: per-project (`cwd`-keyed) and global aggregates, plus per-day and per-(weekday,hour) buckets, built by streaming each session once.
 
@@ -135,9 +143,12 @@ interface TokenUsage {
   cacheRead: number      // cache_read_input_tokens
   cacheCreate1h?: number // cache_creation.ephemeral_1h_input_tokens
   cacheCreate5m?: number // cache_creation.ephemeral_5m_input_tokens
+  webSearch?: number     // server_tool_use.web_search_requests (count)
+  webFetch?: number      // server_tool_use.web_fetch_requests (count)
   serviceTier?: string   // "standard" | "priority" | ...
 }
-// AssistantEvent gains: usage?: TokenUsage   (model?: string already exists)
+// EventBase gains: usage?: TokenUsage  (attached once per source assistant record,
+// on its first emitted event - covers tool-only turns; see FR-1)
 
 interface SessionUsage {
   sessionId: string
@@ -191,18 +202,20 @@ Conforms to `_context.md` §5 and `security-model.md`. Usage Insights reads the 
 - [ ] No new third-party fetch; `verify:no-phone-home` (check-no-external-origins) green.
 - [ ] Playwright smoke: open `#/usage` on a fixture vault, assert cards + table + a chart render.
 
-## 11. Open questions
+## 11. Open questions - RESOLVED (2026-06-26)
 
-- **OQ-1 (pricing freshness):** bundled table + "as of" date + editable overrides is the proposal (no fetch). Is manual maintenance acceptable, or do we want an opt-in, allow-listed pricing fetch later? Recommend: bundled-only for v1, with a stale-date warning.
-- **OQ-2 (effort formula):** output-token-based, idle-collapsed-wall-clock-based, or a blend? What default factor is defensible? It is inherently fuzzy - confirm we present it as a directional toy, editable, not a headline metric.
-- **OQ-3 (Real-Spend weight & periods):** default to est-cost share vs token share? How to handle a monthly subscription over a multi-month vault (per-month allocation vs whole-range proration)?
-- **OQ-4 (schema vs raw):** lift `usage` into the typed schema (recommended - reusable, testable) vs computing from `event.raw` only inside `usage/`? Recommend lifting.
-- **OQ-5 (cache & correctness):** is `(fileId,size,lastModified)` a safe cache key for session files (Claude Code appends; size/mtime change on append)? Confirm append-only behavior so the key is sound.
-- **OQ-6 (charts):** hand-rolled vs a tiny tree-shakeable lib that can be fed CSS-var colors. Recommend hand-rolled to preserve the no-raw-hex + single-bundle posture; revisit if the chart surface grows.
-- **OQ-7 (server tool use):** include per-request web-search/web-fetch costs (data is present) or defer? Likely a small refinement.
-- **OQ-8 (non-Chromium):** how much of the feature works via drop/paste without folder-connect (Safari/Firefox)? Define the degraded experience.
-- **OQ-9 (vNext - shareable report):** a recipient-encrypted usage report via the existing blob model - in scope later? Out of scope now, but the design should not preclude it.
-- **OQ-10 (boundaries):** define "active duration" (idle threshold reuse from the playback timeline's idle-collapse) and the calendar timezone (local vs UTC) for day/heatmap bucketing.
+All ten resolved before build. Factual ones (4/5/10) were settled by reading the code and real fixtures; the two product-taste calls (2/3) were decided by the owner. Decisions:
+
+- **OQ-1 (pricing freshness) -> bundled-only for v1.** Bundled table + per-model "as of" date + user-editable overrides (persisted via `idbKv`). A stale-date warning shows when the table's `asOf` is older than a threshold. No fetch (keeps `check-no-external-origins` green). An opt-in allow-listed pricing fetch stays vNext.
+- **OQ-2 (effort formula) -> output-volume based (default), editable.** Effort = output tokens / a configurable human-authoring rate. Scales with work *produced*. Shown global + per-project with a prominent "rough estimate" disclaimer and the formula visible/editable. (Wall-clock and blend variants remain selectable knobs, but output-volume is the default headline.)
+- **OQ-3 (Real-Spend weight & periods) -> est-cost share, per-month.** Weight each project by its estimated API-equivalent cost; allocate each calendar month's subscription amount within that month, then sum across the active range. Raw-token-share weighting stays a selectable alternative. Labeled an allocation, method visible.
+- **OQ-4 (schema vs raw) -> lift into the typed schema.** Confirmed feasible/clean: `AssistantEvent` gains `usage?: TokenUsage` (additive, tolerant). Real fixtures (`real-2.1.177/160/183.jsonl`) already carry full usage blocks (incl. the ephemeral split, `service_tier`, `server_tool_use`) to test against.
+- **OQ-5 (cache key) -> `(fileId, size, lastModified)` is sound.** Claude Code JSONL is append-only; both `size` and `lastModified` advance on every append, so the key changes iff the file changed. Safe for incremental recompute.
+- **OQ-6 (charts) -> hand-rolled SVG/CSS.** Preserves the single-bundle + no-CDN + `check-no-raw-hex` posture and matches the existing hand-built scrubber. A categorical data-viz token set is added and validated by `check-contrast`.
+- **OQ-7 (server tool use) -> capture, defer costing.** Lift `server_tool_use.web_search_requests`/`web_fetch_requests` counts into the schema/aggregates now (data is present), but defer per-request dollar costing to a later refinement (kept out of the headline cost for v1).
+- **OQ-8 (non-Chromium) -> drop/paste degraded mode.** Without folder-connect (Safari/Firefox), `#/usage` accepts dropped/pasted session files and computes over that subset; no vault enumeration, no incremental cache benefit, but every card/chart renders from the provided sessions. Clearly framed as a partial view.
+- **OQ-9 (vNext - shareable report) -> out of scope now.** Design does not preclude a later recipient-encrypted usage report routed through `createBlob`.
+- **OQ-10 (boundaries) -> reuse playback idle threshold; local timezone.** "Active duration" uses the playback `idleThreshold` (20s) idle-collapse; day and weekday/hour bucketing use the viewer's **local** timezone (matches "when I work" intuition).
 
 ## 12. Phase / milestone
 

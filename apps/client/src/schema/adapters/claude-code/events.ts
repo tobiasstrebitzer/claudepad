@@ -6,6 +6,7 @@ import type {
   MetaEvent,
   SessionEvent,
   ThinkingEvent,
+  TokenUsage,
   ToolResultEvent,
   ToolUseEvent,
   UserEvent
@@ -211,7 +212,85 @@ function mapUserContentBlock(block: RawBlock, out: MapOutput): ContentBlock {
   return rawBlock(block)
 }
 
+/** Coerce a value to a finite non-negative integer, else undefined. */
+function asCount(v: unknown): number | undefined {
+  return typeof v === 'number' && Number.isFinite(v) ? v : undefined
+}
+
+/**
+ * Parse a Claude Code `message.usage` block into a tolerant TokenUsage (PRD-13
+ * FR-1). Returns undefined when there is nothing worth recording. Missing token
+ * fields default to 0; the ephemeral cache split / service tier / server tool
+ * counts are optional.
+ */
+function parseUsage(message: unknown): TokenUsage | undefined {
+  if (!isObject(message)) return undefined
+  const u = message['usage']
+  if (!isObject(u)) return undefined
+
+  const usage: TokenUsage = {
+    input: asCount(u['input_tokens']) ?? 0,
+    output: asCount(u['output_tokens']) ?? 0,
+    cacheCreate: asCount(u['cache_creation_input_tokens']) ?? 0,
+    cacheRead: asCount(u['cache_read_input_tokens']) ?? 0
+  }
+
+  const cc = u['cache_creation']
+  if (isObject(cc)) {
+    const h = asCount(cc['ephemeral_1h_input_tokens'])
+    const m = asCount(cc['ephemeral_5m_input_tokens'])
+    if (h !== undefined) usage.cacheCreate1h = h
+    if (m !== undefined) usage.cacheCreate5m = m
+  }
+
+  const st = u['service_tier']
+  if (typeof st === 'string') usage.serviceTier = st
+
+  const stu = u['server_tool_use']
+  if (isObject(stu)) {
+    const ws = asCount(stu['web_search_requests'])
+    const wf = asCount(stu['web_fetch_requests'])
+    if (ws !== undefined) usage.webSearch = ws
+    if (wf !== undefined) usage.webFetch = wf
+  }
+
+  return usage
+}
+
+/**
+ * Cross-file dedup key for a usage-bearing assistant record: the API
+ * `message.id`, suffixed with the top-level `requestId` when present (matching
+ * the convention established tools like ccusage use). Returns undefined when no
+ * `message.id` is available, so such turns are never collapsed together.
+ */
+function usageKeyOf(rec: RawRecord): string | undefined {
+  const message = rec['message']
+  const id = isObject(message) ? message['id'] : undefined
+  if (typeof id !== 'string' || id.length === 0) return undefined
+  const req = rec['requestId']
+  return typeof req === 'string' && req.length > 0 ? `${id}:${req}` : id
+}
+
+/**
+ * One assistant record → its events, with `usage` attached once to the first
+ * emitted event (covers tool-only / thinking-only turns that produce no
+ * AssistantEvent). See TokenUsage on EventBase.
+ */
 function mapAssistant(rec: RawRecord, ctx: MapContext): MapOutput {
+  const out = mapAssistantEvents(rec, ctx)
+  const usage = parseUsage(rec['message'])
+  if (usage && out.events.length > 0) {
+    // Prefer an assistant event as the carrier (it holds `model`, so cost can be
+    // priced per turn); fall back to the first event for tool/thinking-only turns.
+    const carrier = out.events.find((e) => e.kind === 'assistant') ?? out.events[0]!
+    carrier.usage = usage
+    const key = usageKeyOf(rec)
+    if (key) carrier.usageKey = key
+  }
+  return out
+}
+
+function mapAssistantEvents(rec: RawRecord, ctx: MapContext): MapOutput {
   const out = emptyOutput()
   const base = baseFields(rec, ctx)
   out.missingTimestamp = base.missingTimestamp

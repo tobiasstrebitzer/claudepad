@@ -14,6 +14,7 @@ import { SHARE_ID_PARAM, SHARE_REGISTRY_PARAM } from '@claudepad/registry-client
 import { SessionExperience, sessionTopBar, useSession } from './ingest'
 import { About } from './pages/About'
 import { Gallery } from './pages/Gallery'
+import { UsageInsights } from './pages/UsageInsights'
 import { PlaybackProvider, TransportBar } from './playback'
 import { ReceiveDialog, type OpenShareResult } from './share'
 import type { SecretMap } from './viewer'
@@ -48,6 +49,7 @@ export function App() {
   const route = useHashRoute()
   const isGallery = route.startsWith('#/gallery')
   const isAbout = route.startsWith('#/about')
+  const isUsage = route.startsWith('#/usage')
 
   const vault = useVault()
   const [activeSessionId, setActiveSessionId] = React.useState<string>()
@@ -193,24 +195,26 @@ export function App() {
     ? { crumbs: [{ label: 'Gallery' }], onBack: onHome, backLabel: 'Back to app' }
     : isAbout
       ? { crumbs: [{ label: 'About' }], onBack: onHome, backLabel: 'Back to app' }
-      : loaded
-        ? sessionTopBar({
-          session: loaded.session,
-          diagnostics: loaded.diagnostics,
-          fileName: loaded.fileName,
-          viewMode,
-          onViewMode: setViewMode,
-          onHome
-        })
-        : {
-          crumbs: [],
-          actions: (
-            <Button size="sm" variant="secondary" onClick={openFilePicker}>
-              <FolderOpen />
-              Open…
-            </Button>
-          )
-        }
+      : isUsage
+        ? { crumbs: [{ label: 'Usage Insights' }], onBack: onHome, backLabel: 'Back to app' }
+        : loaded
+          ? sessionTopBar({
+            session: loaded.session,
+            diagnostics: loaded.diagnostics,
+            fileName: loaded.fileName,
+            viewMode,
+            onViewMode: setViewMode,
+            onHome
+          })
+          : {
+            crumbs: [],
+            actions: (
+              <Button size="sm" variant="secondary" onClick={openFilePicker}>
+                <FolderOpen />
+                Open…
+              </Button>
+            )
+          }
 
   return (
     <TooltipProvider>
@@ -236,6 +240,8 @@ export function App() {
                         <Gallery />
                       ) : isAbout ? (
                         <About />
+                      ) : isUsage ? (
+                        <UsageInsights vault={vault} />
                       ) : (
                         <SessionExperience
                           api={session}

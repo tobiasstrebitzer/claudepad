@@ -1,6 +1,7 @@
 import { formatBytes } from '@/ingest'
 import {
   AlertTriangle,
+  BarChart3,
   ChevronRight,
   Code2,
   FileText,
@@ -407,8 +408,23 @@ function Hint({ icon, children }: { icon?: React.ReactNode; children: React.Reac
 
 function SidebarFooter({ route }: { route: string }) {
   const aboutActive = route.startsWith('#/about')
+  const usageActive = route.startsWith('#/usage')
   return (
     <div className="px-2 py-2 border-t border-border flex flex-col gap-0.5">
+      <a
+        href="#/usage"
+        className={cn(
+          'flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-body-sm',
+          'transition-colors hover:bg-accent-tint hover:text-text focus-visible:outline-none',
+          'focus-visible:ring-2 focus-visible:ring-ring',
+          usageActive ? 'bg-accent-tint text-text' : 'text-muted-foreground'
+        )}
+      >
+        <span className="grid size-7 shrink-0 place-items-center">
+          <BarChart3 className="size-4" />
+        </span>
+        Usage Insights
+      </a>
       <a
         href="#/about"
         className={cn(

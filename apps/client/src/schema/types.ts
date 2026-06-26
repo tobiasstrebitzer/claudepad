@@ -39,6 +39,23 @@ export type SessionEvent =
   | ToolResultEvent
   | MetaEvent
 
+/**
+ * Per-turn token accounting lifted from a Claude Code assistant `message.usage`
+ * block (PRD-13 FR-1). Tolerant: missing sub-fields default to 0/absent; unknown
+ * sub-fields are ignored (the source record is still preserved on `raw`).
+ */
+export interface TokenUsage {
+  input: number // input_tokens
+  output: number // output_tokens
+  cacheCreate: number // cache_creation_input_tokens (fresh cache writes)
+  cacheRead: number // cache_read_input_tokens (cheap cache hits)
+  cacheCreate1h?: number // cache_creation.ephemeral_1h_input_tokens
+  cacheCreate5m?: number // cache_creation.ephemeral_5m_input_tokens
+  webSearch?: number // server_tool_use.web_search_requests (count, not tokens)
+  webFetch?: number // server_tool_use.web_fetch_requests (count, not tokens)
+  serviceTier?: string // "standard" | "priority" | ...
+}
+
 export interface EventBase {
   /** Source uuid when present; else synthesized stable id (FR-23). */
   id?: string
@@ -52,6 +69,23 @@ export interface EventBase {
   meta?: boolean
   /** Original source record, preserved unless preserveRaw:false (FR-23, FR-30). */
   raw?: unknown
+  /**
+   * Token usage for the source assistant turn (PRD-13 FR-1). Populated exactly
+   * once per source assistant *record*, on its first emitted event - which may be
+   * a thinking/tool_use event for turns with no assistant text, so it lives on
+   * EventBase (not AssistantEvent) to avoid dropping tool-only turns. Aggregation
+   * sums this across all events; each record contributes once.
+   */
+  usage?: TokenUsage
+  /**
+   * Stable cross-file identity of the source API response (`message.id`, plus
+   * `:requestId` when present), set alongside `usage` on the carrier event.
+   * Claude Code copies the same assistant turn into resumed/sidechain session
+   * files with a *fresh* `uuid` each time, so `id` cannot dedup them; the
+   * aggregator uses this key to count each turn's tokens exactly once across the
+   * vault (PRD-13). Absent when the source carried no `message.id`.
+   */
+  usageKey?: string
 }
 
 export interface UserEvent extends EventBase {

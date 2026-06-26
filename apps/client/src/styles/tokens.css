@@ -29,6 +29,15 @@
   --warn: #b87f30; /* amber, darkened from #c28a3a to clear 3:1 on canvas (FR-21) */
   --danger: #c25b4e;
 
+  /* Categorical data-viz palette (PRD-13): functional, not aesthetic - fixed
+   * across viewer-themes, only light/dark. Each clears 3:1 on every --surface. */
+  --data-1: #bf6244;
+  --data-2: #1f7a73;
+  --data-3: #4f57bf;
+  --data-4: #5f7e2c;
+  --data-5: #a23c79;
+  --data-6: #8a6a1f;
+
   /* Focus ring (accent-derived) */
   --ring: #cc785c;
 
@@ -58,6 +67,15 @@
   --success: #7fa98a;
   --warn: #d8a85a;
   --danger: #db776a;
+
+  /* Categorical data-viz palette (lifted for dark; clears 3:1 on every dark
+   * --surface, the lightest being #222120). */
+  --data-1: #e0916f;
+  --data-2: #54b9b0;
+  --data-3: #8e9bf0;
+  --data-4: #9fc06a;
+  --data-5: #d98ac0;
+  --data-6: #d3ad5e;
 
   --ring: #d98e73;
 
