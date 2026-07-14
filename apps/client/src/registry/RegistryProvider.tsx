@@ -11,6 +11,7 @@ import {
 import * as React from 'react'
 import { useIdentityContext } from '../identity'
 import { usePersistedState } from '../lib/usePersistedState'
+import { REGISTRY_ENABLED } from './availability'
 import { pubHash } from './pubHash'
 
 const STORAGE_KEY = 'claudepad.registry-url'
@@ -57,7 +58,9 @@ export function RegistryProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   React.useEffect(() => {
-    const trimmed = url.trim()
+    // Gated off (pending independent review, D-95): never connect, even to a
+    // previously persisted URL.
+    const trimmed = REGISTRY_ENABLED ? url.trim() : ''
     if (!trimmed) {
       setState({ status: 'none' })
       return

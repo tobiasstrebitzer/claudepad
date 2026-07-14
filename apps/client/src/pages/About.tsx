@@ -14,7 +14,7 @@ import { Wordmark } from '../components/brand/Wordmark'
 import { Badge } from '../components/ui/Badge'
 import { Button } from '../components/ui/Button'
 import { Separator } from '../components/ui/Separator'
-import { DEFAULT_REGISTRY_LABEL } from '../registry'
+import { DEFAULT_REGISTRY_LABEL, REGISTRY_ENABLED } from '../registry'
 
 const REPO_URL = 'https://github.com/tobiasstrebitzer/claudepad'
 
@@ -153,13 +153,24 @@ export function About() {
         <span className="grid size-9 place-items-center rounded-full bg-accent-tint text-accent">
           <Server className="size-4.5" strokeWidth={1.5} />
         </span>
-        <h2 className="mt-4 font-serif text-heading-1 text-text">The optional registry</h2>
+        <h2 className="mt-4 flex items-center gap-3 font-serif text-heading-1 text-text">
+          The optional registry
+          {!REGISTRY_ENABLED && <Badge variant="outline">coming soon</Badge>}
+        </h2>
         <p className="mt-3 text-body leading-relaxed text-muted-foreground">
           Sharing works fully offline - the encrypted blob is self-contained, and you can carry it
           over Slack, email, or a file with no service involved. A <em>registry</em> is an opt-in
           convenience on top of that: a place to host a blob behind a short link, and a directory
           so people can share with you by name instead of pasting a long public key.
         </p>
+        {!REGISTRY_ENABLED && (
+          <p className="mt-3 rounded-lg border border-border bg-surface p-4 text-body-sm leading-relaxed text-muted-foreground">
+            Registries are switched off in this build for now. They only ever hold encrypted
+            blobs they cannot read, but we want that design to pass an independent security
+            review before offering it - honesty over polish. Everything below describes what is
+            coming; sharing already works fully without it.
+          </p>
+        )}
         <ul className="mt-4 grid gap-3">
           {[
             ['Zero-knowledge by default', 'A registry stores opaque blobs it cannot read and a public-key directory. It never sees your sessions or your private key.'],

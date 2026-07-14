@@ -118,7 +118,7 @@ TypeScript (strict) · Vite + React 19 · shadcn/ui on base-ui + Tailwind · Web
 
 - **Conform to the canonical docs.** If a PRD conflicts with `docs/prd/_context.md` or `docs/trustless-model.md`, those win (or update them deliberately and note it in `decisions.md`).
 - **Keep the crypto zero-dependency and auditable.** Don't introduce a crypto lib for the v1 core.
-- **No server assumptions.** Every flow must work fully offline. The client ships no *automatic* server dependency. **Exception (D-88/D-89):** `registry.claudepad.io` is referenced as a single constant (`apps/client/src/registry/defaults.ts`) and offered as a one-click **opt-in** default - unchecked in onboarding (so a new user stays fully local) and surfaced in the identity/registry modal - still swappable, still offline-capable, and allow-listed in `check-no-external-origins`. Don't scatter the URL elsewhere or assume a registry exists in any flow.
+- **No server assumptions.** Every flow must work fully offline. The client ships no *automatic* server dependency. **Exception (D-88/D-89):** `registry.claudepad.io` is referenced as a single constant (`apps/client/src/registry/defaults.ts`) and offered as a one-click **opt-in** default - unchecked in onboarding (so a new user stays fully local) and surfaced in the identity/registry modal - still swappable, still offline-capable, and allow-listed in `check-no-external-origins`. Don't scatter the URL elsewhere or assume a registry exists in any flow. **Launch gate (D-95):** the whole registry surface is disabled in production builds (shown as "coming soon", pending the independent review) via `REGISTRY_ENABLED` in `apps/client/src/registry/availability.ts`; dev builds keep it on, `VITE_REGISTRY_ENABLED=true` re-enables it in a production build.
 - **Honesty over polish in security claims.** Surface trade-offs (no recall/expiry, self-claimed names, best-effort redaction) - see `trustless-model.md` §7.
 - **Design language:** warm-minimal (paige/white canvas, clay-orange accent), serif display + clean sans, per `_context.md` §4 - Anthropic-inspired but a distinct claudepad identity.
 - Some PRD sections (PRD-05 §4/§7.3/§7.4/§6.6, PRD-07 entirely, parts of PRD-09) describe the **vNext** link/store path and are explicitly banner-tagged - don't implement them for v1.
@@ -133,5 +133,6 @@ TypeScript (strict) · Vite + React 19 · shadcn/ui on base-ui + Tailwind · Web
 - frontend_smoke: yes - `pnpm --filter @claudepad/client run test:e2e` (Playwright)
 - push: yes - remote `origin` = `https://github.com/tobiasstrebitzer/claudepad`
 - version_bump: yes (aligned across all packages; pre-1.0 - infer patch/minor)
+- co_authored_by: no (global)
 - publish: no (packages are private, pre-launch)
 - docs: `docs/` folder (PRDs, ROADMAP, DECISIONS) + this CLAUDE.md as index; record as-built deviations in `decisions.md`

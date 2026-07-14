@@ -5,16 +5,37 @@
 import type { RegistryClient } from '@claudepad/registry-client'
 import { Check, Loader2, Server, Sparkles, TriangleAlert, UploadCloud } from 'lucide-react'
 import * as React from 'react'
+import { Badge } from '../components/ui/Badge'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
 import { Popover, PopoverContent, PopoverTrigger } from '../components/ui/Popover'
+import { Tooltip, TooltipContent, TooltipTrigger } from '../components/ui/Tooltip'
 import { useIdentityContext } from '../identity'
 import { cn } from '../lib/cn'
+import { REGISTRY_COMING_SOON_NOTE, REGISTRY_ENABLED } from './availability'
 import { DEFAULT_REGISTRY_LABEL, DEFAULT_REGISTRY_URL } from './defaults'
 import { useRegistry } from './RegistryProvider'
 
 export function RegistryControl() {
   const { state } = useRegistry()
+  if (!REGISTRY_ENABLED) {
+    return (
+      <Tooltip>
+        <TooltipTrigger className="flex w-full cursor-default items-center gap-2 rounded-md px-3 py-2 text-left">
+          <span className="grid size-7 shrink-0 place-items-center rounded-full bg-accent-tint text-muted-foreground">
+            <Server className="size-3.5" />
+          </span>
+          <span className="flex min-w-0 flex-col leading-tight">
+            <span className="truncate text-body-sm text-text">Registry</span>
+            <span className="truncate text-label text-muted-foreground">coming soon</span>
+          </span>
+        </TooltipTrigger>
+        <TooltipContent side="top" align="start">
+          {REGISTRY_COMING_SOON_NOTE}
+        </TooltipContent>
+      </Tooltip>
+    )
+  }
   return (
     <Popover>
       <PopoverTrigger
@@ -57,6 +78,27 @@ export function RegistryPanel() {
 
   const connecting = state.status === 'connecting'
   const isDefault = url.trim() === DEFAULT_REGISTRY_URL
+
+  if (!REGISTRY_ENABLED) {
+    return (
+      <div className="flex flex-col gap-3">
+        <h3 className="flex items-center gap-2 text-body font-medium text-text">
+          Registry
+          <Tooltip>
+            <TooltipTrigger render={<Badge variant="outline" className="cursor-default" />}>
+              coming soon
+            </TooltipTrigger>
+            <TooltipContent>{REGISTRY_COMING_SOON_NOTE}</TooltipContent>
+          </Tooltip>
+        </h3>
+        <p className="text-label text-muted-foreground">
+          A registry will add short links and share-by-name on top of the encrypted
+          blobs you already share. It stays off until the zero-knowledge design has
+          passed an independent security review - sharing works fully without it.
+        </p>
+      </div>
+    )
+  }
 
   return (
     <div className="flex flex-col gap-3">

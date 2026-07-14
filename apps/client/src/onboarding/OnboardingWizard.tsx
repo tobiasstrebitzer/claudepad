@@ -30,7 +30,7 @@ import {
 import { Input } from '../components/ui/Input'
 import { useIdentityContext } from '../identity'
 import { cn } from '../lib/cn'
-import { DEFAULT_REGISTRY_LABEL, DEFAULT_REGISTRY_URL, pubHash, useRegistry } from '../registry'
+import { DEFAULT_REGISTRY_LABEL, DEFAULT_REGISTRY_URL, pubHash, REGISTRY_ENABLED, useRegistry } from '../registry'
 import howToWelcome from './assets/onboarding-01.png'
 import howToBring from './assets/onboarding-02.png'
 import howToPlay from './assets/onboarding-03.png'
@@ -320,30 +320,47 @@ function IdentityStep({
             />
           </div>
 
-          <label className="flex items-start gap-2">
-            <Checkbox
-              checked={register}
-              onCheckedChange={(v) => setRegister(v === true)}
-              className="mt-0.5"
-            />
-            <span className="text-body-sm text-text">
-              List me on <span className="font-medium">{DEFAULT_REGISTRY_LABEL}</span> so people can
-              share with me by name.{' '}
+          {REGISTRY_ENABLED ? (
+            <label className="flex items-start gap-2">
+              <Checkbox
+                checked={register}
+                onCheckedChange={(v) => setRegister(v === true)}
+                className="mt-0.5"
+              />
+              <span className="text-body-sm text-text">
+                List me on <span className="font-medium">{DEFAULT_REGISTRY_LABEL}</span> so people can
+                share with me by name.{' '}
+                <a
+                  href={LEARN_MORE_URL}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-accent hover:underline"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  Learn more
+                </a>
+                <span className="mt-0.5 block text-label text-muted-foreground">
+                  Optional - publishes your public key + name to the directory. Leave unchecked
+                  (the default) to stay fully offline; you can change this later.
+                </span>
+              </span>
+            </label>
+          ) : (
+            <p className="text-label text-muted-foreground">
+              Coming soon: list yourself on{' '}
+              <span className="font-medium">{DEFAULT_REGISTRY_LABEL}</span> so people can share
+              with you by name. It goes live once the design has passed an independent security
+              review.{' '}
               <a
                 href={LEARN_MORE_URL}
                 target="_blank"
                 rel="noreferrer"
                 className="text-accent hover:underline"
-                onClick={(e) => e.stopPropagation()}
               >
                 Learn more
               </a>
-              <span className="mt-0.5 block text-label text-muted-foreground">
-                Optional - publishes your public key + name to the directory. Leave unchecked
-                (the default) to stay fully offline; you can change this later.
-              </span>
-            </span>
-          </label>
+            </p>
+          )}
           {error && <p className="text-body-sm text-danger">{error}</p>}
         </>
       )}

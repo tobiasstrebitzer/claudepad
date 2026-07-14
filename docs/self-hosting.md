@@ -25,6 +25,12 @@ Everything runs in the browser:
 
 No flow contacts a network service unless you explicitly opt into a registry. By default the client ships **no active store/registry connection** - the registry is a single opt-in constant, unchecked in onboarding (DECISIONS D-33, relaxed to opt-in by D-88/D-89). Fonts are self-hosted (`@fontsource`), there are no CDN or third-party script fetches - which is also a [security property](./threat-model.md#web-hygiene-is-part-of-the-model).
 
+**The registry surface is off in production builds for now** (D-95): a registry only ever stores encrypted blobs, but that claim hasn't passed an independent security review yet, so production builds show the registry as "coming soon" instead of offering it. Dev builds (`pnpm dev`, tests) keep it on. To enable it in your own production build anyway, set the flag at build time:
+
+```sh
+VITE_REGISTRY_ENABLED=true pnpm build
+```
+
 ## Build the bundle
 
 Requires Node ≥ 20 and pnpm.
@@ -74,7 +80,7 @@ Optional passkey protection of your identity (WebAuthn PRF) requires a **real or
 
 ## What you do NOT need
 
-No Postgres, no S3/MinIO, no Docker, no API server, no accounts, no environment variables, no secrets to manage. The `docker compose` + Postgres + MinIO + Workers/R2 path described in the [store-addon PRD](./prd/prd-07-backend.md) is for the **optional, deferred store addon** (vNext), not for running v1.
+No Postgres, no S3/MinIO, no Docker, no API server, no accounts, no runtime environment variables, no secrets to manage (the only knob is the optional `VITE_REGISTRY_ENABLED` build flag above). The `docker compose` + Postgres + MinIO + Workers/R2 path described in the [store-addon PRD](./prd/prd-07-backend.md) is for the **optional, deferred store addon** (vNext), not for running v1.
 
 ## Verify there's really no server
 

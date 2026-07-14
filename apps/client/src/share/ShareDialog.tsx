@@ -50,7 +50,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '../components/ui/Toolti
 import { Fingerprint, useIdentityContext } from '../identity'
 import { useCopy } from '../ingest/useCopy'
 import { cn } from '../lib/cn'
-import { useRegistry, pubHash, type RegistryApi } from '../registry'
+import { useRegistry, pubHash, REGISTRY_ENABLED, type RegistryApi } from '../registry'
 import { useAppSettings } from '../settings/appSettings'
 import { createShare, createMultiShare } from './blob'
 import { useAddressBook, type AddressBook, type Contact } from './useAddressBook'
@@ -1035,7 +1035,10 @@ function ResultStep({
           <ShieldAlert className="mt-0.5 size-4 shrink-0 text-warn" />
           <span>
             No server holds this. If it&rsquo;s lost, it&rsquo;s gone - it can&rsquo;t be expired,
-            revoked, or recovered. (Connect a registry to share a short link instead.)
+            revoked, or recovered.{' '}
+            {REGISTRY_ENABLED
+              ? '(Connect a registry to share a short link instead.)'
+              : '(Registry short links are coming soon, pending an independent security review.)'}
           </span>
         </div>
       )}

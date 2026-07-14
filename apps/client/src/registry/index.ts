@@ -2,6 +2,7 @@
 // The crypto/contract live in @claudepad/registry-client; this layer is the
 // React wiring + UI.
 
+export { REGISTRY_COMING_SOON_NOTE, REGISTRY_ENABLED } from './availability'
 export { RegistryProvider, useRegistry, type RegistryApi, type RegistryState } from './RegistryProvider'
 export { RegistryControl, RegistryPanel } from './RegistryControl'
 export { pubHash } from './pubHash'

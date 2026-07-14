@@ -9,7 +9,7 @@ import { TooltipProvider } from './components/ui/Tooltip'
 import { readSessionFile, useVault, type VaultSession } from './fs'
 import { IdentityProvider } from './identity'
 import { OnboardingProvider } from './onboarding'
-import { fetchSharedBlob, RegistryProvider } from './registry'
+import { fetchSharedBlob, REGISTRY_ENABLED, RegistryProvider } from './registry'
 import { SHARE_ID_PARAM, SHARE_REGISTRY_PARAM } from '@claudepad/registry-client'
 import { SessionExperience, sessionTopBar, useSession } from './ingest'
 import { About } from './pages/About'
@@ -88,7 +88,7 @@ export function App() {
       '',
       `${window.location.pathname}${qs ? `?${qs}` : ''}${window.location.hash}`
     )
-    if (registryUrl) {
+    if (registryUrl && REGISTRY_ENABLED) {
       void fetchSharedBlob(registryUrl, id).then((blob) => onShareBlob(blob ?? id))
     } else {
       onShareBlob(id)
