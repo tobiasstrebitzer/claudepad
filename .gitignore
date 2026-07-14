@@ -38,3 +38,6 @@ claudepad-identity-*.txt
 
 # roam local cache
 .roam/
+
+# local npm/pnpm config (may hold auth tokens)
+.npmrc

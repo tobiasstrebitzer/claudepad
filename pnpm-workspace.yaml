@@ -2,6 +2,12 @@ packages:
   - 'apps/*'
   - 'packages/*'
 
+# Hoist nothing surprising; keep the tree auditable for the zero-dep crypto
+# posture. (Moved from the formerly tracked .npmrc, which is gitignored now so
+# a local auth token can never land in git.)
+autoInstallPeers: true
+strictPeerDependencies: false
+
 # esbuild ships a platform binary via its install script; Vite + Vitest need it.
 # workerd is wrangler's runtime. sharp is only wrangler's optional image-transform
 # dep for local dev - we never use it, so its native build stays off (it would
