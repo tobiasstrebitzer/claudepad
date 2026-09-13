@@ -18,9 +18,11 @@ export interface CachedFile {
 // One database per store (the idbKv helper creates a single store on first
 // open); a sibling DB holds settings (see useUsageSettings). The store name
 // carries a schema version: `v2` switched FileAggregate from pre-summed day
-// buckets to a deduped per-turn record list, so old entries must not be read
+// buckets to a deduped per-turn record list, and `v3` added per-record `ts` +
+// subagent attribution (records cached under v2 have neither, so a delegated
+// run would read back as a top-level session). Old entries must not be read
 // back - a fresh store name orphans them.
-const kv = createIdbKv('claudepad-usage-cache', 'file-aggregates-v2')
+const kv = createIdbKv('claudepad-usage-cache', 'file-aggregates-v3')
 
 export function loadCachedFile(fileId: string): Promise<CachedFile | undefined> {
   return kv.get<CachedFile>(fileId)

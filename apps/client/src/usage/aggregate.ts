@@ -4,9 +4,12 @@
 // FR-2/3). No I/O, no cost - reused by the worker and by tests alike.
 
 import type { Session, SessionEvent, TokenUsage } from '@/schema'
+import { computeConcurrency, emptyConcurrency, type Timeline } from './concurrency'
 import type {
+  AgentRunInfo,
   ByModel,
   FileAggregate,
+  LimitEvent,
   ProjectUsage,
   SessionUsage,
   UsageBucket,
@@ -21,6 +24,35 @@ const IDLE_THRESHOLD_MS = 20_000
 
 const UNKNOWN_MODEL = '(unknown)'
 const UNKNOWN_PROJECT = '(unknown)'
+const UNKNOWN_AGENT = '(agent)'
+
+/**
+ * Cross-file dedup gate. Claude Code copies the same assistant turn into
+ * resumed/sidechain files with a fresh `uuid`, so turns are identified by
+ * `usageKey` (`message.id[:requestId]`) instead. Returns true the first time a
+ * key is seen and for every keyless turn (which cannot be a copy).
+ *
+ * Shared so the roll-up and the quota windows apply exactly the same rule - a
+ * divergence there would silently double-count one surface and not the other.
+ */
+export function newDeduper(): (key?: string) => boolean {
+  const seen = new Set<string>()
+  return (key) => {
+    if (key === undefined) return true
+    if (seen.has(key)) return false
+    seen.add(key)
+    return true
+  }
+}
+
+/** Every billed turn across the vault, deduped and in chronological order. */
+export function dedupedRecords(files: readonly FileAggregate[]): UsageRecord[] {
+  const keep = newDeduper()
+  const out: UsageRecord[] = []
+  for (const f of files) for (const r of f.records) if (keep(r.key)) out.push(r)
+  out.sort((a, b) => a.ts - b.ts)
+  return out
+}
 
 export function emptyUsage(): TokenUsage {
   return { input: 0, output: 0, cacheCreate: 0, cacheRead: 0 }
@@ -153,31 +185,52 @@ function emptyWeekdayHour(): number[][] {
  * time, because a turn copied into a resumed file must be dropped once across the
  * *whole* vault before it's summed (a pre-summed day bucket can't be deduped).
  */
-export function aggregateFile(session: Session): FileAggregate {
+export function aggregateFile(session: Session, agent?: AgentRunInfo): FileAggregate {
   const usage = aggregateSession(session)
   const records: UsageRecord[] = []
+  const limits: LimitEvent[] = []
 
   for (const e of session.events) {
-    if (!e.usage) continue
     const t = epoch(e.ts)
     if (t === undefined) continue
+
+    if (e.limit) {
+      const ev: LimitEvent = { ...e.limit, ts: t, day: localDayKey(t) }
+      if (usage.cwd) ev.project = usage.cwd
+      limits.push(ev)
+    }
+
+    if (!e.usage) continue
     const rec: UsageRecord = {
       day: localDayKey(t),
       hour: new Date(t).getHours(),
+      ts: t,
       model: modelOf(e, session.meta.model),
       usage: e.usage
     }
     if (e.usageKey !== undefined) rec.key = e.usageKey
+    // Presence marks the turn as delegated; the label is best-effort.
+    if (agent) rec.agentType = agent.agentType ?? UNKNOWN_AGENT
     records.push(rec)
   }
 
   const out: FileAggregate = { usage, records }
   if (usage.cwd) out.cwd = usage.cwd
+  if (agent) out.agent = agent
+  if (limits.length > 0) out.limits = limits
   return out
 }
 
 function emptyProject(project: string): ProjectUsage {
-  return { project, totals: emptyUsage(), byModel: {}, sessions: 0, activeMs: 0 }
+  return {
+    project,
+    totals: emptyUsage(),
+    byModel: {},
+    sessions: 0,
+    agentRuns: 0,
+    delegated: emptyUsage(),
+    activeMs: 0
+  }
 }
 
 export interface DayRange {
@@ -210,6 +263,11 @@ function weekdayOf(day: string): number {
  * the deduped, in-range turns, so a start/end down to the day yields exact usage.
  * Pure merge: the expensive parse is already cached per file, so this re-runs
  * instantly on filter changes.
+ *
+ * Delegated subagent runs (`FileAggregate.agent`) are summed into every token
+ * figure - they are real spend - but counted as `agentRuns`, never as sessions,
+ * and tracked separately in `delegated` / `byAgentType`. `concurrency` measures
+ * how many top-level sessions overlapped in wall-clock (see concurrency.ts).
  */
 export function rollupVault(files: readonly FileAggregate[], range?: DayRange): VaultUsage {
   const global = emptyProject('(global)')
@@ -218,28 +276,36 @@ export function rollupVault(files: readonly FileAggregate[], range?: DayRange): 
   const byDay: Record<string, UsageBucket> = {}
   const byProjectMonth: Record<string, Record<string, UsageBucket>> = {}
   const byModel: ByModel = {}
+  const byAgentType: Record<string, UsageBucket> = {}
   const byWeekdayHour = emptyWeekdayHour()
-  // Cross-file dedup: a turn whose key was already counted (in any prior file) is
-  // skipped. Keyless turns (no message.id) are always kept - they can't be a copy.
-  const seen = new Set<string>()
+  const delegated = emptyUsage()
+  const limits: LimitEvent[] = []
+  // Wall-clock timelines for the parallelism metric. Top-level sessions and
+  // delegated runs are kept apart: a subagent runs *inside* its parent's
+  // wall-clock, so folding them together would count the same minute twice and
+  // report fan-out as if it were multitasking.
+  const sessionTimelines: Timeline[] = []
+  const agentTimelines: Timeline[] = []
+  let agentRuns = 0
+  const keep = newDeduper()
 
   for (const f of files) {
     const key = f.cwd ?? UNKNOWN_PROJECT
     const proj = projects.get(key) ?? emptyProject(key)
     const months = (byProjectMonth[key] ??= {})
+    const isAgent = f.agent !== undefined
 
     // Per-session totals restricted to the range (for the histogram + count).
     const sessionTotals = emptyUsage()
     const sessionByModel: ByModel = {}
+    const ts: number[] = []
     let included = false
 
     for (const r of f.records) {
-      if (r.key !== undefined) {
-        if (seen.has(r.key)) continue
-        seen.add(r.key)
-      }
+      if (!keep(r.key)) continue
       if (!dayInRange(r.day, range)) continue
       included = true
+      ts.push(r.ts)
 
       addInto(global.totals, r.usage)
       addInto(proj.totals, r.usage)
@@ -248,6 +314,14 @@ export function rollupVault(files: readonly FileAggregate[], range?: DayRange): 
       addByModel(global.byModel, r.model, r.usage)
       addByModel(proj.byModel, r.model, r.usage)
       addByModel(sessionByModel, r.model, r.usage)
+
+      if (r.agentType !== undefined) {
+        addInto(delegated, r.usage)
+        addInto(proj.delegated, r.usage)
+        const at = (byAgentType[r.agentType] ??= emptyBucket())
+        addInto(at.totals, r.usage)
+        addByModel(at.byModel, r.model, r.usage)
+      }
 
       const bucket = (byDay[r.day] ??= emptyBucket())
       addInto(bucket.totals, r.usage)
@@ -260,11 +334,29 @@ export function rollupVault(files: readonly FileAggregate[], range?: DayRange): 
       byWeekdayHour[weekdayOf(r.day)]![r.hour]! += 1
     }
 
+    for (const l of f.limits ?? []) {
+      if (dayInRange(l.day, range)) limits.push(l)
+    }
+
     if (!included) continue
+
+    if (isAgent) {
+      // A delegated run is work and spend, but it is not a session: counting it
+      // as one would inflate the session count, skew tokens-per-session, and
+      // make the parallelism metric report fan-out as multitasking.
+      agentRuns += 1
+      proj.agentRuns += 1
+      global.agentRuns += 1
+      agentTimelines.push({ id: f.usage.sessionId, ts })
+      projects.set(key, proj)
+      continue
+    }
+
     proj.sessions += 1
     global.sessions += 1
     proj.activeMs += f.usage.activeMs
     global.activeMs += f.usage.activeMs
+    sessionTimelines.push({ id: f.usage.sessionId, ts })
     if (f.usage.firstAt) {
       if (!proj.firstAt || f.usage.firstAt < proj.firstAt) proj.firstAt = f.usage.firstAt
     }
@@ -279,6 +371,8 @@ export function rollupVault(files: readonly FileAggregate[], range?: DayRange): 
     })
   }
 
+  limits.sort((a, b) => a.ts - b.ts)
+
   return {
     global,
     projects: [...projects.values()].sort((a, b) => totalTokens(b.totals) - totalTokens(a.totals)),
@@ -286,7 +380,15 @@ export function rollupVault(files: readonly FileAggregate[], range?: DayRange): 
     byDay,
     byProjectMonth,
     byWeekdayHour,
-    byModel
+    byModel,
+    byAgentType,
+    delegated,
+    agentRuns,
+    limits,
+    concurrency:
+      sessionTimelines.length > 0 || agentTimelines.length > 0
+        ? computeConcurrency(sessionTimelines, agentTimelines)
+        : emptyConcurrency()
   }
 }
 
@@ -295,9 +397,12 @@ export function rollupVault(files: readonly FileAggregate[], range?: DayRange): 
  * uses `aggregateFile` + `rollupVault` (so per-file aggregates can be cached);
  * this wrapper is for tests and small in-memory sets.
  */
-export function aggregateVault(sessions: { session: Session }[], range?: DayRange): VaultUsage {
+export function aggregateVault(
+  sessions: { session: Session; agent?: AgentRunInfo }[],
+  range?: DayRange
+): VaultUsage {
   return rollupVault(
-    sessions.map((s) => aggregateFile(s.session)),
+    sessions.map((s) => aggregateFile(s.session, s.agent)),
     range
   )
 }

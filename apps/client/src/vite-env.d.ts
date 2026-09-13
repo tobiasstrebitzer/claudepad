@@ -7,4 +7,5 @@ interface ImportMetaEnv {
    * always on. See src/registry/availability.ts.
    */
   readonly VITE_REGISTRY_ENABLED?: string
+  readonly VITE_QUOTA_PANEL?: string
 }

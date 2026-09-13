@@ -5,7 +5,7 @@
 // the worker reads, parses, and aggregates each off the main thread and streams
 // back one FileAggregate per file plus progress.
 
-import type { FileAggregate } from './types'
+import type { AgentRunInfo, FileAggregate } from './types'
 
 /** One session file to (re)compute. `fileId` is stable: `${projectId}/${fileName}`. */
 export interface UsageFileTask {
@@ -13,6 +13,15 @@ export interface UsageFileTask {
   handle: FileSystemFileHandle
   size: number
   lastModified: number
+  /**
+   * Set when the task is a delegated subagent run rather than a top-level
+   * session. `agentType`/`description` come from the run's `.meta.json` sidecar,
+   * which the worker reads (it is a second tiny file per run, so it is read off
+   * the main thread with the transcript, not during the vault scan).
+   */
+  agent?: AgentRunInfo
+  /** Handle to the run's `.meta.json` sidecar, when one exists. */
+  metaHandle?: FileSystemFileHandle
 }
 
 export interface UsageRequest {

@@ -1,7 +1,14 @@
 // @vitest-environment node
 import { describe, it, expect } from 'vitest';
 import type { TokenUsage } from '@/schema';
-import { costOf, canonicalModel, DEFAULT_PRICING, type ModelRate } from '@/usage/pricing';
+import {
+  costOf,
+  costOfByModel,
+  canonicalModel,
+  DEFAULT_PRICING,
+  UNPRICED_WARN_SHARE,
+  type ModelRate,
+} from '@/usage/pricing';
 
 function u(p: Partial<TokenUsage>): TokenUsage {
   return { input: 0, output: 0, cacheCreate: 0, cacheRead: 0, ...p };
@@ -52,11 +59,71 @@ describe('PRD-13 FR-4/5/6: cost estimation', () => {
     expect(costOf(u({ input: 1e6 }), 'claude-opus-4-8', override).input).toBeCloseTo(99);
   });
 
-  it('every bundled rate carries an asOf date and derived cache tiers', () => {
+  it('every bundled rate carries an asOf date and derived cache-write tiers', () => {
     for (const r of Object.values(DEFAULT_PRICING)) {
       expect(r.asOf).toMatch(/^\d{4}-\d{2}-\d{2}$/);
-      expect(r.cacheRead).toBeCloseTo(r.input * 0.1);
+      expect(r.cacheWrite5m).toBeCloseTo(r.input * 1.25);
       expect(r.cacheWrite1h).toBeCloseTo(r.input * 2);
+      // Cache reads default to 0.1x but a model may price them off that ladder.
+      expect(r.cacheRead).toBeGreaterThan(0);
+      expect(r.cacheRead).toBeLessThanOrEqual(r.input * 0.1);
     }
+  });
+});
+
+describe('the models people actually run are priced', () => {
+  // Regression: `claude-opus-5` was missing from the table while being 93% of a
+  // real vault's tokens. Every unpriced token silently costs $0, so the headline
+  // estimate came out ~10x low while still looking like a confident number.
+  const CURRENT = [
+    'claude-opus-5',
+    'claude-fable-5',
+    'claude-fable-5-1',
+    'claude-sonnet-5',
+    'claude-opus-4-8',
+    'claude-haiku-4-5',
+  ];
+
+  it.each(CURRENT)('prices %s', (model) => {
+    expect(costOf(u({ output: 1e6 }), model).unpriced).toBe(false);
+  });
+
+  it('treats a [1m] long-context variant as the same model', () => {
+    expect(canonicalModel('claude-opus-5[1m]')).toBe('claude-opus-5');
+    expect(costOf(u({ output: 1e6 }), 'claude-opus-5[1m]').output).toBeCloseTo(25);
+  });
+
+  it('prices Fable 5.1 cache reads off the 0.1x ladder', () => {
+    // $0.25/MTok flat, not $1.00 (= 10x input).
+    expect(costOf(u({ cacheRead: 1e6 }), 'claude-fable-5-1').cacheRead).toBeCloseTo(0.25);
+    expect(costOf(u({ cacheRead: 1e6 }), 'claude-fable-5').cacheRead).toBeCloseTo(1);
+  });
+});
+
+describe('an unpriced model is never silently rounded to $0', () => {
+  it('reports the unpriced token share alongside the total', () => {
+    const byModel = {
+      'claude-opus-4-8': u({ output: 1e5 }),
+      'some-future-model': u({ cacheRead: 9e6 }),
+    };
+    const c = costOfByModel(byModel);
+    // Something priced, so `unpriced` is false - but the total covers 1% of tokens.
+    expect(c.unpriced).toBe(false);
+    expect(c.total).toBeGreaterThan(0);
+    expect(c.unpricedTokens).toBe(9e6);
+    expect(c.unpricedShare).toBeCloseTo(9e6 / 9.1e6);
+    expect(c.unpricedShare).toBeGreaterThan(UNPRICED_WARN_SHARE);
+  });
+
+  it('is a clean zero share when every model is priced', () => {
+    const c = costOfByModel({ 'claude-opus-5': u({ output: 1e6 }) });
+    expect(c.unpricedShare).toBe(0);
+    expect(c.unpricedTokens).toBe(0);
+  });
+
+  it('still flags a wholly unpriced scope', () => {
+    const c = costOfByModel({ 'some-future-model': u({ output: 1e6 }) });
+    expect(c.unpriced).toBe(true);
+    expect(c.unpricedShare).toBe(1);
   });
 });

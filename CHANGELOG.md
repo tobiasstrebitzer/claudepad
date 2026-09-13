@@ -7,6 +7,28 @@ All notable changes to claudepad are documented here. The format is based on
 
 ## [Unreleased]
 
+## [0.16.0] - 2026-09-13 - Usage Insights: delegation, parallelism & real limits
+
+### Added
+- **Subagent work is now visible (D-97):** `scanVault` never descended into `<project>/<sessionId>/subagents/`, so roughly **14% of tokens were missing** from every total. Delegated runs are scanned, deduped and summed into all figures, but counted as `agentRuns` - never as `sessions` - with a new `byAgentType` split and a **Delegation** panel (share of tokens delegated, runs per session, top agent types).
+- **Parallelism (D-98):** `usage/concurrency.ts` measures time-weighted concurrent *top-level* sessions (5-minute slots, 10-minute bridge), surfaced as an "At once" metric card and a **Sessions in parallel** panel. Insensitive to the bridge parameter (mean moves 1.59x -> 1.73x across a 5m-30m sweep).
+- **Limit hits (D-99):** `quotaLimits` rejection blocks are lifted into `EventBase.limit`, and an honest event log reports incidents, affected days and blocked duration - what actually got refused, not an estimate.
+- **Scorecard** gained cost, average/peak parallelism, busy hours, delegation share and limit incidents.
+- **What your plan actually meters (PRD-14, D-100):** calibrated by regressing 9,571 measured `utilization` readings against real token spend, **cache reads are free to the subscription meter** - only fresh input + output + cache writes count. For a heavy agentic user that is ~74% of the API-equivalent cost invisible to the limit, which is why quota burn feels unrelated to the dollar estimate. Metered over a 5h tumbling window anchored to first use, a weekly window resetting Sun 04:00Z, and a Fable-scoped weekly sub-limit. Bundled Max 20x budgets ($75 / $528 / $118) are reverse-engineered from a single account, labelled as such, editable, and superseded by self-calibration the moment a quota log is imported. Three quality gates (monotone filtering, max-gap, unexplained-rise) stop a partial import from producing confidently wrong budgets.
+- **Dev-only for now** via `QUOTA_PANEL_ENABLED` (`usage/availability.ts`, mirroring `REGISTRY_ENABLED`), since the quota log it calibrates against is not something most users have. `VITE_QUOTA_PANEL=true` re-enables it in a production build.
+
+### Fixed
+- **Est. cost was ~10x too low (D-96):** `DEFAULT_PRICING` was missing `claude-opus-5`, `claude-fable-5-1` and `claude-sonnet-5`, and an unpriced model silently contributed **$0** - `costOfByModel` only raised the `unpriced` flag when *nothing* was priced. A vault that is 93% Opus 5 therefore reported **$524** instead of **~$4.9K**. The table now covers the current tiers, `rate()` takes a cache-read override (Fable 5.1 reads flat at $0.25/MTok), `canonicalModel` strips a `[1m]` context suffix, and `CostBreakdown.unpricedShare` renders any future gap as a visible `>$X` floor instead of a confident wrong number.
+- **Second page scrollbar:** Tailwind's `sr-only` is `position: absolute`, so a visually-hidden file input inside the scrolling `<main>` resolved against the initial containing block, landed at its flow offset deep in the content and stretched the document to 1277px against a 987px viewport. `<main>` is now `relative`, containing any absolutely-positioned descendant.
+
+### Internal
+- Shared `newDeduper`/`dedupedRecords` helpers; file-aggregate cache bumped to `file-aggregates-v3`.
+
+## [0.15.0] - 2026-06-27 - Registry gated off for launch
+
+### Changed
+- **The registry surface is disabled in production builds (D-95)**, shown as "coming soon" pending the independent security review. Dev builds keep it on and `VITE_REGISTRY_ENABLED=true` re-enables it in a production build.
+
 ## [0.14.1] - 2026-06-27 - Scorecard export fix
 
 ### Fixed

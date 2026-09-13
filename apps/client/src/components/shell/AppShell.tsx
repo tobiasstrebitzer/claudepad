@@ -144,7 +144,12 @@ export function AppShell({
           }
         />
 
-        <main className="min-h-0 flex-1 overflow-y-auto">{children}</main>
+        {/* `relative` contains absolutely-positioned descendants. Without it a
+            visually-hidden control (Tailwind `sr-only` is `position:absolute`)
+            resolves against the initial containing block, lands at its flow
+            offset deep inside the scrolled content, and stretches the document
+            - giving the page a second scrollbar alongside this one. */}
+        <main className="relative min-h-0 flex-1 overflow-y-auto">{children}</main>
         {footer}
       </div>
     </div>

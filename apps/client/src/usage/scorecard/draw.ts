@@ -101,10 +101,13 @@ interface Tile {
 
 function metricTiles(card: Scorecard): Tile[] {
   return [
-    { value: pct(card.cacheRatio), label: `cache efficiency · grade ${card.grade}` },
+    { value: pct(card.cacheRatio), label: `cache efficiency · ${card.grade}` },
     { value: formatTokens(card.avgContextPerTurn), label: 'avg context / turn' },
     { value: formatCount(card.sessions), label: `sessions · ${formatCount(card.projects)} projects` },
-    { value: pct(card.leanShare), label: 'sessions kept lean' }
+    // The two numbers that describe *how* the work was run, not just how much:
+    // how many sessions ran at once, and how much was handed to subagents.
+    { value: `${card.avgConcurrency.toFixed(1)}x`, label: `at once · peak ${card.peakConcurrency}` },
+    { value: pct(card.delegationShare), label: `delegated · ${formatCount(card.agentRuns)} runs` }
   ]
 }
 
@@ -157,7 +160,10 @@ export function drawScorecard(ctx: DrawContext, card: Scorecard, p: CardPalette,
   text(ctx, formatTokens(card.totalTokens), left, y, { size: 96, family: p.serif, weight: 600, color: p.text })
 
   y += 40
-  const costStr = card.cost === null ? 'cost n/a' : `≈ ${formatCost(card.cost)} API-equivalent`
+  const costStr =
+    card.cost === null
+      ? 'cost n/a'
+      : `${card.costApprox ? '>' : '≈'} ${formatCost(card.cost)} API-equivalent`
   const heroSub = `${costStr}  ·  ${formatCount(card.activeDays)} active days${
     card.topModel ? `  ·  ${shortModel(card.topModel)}` : ''
   }`
@@ -174,8 +180,8 @@ export function drawScorecard(ctx: DrawContext, card: Scorecard, p: CardPalette,
     ctx.fillStyle = p.accentTint
     roundRect(ctx, tx, tileY, tileW, tileH, 14)
     ctx.fill()
-    text(ctx, tile.value, tx + 20, tileY + 56, { size: 40, family: p.serif, weight: 600, color: p.text })
-    text(ctx, tile.label, tx + 20, tileY + 90, { size: 15, family: p.sans, color: p.muted })
+    text(ctx, tile.value, tx + 18, tileY + 54, { size: 36, family: p.serif, weight: 600, color: p.text })
+    text(ctx, tile.label, tx + 18, tileY + 88, { size: 13, family: p.sans, color: p.muted })
   })
 
   // Footer: url left, optional identity right.

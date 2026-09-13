@@ -7,9 +7,32 @@
 
 import { parseSession } from '@/schema'
 import { aggregateFile } from './aggregate'
-import type { UsageRequest, UsageResponse } from './protocol'
+import type { UsageFileTask, UsageResponse, UsageRequest } from './protocol'
+import type { AgentRunInfo } from './types'
 
 const post = (msg: UsageResponse) => self.postMessage(msg)
+
+/**
+ * Enrich a delegated run's identity from its `.meta.json` sidecar (agent type,
+ * task description, spawn depth). Best-effort: a missing or malformed sidecar
+ * still yields a run that counts, just without a type label.
+ */
+async function readAgentInfo(task: UsageFileTask): Promise<AgentRunInfo | undefined> {
+  if (!task.agent) return undefined
+  if (!task.metaHandle) return task.agent
+  try {
+    const raw: unknown = JSON.parse(await (await task.metaHandle.getFile()).text())
+    if (typeof raw !== 'object' || raw === null) return task.agent
+    const m = raw as Record<string, unknown>
+    const info: AgentRunInfo = { ...task.agent }
+    if (typeof m['agentType'] === 'string') info.agentType = m['agentType']
+    if (typeof m['description'] === 'string') info.description = m['description']
+    if (typeof m['spawnDepth'] === 'number') info.spawnDepth = m['spawnDepth']
+    return info
+  } catch {
+    return task.agent
+  }
+}
 
 self.onmessage = async (e: MessageEvent<UsageRequest>) => {
   const { tasks } = e.data
@@ -19,13 +42,16 @@ self.onmessage = async (e: MessageEvent<UsageRequest>) => {
     for (const task of tasks) {
       try {
         const file = await task.handle.getFile()
-        const { session } = await parseSession(file, { preserveRaw: false })
+        const [{ session }, agent] = await Promise.all([
+          parseSession(file, { preserveRaw: false }),
+          readAgentInfo(task)
+        ])
         post({
           type: 'file',
           fileId: task.fileId,
           size: task.size,
           lastModified: task.lastModified,
-          aggregate: aggregateFile(session)
+          aggregate: aggregateFile(session, agent)
         })
       } catch (err) {
         // One unreadable file shouldn't sink the whole vault - report and skip.

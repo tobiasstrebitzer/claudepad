@@ -56,6 +56,25 @@ export interface TokenUsage {
   serviceTier?: string // "standard" | "priority" | ...
 }
 
+/**
+ * A subscription rate-limit rejection, lifted from a Claude Code `quotaLimits`
+ * record (PRD-13). Claude Code writes one of these only when a request is
+ * *rejected*; it never records remaining headroom, so this supports "how often
+ * and when did I hit a wall" - not a "% of quota used" gauge.
+ */
+export interface RateLimitHit {
+  /** Source limit bucket: `five_hour` | `weekly` | ... - kept as-is, not narrowed. */
+  type?: string
+  /** Source status, e.g. `rejected`. */
+  status?: string
+  /** Epoch *seconds* the limit window resets (source unit, preserved). */
+  resetsAt?: number
+  /** HTTP status of the rejected request (429 in practice). */
+  httpStatus?: number
+  /** Whether a paid-overage / fallback path was offered at the time. */
+  fallbackAvailable?: boolean
+}
+
 export interface EventBase {
   /** Source uuid when present; else synthesized stable id (FR-23). */
   id?: string
@@ -86,6 +105,12 @@ export interface EventBase {
    * vault (PRD-13). Absent when the source carried no `message.id`.
    */
   usageKey?: string
+  /**
+   * Set when this record *is* a rate-limit rejection (PRD-13). Carries no
+   * tokens - the request never ran - so it is counted as an event, never summed
+   * into TokenUsage.
+   */
+  limit?: RateLimitHit
 }
 
 export interface UserEvent extends EventBase {

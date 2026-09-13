@@ -4,6 +4,7 @@ import type {
   AssistantEvent,
   ContentBlock,
   MetaEvent,
+  RateLimitHit,
   SessionEvent,
   ThinkingEvent,
   TokenUsage,
@@ -272,14 +273,44 @@ function usageKeyOf(rec: RawRecord): string | undefined {
 }
 
 /**
+ * Lift a `quotaLimits` rejection into a RateLimitHit. Claude Code writes this
+ * block only when the subscription limit actually turned a request away (the
+ * synthetic "You've hit your session limit" turn), so a present-and-rejected
+ * block is the *event*, not a headroom reading. Tolerant: any missing field is
+ * simply absent.
+ */
+function parseLimit(rec: RawRecord): RateLimitHit | undefined {
+  const q = rec['quotaLimits']
+  if (!isObject(q)) return undefined
+  const status = typeof q['status'] === 'string' ? q['status'] : undefined
+  // Only rejections are meaningful; an "allowed" block carries no signal.
+  if (status !== undefined && status !== 'rejected') return undefined
+  if (status === undefined && rec['error'] !== 'rate_limit') return undefined
+
+  const hit: RateLimitHit = {}
+  if (typeof q['rateLimitType'] === 'string') hit.type = q['rateLimitType']
+  if (status) hit.status = status
+  const resets = asCount(q['resetsAt'])
+  if (resets !== undefined) hit.resetsAt = resets
+  const http = asCount(rec['apiErrorStatus'])
+  if (http !== undefined) hit.httpStatus = http
+  if (typeof q['unifiedRateLimitFallbackAvailable'] === 'boolean') {
+    hit.fallbackAvailable = q['unifiedRateLimitFallbackAvailable']
+  }
+  return hit
+}
+
+/**
  * One assistant record → its events, with `usage` attached once to the first
  * emitted event (covers tool-only / thinking-only turns that produce no
  * AssistantEvent). See TokenUsage on EventBase.
  */
 function mapAssistant(rec: RawRecord, ctx: MapContext): MapOutput {
   const out = mapAssistantEvents(rec, ctx)
+  if (out.events.length === 0) return out
+
   const usage = parseUsage(rec['message'])
-  if (usage && out.events.length > 0) {
+  if (usage) {
     // Prefer an assistant event as the carrier (it holds `model`, so cost can be
     // priced per turn); fall back to the first event for tool/thinking-only turns.
     const carrier = out.events.find((e) => e.kind === 'assistant') ?? out.events[0]!
@@ -287,6 +318,9 @@ function mapAssistant(rec: RawRecord, ctx: MapContext): MapOutput {
     const key = usageKeyOf(rec)
     if (key) carrier.usageKey = key
   }
+
+  const limit = parseLimit(rec)
+  if (limit) out.events[0]!.limit = limit
   return out
 }
 

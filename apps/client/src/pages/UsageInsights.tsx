@@ -21,9 +21,12 @@ import { ModelBars, SessionHistogram, TokenTrend } from '../usage/charts/series'
 import { DateRangeControl } from '../usage/DateRangeControl'
 import { buildDashboard, type DashboardView, type UsageFilters } from '../usage/derive'
 import { dataColor, formatCost, formatCount, formatHours, formatTokens, shortProject } from '../usage/format'
-import { ASOF_NOTE } from '../usage/pricing'
+import { MAX_LEVEL } from '../usage/concurrency'
+import { ASOF_NOTE, UNPRICED_WARN_SHARE } from '../usage/pricing'
 import { EFFORT_DISCLAIMER, effortFormula } from '../usage/effort'
 import { spendMethodLabel } from '../usage/attribution'
+import { QUOTA_PANEL_ENABLED } from '../usage/availability'
+import { QuotaPanel } from '../usage/QuotaPanel'
 import { ScorecardDialog } from '../usage/scorecard'
 import type { FileAggregate } from '../usage/types'
 import { useUsageSettings } from '../usage/useUsageSettings'
@@ -70,6 +73,7 @@ export function UsageInsights({ vault }: UsageInsightsProps): React.JSX.Element 
   return (
     <Dashboard
       view={view}
+      files={files}
       filters={filters}
       onFilters={setFilters}
       settings={settings}
@@ -104,6 +108,7 @@ function dayBounds(files: FileAggregate[]): DayBounds {
 
 function Dashboard({
   view,
+  files,
   filters,
   onFilters,
   settings,
@@ -112,6 +117,7 @@ function Dashboard({
   partial
 }: {
   view: DashboardView
+  files: readonly FileAggregate[]
   filters: UsageFilters
   onFilters: (f: UsageFilters) => void
   settings: ReturnType<typeof useUsageSettings>['settings']
@@ -132,6 +138,12 @@ function Dashboard({
           {view.sessionTokens.length === 0 ? <Empty>No sessions.</Empty> : <SessionHistogram values={view.sessionTokens} />}
         </Panel>
       </div>
+      <div className="grid gap-4 md:grid-cols-2">
+        <ParallelismPanel view={view} />
+        <DelegationPanel view={view} />
+      </div>
+      {QUOTA_PANEL_ENABLED && <QuotaPanel files={files} settings={settings} onSettings={onSettings} />}
+      <LimitsPanel view={view} />
       <ProjectTable view={view} filters={filters} onFilters={onFilters} />
       <div className="grid gap-4 md:grid-cols-2">
         <ModelBreakdown view={view} />
@@ -224,7 +236,7 @@ function ProjectItem({ label, active, onSelect }: { label: string; active: boole
 function MetricCards({ view }: { view: DashboardView }): React.JSX.Element {
   const t = view.totals
   return (
-    <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
+    <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6">
       <Metric
         label="Total tokens"
         value={formatTokens(t.input + t.output + t.cacheCreate + t.cacheRead)}
@@ -235,13 +247,32 @@ function MetricCards({ view }: { view: DashboardView }): React.JSX.Element {
         }
         info={`Input ${formatTokens(t.input)} · Output ${formatTokens(t.output)} · Cache write ${formatTokens(t.cacheCreate)} · Cache read ${formatTokens(t.cacheRead)}. Cache reads are re-reads of the cached prompt on every turn - usually the bulk of all tokens, and billed ~10x cheaper than fresh input.`}
       />
+      <CostMetric view={view} />
       <Metric
-        label="Est. cost"
-        value={view.cost.unpriced ? 'n/a' : formatCost(view.cost.total)}
-        sub="API-equivalent"
-        info={`Estimated, API-equivalent. ${ASOF_NOTE}`}
+        label="Sessions"
+        value={formatCount(view.sessionCount)}
+        sub={
+          <Breakdown
+            parts={[
+              `${view.projectCount} project${view.projectCount === 1 ? '' : 's'}`,
+              `${formatCount(view.delegation.runs)} agent runs`
+            ]}
+          />
+        }
+        info={`${formatCount(view.sessionCount)} top-level sessions plus ${formatCount(
+          view.delegation.runs
+        )} delegated subagent runs (${Math.round(
+          view.delegation.runsPerSession * 10
+        ) / 10} per session). Subagent tokens count toward every total here, but a delegated run is not a session - it runs inside its parent's wall-clock.`}
       />
-      <Metric label="Sessions" value={formatCount(view.sessionCount)} sub={`${view.projectCount} project${view.projectCount === 1 ? '' : 's'}`} />
+      <Metric
+        label="At once"
+        value={`${view.parallelism.mean.toFixed(1)}x`}
+        sub={`peak ${view.parallelism.max} · ${formatHours(view.parallelism.busyHours)} active`}
+        info={`Average top-level sessions running simultaneously, weighted by time actually spent working (${
+          view.parallelism.slotMs / 60_000
+        }-minute resolution). Delegated subagent runs are excluded - they run inside a parent session, so counting them would report fan-out as multitasking.`}
+      />
       <Metric label="Active days" value={formatCount(view.activeDays)} sub="with usage" />
       <Metric
         label="Top model"
@@ -379,6 +410,195 @@ function ProjectTable({
       )}
     </Panel>
   )
+}
+
+function CostMetric({ view }: { view: DashboardView }): React.JSX.Element {
+  const approx = view.cost.unpricedShare > UNPRICED_WARN_SHARE
+  const missing = view.unpricedModels.map(shortModel).join(', ')
+  return (
+    <Metric
+      label="Est. cost"
+      value={view.cost.unpriced ? 'n/a' : `${approx ? '>' : ''}${formatCost(view.cost.total)}`}
+      sub={
+        approx
+          ? `API-equivalent · ${Math.round(view.cost.unpricedShare * 100)}% unpriced`
+          : 'API-equivalent'
+      }
+      info={
+        approx
+          ? `Floor, not an estimate: ${Math.round(
+            view.cost.unpricedShare * 100
+          )}% of tokens ran on models with no bundled rate (${missing}), and unpriced tokens contribute $0. Add rates for them to get a real number. ${ASOF_NOTE}`
+          : `Estimated, API-equivalent. ${ASOF_NOTE}`
+      }
+    />
+  )
+}
+
+/**
+ * The parallelism card: how many top-level sessions ran at the same time, and
+ * how working time split across concurrency levels. Answers "am I actually
+ * running 3 things at once, or does it just feel that way".
+ */
+function ParallelismPanel({ view }: { view: DashboardView }): React.JSX.Element {
+  const p = view.parallelism
+  const shares = p.shares
+  return (
+    <Panel title="Sessions in parallel" subtitle="share of working time by concurrent sessions">
+      {shares.length === 0 ? (
+        <Empty>No overlapping activity in range.</Empty>
+      ) : (
+        <>
+          <div className="flex flex-col gap-1.5">
+            {shares.map((s) => (
+              <div key={s.level} className="flex items-center gap-2 text-sm">
+                <span className="w-10 shrink-0 tabular-nums text-muted-foreground">
+                  {s.level === MAX_LEVEL ? `${MAX_LEVEL}+` : `${s.level}x`}
+                </span>
+                <span className="min-w-0 flex-1">
+                  <HBar
+                    fraction={s.share}
+                    color={dataColor(s.level - 1)}
+                    ariaLabel={`${s.level} concurrent sessions: ${Math.round(s.share * 100)}% of working time`}
+                  />
+                </span>
+                <span className="w-10 shrink-0 text-right tabular-nums text-muted-foreground">
+                  {Math.round(s.share * 100)}%
+                </span>
+              </div>
+            ))}
+          </div>
+          <p className="mt-3 text-xs text-muted-foreground">
+            {p.mean.toFixed(1)} sessions at once on average, peaking at {p.max}, across{' '}
+            {formatHours(p.busyHours)} of working time. Solo {Math.round(p.soloShare * 100)}% of it.
+            {p.maxAgents > 0 && ` Subagents peaked at ${p.maxAgents} in flight.`}
+          </p>
+        </>
+      )}
+    </Panel>
+  )
+}
+
+/** How much of the work was handed to subagents, and to which kinds. */
+function DelegationPanel({ view }: { view: DashboardView }): React.JSX.Element {
+  const d = view.delegation
+  const max = Math.max(1, ...d.types.map((t) => t.tokens))
+  return (
+    <Panel title="Delegation" subtitle="work handed to subagents">
+      {d.types.length === 0 ? (
+        <Empty>No subagent runs in range.</Empty>
+      ) : (
+        <>
+          <div className="mb-3 flex flex-wrap gap-x-5 gap-y-1 text-sm">
+            <span className="text-text">
+              {Math.round(d.share * 100)}%{' '}
+              <span className="text-muted-foreground">of tokens</span>
+            </span>
+            <span className="text-text">
+              {formatCount(d.runs)} <span className="text-muted-foreground">runs</span>
+            </span>
+            <span className="text-text">
+              {d.runsPerSession.toFixed(1)}x <span className="text-muted-foreground">per session</span>
+            </span>
+          </div>
+          <div className="flex flex-col gap-1.5">
+            {d.types.slice(0, 8).map((t, i) => (
+              <div key={t.agentType} className="flex items-center gap-2 text-sm">
+                <span className="w-28 shrink-0 truncate text-text" title={t.agentType}>
+                  {t.agentType}
+                </span>
+                <span className="min-w-0 flex-1">
+                  <HBar fraction={t.tokens / max} color={dataColor(i)} />
+                </span>
+                <span className="w-12 shrink-0 text-right tabular-nums text-muted-foreground">
+                  {formatTokens(t.tokens)}
+                </span>
+                <span className="w-16 shrink-0 text-right tabular-nums text-muted-foreground">
+                  {t.unpriced ? 'unpriced' : formatCost(t.cost)}
+                </span>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+    </Panel>
+  )
+}
+
+/**
+ * Rate-limit walls. Claude Code records a rejection when one turns a request
+ * away, but never records remaining headroom - so this is an honest event log,
+ * not a quota gauge, and says so.
+ */
+function LimitsPanel({ view }: { view: DashboardView }): React.JSX.Element {
+  const l = view.limits
+  return (
+    <Panel title="Limit hits" subtitle="when your subscription actually said no">
+      {l.incidents === 0 ? (
+        <p className="py-2 text-sm text-muted-foreground">
+          No limit hits in range - you never ran into a wall.
+        </p>
+      ) : (
+        <>
+          <div className="mb-3 flex flex-wrap gap-x-5 gap-y-1 text-sm">
+            <span className="text-text">
+              {formatCount(l.incidents)}{' '}
+              <span className="text-muted-foreground">
+                incident{l.incidents === 1 ? '' : 's'}
+              </span>
+            </span>
+            <span className="text-text">
+              {formatCount(l.daysHit)} <span className="text-muted-foreground">days affected</span>
+            </span>
+            {Object.entries(l.byType).map(([type, n]) => (
+              <span key={type} className="text-text">
+                {formatCount(n)} <span className="text-muted-foreground">{type.replace(/_/g, ' ')}</span>
+              </span>
+            ))}
+          </div>
+          <ul className="flex flex-col gap-1 text-xs text-muted-foreground">
+            {dedupeIncidents(l.events).slice(0, 8).map((e) => (
+              <li key={`${e.ts}-${e.type ?? ''}`} className="flex flex-wrap gap-x-3">
+                <span className="tabular-nums text-text">{new Date(e.ts).toLocaleString()}</span>
+                <span>{(e.type ?? 'limit').replace(/_/g, ' ')}</span>
+                {e.resetsAt !== undefined && (
+                  <span>blocked {formatDuration(e.resetsAt * 1000 - e.ts)}</span>
+                )}
+                {e.project && <span className="truncate">{shortProject(e.project)}</span>}
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+      <p className="mt-3 text-xs text-muted-foreground">
+        Sessions record a rejection only when a limit actually turns a request away - remaining
+        quota is never written to the transcript, so there is no headroom gauge to show here. Use{' '}
+        <code className="rounded bg-accent-tint px-1">/usage</code> in Claude Code for live numbers.
+      </p>
+    </Panel>
+  )
+}
+
+/** One wall rejects every in-flight session at once; collapse them by reset time. */
+function dedupeIncidents(events: DashboardView['limits']['events']): DashboardView['limits']['events'] {
+  const seen = new Set<string>()
+  const out: DashboardView['limits']['events'] = []
+  for (const e of events) {
+    const key = `${e.type ?? ''}:${e.resetsAt ?? e.day}`
+    if (seen.has(key)) continue
+    seen.add(key)
+    out.push(e)
+  }
+  return out
+}
+
+function formatDuration(ms: number): string {
+  if (!Number.isFinite(ms) || ms <= 0) return 'briefly'
+  const mins = Math.round(ms / 60_000)
+  if (mins < 60) return `${mins}m`
+  const h = Math.floor(mins / 60)
+  const m = mins % 60
+  return m === 0 ? `${h}h` : `${h}h ${m}m`
 }
 
 function ModelBreakdown({ view }: { view: DashboardView }): React.JSX.Element {

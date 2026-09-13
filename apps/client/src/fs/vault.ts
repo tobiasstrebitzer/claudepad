@@ -8,6 +8,17 @@ import { extractSessionMeta } from '@/ingest'
 
 const SESSION_RE = /\.jsonl$/i
 
+// Claude Code stores delegated subagent runs beside the parent session, in
+// `<project>/<sessionId>/subagents/agent-<id>.jsonl`, each with a tiny
+// `agent-<id>.meta.json` sidecar naming the agent type. They hold real turns and
+// real token spend, so a scan that stops at the project's top level silently
+// undercounts every delegated workflow - which, once you work through subagents,
+// is most of the fan-out. They are listed separately from `sessions`: a
+// delegated run is not a session, and folding it into that list would inflate
+// the session count and the parallelism metric alike.
+const SUBAGENTS_DIR = 'subagents'
+const AGENT_RUN_RE = /^agent-.*\.jsonl$/i
+
 // Title/branch/cwd live in tiny records Claude Code appends at the END of each
 // session file (per turn), so a tail slice captures them without reading the
 // whole (potentially multi-MB) session. 64KB comfortably covers the trailing
@@ -29,6 +40,24 @@ export interface VaultSession {
   lastModified: number
 }
 
+/**
+ * A delegated subagent run: one `agent-*.jsonl` under a session's `subagents/`.
+ * Metadata (agent type, task description) lives in the sidecar, which is read
+ * lazily by the usage worker - the scan stays stat-only.
+ */
+export interface VaultAgentRun {
+  /** File stem, e.g. `agent-acdb9b4a0514233d2`. */
+  id: string
+  fileName: string
+  /** The session this run was delegated from. */
+  parentSessionId: string
+  handle: FileSystemFileHandle
+  /** The `.meta.json` sidecar, when present. */
+  metaHandle?: FileSystemFileHandle
+  size: number
+  lastModified: number
+}
+
 export interface VaultProject {
   /** the on-disk (encoded) directory name - stable, used as a key */
   id: string
@@ -38,6 +67,8 @@ export interface VaultProject {
   path: string
   handle: FileSystemDirectoryHandle
   sessions: VaultSession[]
+  /** Delegated subagent runs across every session in this project. */
+  agentRuns: VaultAgentRun[]
   /** newest session mtime, for sorting projects by recency */
   lastModified: number
 }
@@ -123,10 +154,54 @@ async function readSession(
   }
 }
 
+/**
+ * Delegated runs under one session's directory (`<sessionId>/subagents/`).
+ * Stat-only, like the session scan: the `.meta.json` sidecar handle is carried
+ * along but not opened here.
+ */
+async function readAgentRuns(
+  parentSessionId: string,
+  sessionDir: FileSystemDirectoryHandle
+): Promise<VaultAgentRun[]> {
+  let subagents: FileSystemDirectoryHandle
+  try {
+    subagents = await sessionDir.getDirectoryHandle(SUBAGENTS_DIR)
+  } catch {
+    return [] // no delegated runs for this session
+  }
+
+  const { files } = await listDir(subagents)
+  const metaByStem = new Map<string, FileSystemFileHandle>()
+  for (const f of files) {
+    if (f.name.endsWith('.meta.json')) metaByStem.set(f.name.slice(0, -'.meta.json'.length), f.handle)
+  }
+
+  const runs = await Promise.all(
+    files
+      .filter((f) => AGENT_RUN_RE.test(f.name))
+      .map(async (f): Promise<VaultAgentRun> => {
+        const file = await f.handle.getFile()
+        const id = f.name.replace(SESSION_RE, '') // strip .jsonl, keep the agent- stem
+        const meta = metaByStem.get(id)
+        return {
+          id,
+          fileName: f.name,
+          parentSessionId,
+          handle: f.handle,
+          ...(meta ? { metaHandle: meta } : {}),
+          size: file.size,
+          lastModified: file.lastModified
+        }
+      })
+  )
+  return runs
+}
+
 async function buildProject(
   id: string,
   handle: FileSystemDirectoryHandle,
-  files: FileEntry[]
+  files: FileEntry[],
+  dirs: DirEntry[] = []
 ): Promise<VaultProject | null> {
   const sessionFiles = files.filter((f) => SESSION_RE.test(f.name))
   if (sessionFiles.length === 0) return null
@@ -134,6 +209,11 @@ async function buildProject(
   const built = await Promise.all(sessionFiles.map(readSession))
   built.sort((a, b) => b.session.lastModified - a.session.lastModified)
   const sessions = built.map((b) => b.session)
+
+  // A session's delegated runs live in a sibling directory named for the
+  // session id. Scan every such directory, not just ones with a matching
+  // transcript, so runs whose parent .jsonl was pruned still count.
+  const agentRuns = (await Promise.all(dirs.map((d) => readAgentRuns(d.name, d.handle)))).flat()
 
   // The real project path comes from the session's cwd (authoritative over the
   // lossy encoded dir name); prefer the most recent session that recorded one.
@@ -144,6 +224,7 @@ async function buildProject(
     path,
     handle,
     sessions,
+    agentRuns,
     lastModified: sessions[0]?.lastModified ?? 0
   }
 }
@@ -165,14 +246,14 @@ export async function scanVault(
 
   const projects: VaultProject[] = []
   for (const d of childDirs) {
-    const { files } = await listDir(d.handle)
-    const project = await buildProject(d.name, d.handle, files)
+    const { files, dirs } = await listDir(d.handle)
+    const project = await buildProject(d.name, d.handle, files, dirs)
     if (project) projects.push(project)
   }
 
   // Fallback: the user picked a single project directory (sessions sit at the top).
   if (projects.length === 0 && !projectsDir) {
-    const self = await buildProject(projectsRoot.name, projectsRoot, top.files)
+    const self = await buildProject(projectsRoot.name, projectsRoot, top.files, top.dirs)
     if (self) projects.push(self)
   }
 

@@ -38,4 +38,44 @@ test.describe('usage insights', () => {
     await expect(page.getByRole('button', { name: 'All time' })).toBeVisible();
     await expect(page.getByRole('button', { name: /Global - all projects/ })).toBeVisible();
   });
+
+  test('surfaces how the work ran, not just how much', async ({ page }) => {
+    await page.goto('/#/usage');
+    await page.getByTestId('usage-file-input').setInputFiles(FIXTURE);
+
+    // Parallelism + delegation are first-class panels, with the "at once" card.
+    await expect(page.getByRole('heading', { name: 'Sessions in parallel' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Delegation' })).toBeVisible();
+    await expect(page.getByText('At once', { exact: true })).toBeVisible();
+
+    // A single dropped session has no subagent runs and no limit hits - both
+    // panels must say so plainly rather than render an empty chart.
+    await expect(page.getByText('No subagent runs in range.')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Limit hits' })).toBeVisible();
+    await expect(page.getByText(/No limit hits in range/)).toBeVisible();
+    // Honesty: the limits panel says why there is no headroom gauge.
+    await expect(page.getByText(/remaining\s+quota is never written/)).toBeVisible();
+  });
+
+  // Dev-gated (VITE_QUOTA_PANEL): the Playwright server runs `vite` in dev, so
+  // the panel is on here. A production bundle ships without it.
+  test('separates what the plan meters from what the API would charge', async ({ page }) => {
+    await page.goto('/#/usage');
+    await page.getByTestId('usage-file-input').setInputFiles(FIXTURE);
+
+    const quota = page.locator('section').filter({ hasText: 'what your subscription actually meters' });
+    await expect(quota.getByRole('heading', { name: 'Rate limits' })).toBeVisible();
+    await expect(quota.getByText('counted against your limits')).toBeVisible();
+    // The headline claim: cache reads are excluded from the meter.
+    await expect(quota.getByText(/is cache reads/)).toBeVisible();
+
+    // Budgets are editable and labelled as reverse-engineered, not official.
+    await expect(quota.getByText('5h budget')).toBeVisible();
+    await expect(quota.getByText(/Reverse-engineered from 5 weeks/)).toBeVisible();
+
+    // No quota log connected -> an import affordance, and no measured readings.
+    await expect(quota.getByRole('button', { name: 'Import' })).toBeVisible();
+    await expect(quota.getByText(/^measured \d+%$/)).toHaveCount(0);
+    await expect(quota.getByText(/readings/)).toHaveCount(0);
+  });
 });

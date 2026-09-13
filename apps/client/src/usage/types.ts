@@ -4,9 +4,29 @@
 // in the schema; these roll it up per session / project / vault. Pure data - no
 // I/O, no cost (cost is layered on in pricing.ts).
 
-import type { TokenUsage } from '@/schema'
+import type { RateLimitHit, TokenUsage } from '@/schema'
 
-export type { TokenUsage }
+export type { RateLimitHit, TokenUsage }
+
+/**
+ * What a delegated subagent run is, as the roll-up sees it. Claude Code stores
+ * these beside the parent session (`<project>/<sessionId>/subagents/agent-*.jsonl`)
+ * with a tiny `.meta.json` sidecar naming the agent type; they are real spend and
+ * real work, so they must be counted - but never as top-level *sessions*, or the
+ * session count and the parallelism metric both stop meaning anything.
+ */
+export interface AgentRunInfo {
+  /** File stem, e.g. `agent-acdb9b4a0514233d2`. */
+  agentId: string
+  /** The main session this run was delegated from. */
+  parentSessionId: string
+  /** Declared subagent type (`Explore`, `fable`, `general-purpose`, ...). */
+  agentType?: string
+  /** Short human description of the delegated task, when the sidecar has one. */
+  description?: string
+  /** 1 = spawned by the main session; 2+ = spawned by another subagent. */
+  spawnDepth?: number
+}
 
 /** Per-model token totals within a session/project. */
 export type ByModel = Record<string, TokenUsage>
@@ -43,7 +63,12 @@ export interface ProjectUsage {
   project: string
   totals: TokenUsage
   byModel: ByModel
+  /** Top-level sessions only - delegated runs are counted in `agentRuns`. */
   sessions: number
+  /** Delegated subagent runs that contributed usage in range. */
+  agentRuns: number
+  /** The delegated slice of `totals` (subset, not an addition). */
+  delegated: TokenUsage
   firstAt?: string
   lastAt?: string
   activeMs: number
@@ -65,8 +90,29 @@ export interface UsageRecord {
   day: string
   /** Local hour 0..23 (for the weekday x hour heatmap). */
   hour: number
+  /**
+   * Epoch ms of the turn. `day`/`hour` are the pre-bucketed local-calendar keys
+   * (kept so roll-up stays a cheap merge); `ts` is the raw instant, needed by
+   * anything sub-hourly - concurrency slots, 5h limit windows.
+   */
+  ts: number
   model: string
+  /**
+   * Set iff this turn ran inside a delegated subagent run; the value is the
+   * agent type. Presence - not the value - is what marks a turn as delegated.
+   */
+  agentType?: string
   usage: TokenUsage
+}
+
+/** A rate-limit rejection, placed on the timeline. */
+export interface LimitEvent extends RateLimitHit {
+  /** Epoch ms the rejection was recorded. */
+  ts: number
+  /** Local-calendar day `YYYY-MM-DD`. */
+  day: string
+  /** Project (`cwd`) the rejection happened in. */
+  project?: string
 }
 
 /**
@@ -81,6 +127,10 @@ export interface FileAggregate {
   usage: SessionUsage
   cwd?: string
   records: UsageRecord[]
+  /** Present iff this file is a delegated subagent run, not a top-level session. */
+  agent?: AgentRunInfo
+  /** Rate-limit rejections recorded in this file (usually none). */
+  limits?: LimitEvent[]
 }
 
 export interface VaultUsage {
@@ -96,6 +146,43 @@ export interface VaultUsage {
   byWeekdayHour: number[][]
   /** Per-model totals across the whole vault. */
   byModel: ByModel
+  /**
+   * Per-subagent-type totals. Covers delegated turns only, so its sum is
+   * `delegated`, not `global.totals`.
+   */
+  byAgentType: Record<string, UsageBucket>
+  /** The delegated (subagent) slice of `global.totals` - a subset, not an addition. */
+  delegated: TokenUsage
+  /** Delegated subagent runs that contributed usage in range. */
+  agentRuns: number
+  /** Rate-limit rejections in range, chronological. */
+  limits: LimitEvent[]
+  /** How many top-level sessions were in flight at once, over time. */
+  concurrency: ConcurrencyStats
   /** ISO timestamp this roll-up was computed (stamped by the caller). */
   computedAt?: string
+}
+
+/**
+ * Time-weighted parallelism: how many top-level sessions were actually running
+ * at the same time. Computed by slicing the range into fixed slots and counting
+ * distinct sessions with a turn in (or spanning) each slot, so it measures real
+ * overlap rather than "sessions that share a calendar day".
+ */
+export interface ConcurrencyStats {
+  /** Slot width in ms (the resolution every figure below is quantized to). */
+  slotMs: number
+  /** Slots with at least one session running - i.e. time actually spent working. */
+  busySlots: number
+  /** Mean concurrent sessions across busy slots (1 = always strictly serial). */
+  mean: number
+  /** Highest simultaneous session count observed. */
+  max: number
+  /**
+   * Busy-slot counts by concurrency level: `histogram[n]` slots had exactly `n`
+   * sessions running. Index 0 is unused; the last index is a `n+` bucket.
+   */
+  histogram: number[]
+  /** Peak simultaneous *delegated* runs (agent fan-out), same slotting. */
+  maxAgents: number
 }

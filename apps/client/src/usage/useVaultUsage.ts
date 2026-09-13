@@ -12,7 +12,7 @@ import type { VaultProject } from '@/fs/vault'
 import { aggregateFile, rollupVault } from './aggregate'
 import { isFresh, loadCachedFile, storeCachedFile } from './cache'
 import type { UsageRequest, UsageResponse } from './protocol'
-import type { FileAggregate, VaultUsage } from './types'
+import type { AgentRunInfo, FileAggregate, VaultUsage } from './types'
 
 export interface UsageComputeState {
   status: 'idle' | 'computing' | 'ready' | 'error'
@@ -29,10 +29,38 @@ interface FileEntry {
   handle: FileSystemFileHandle
   size: number
   lastModified: number
+  agent?: AgentRunInfo
+  metaHandle?: FileSystemFileHandle
 }
 
 const supportsWorker = typeof Worker !== 'undefined'
 
+/**
+ * Agent identity from the run's `.meta.json` sidecar. Mirrors the worker's copy
+ * for the no-Worker degraded path; best-effort, never throws.
+ */
+async function readAgentInfo(f: FileEntry): Promise<AgentRunInfo | undefined> {
+  if (!f.agent) return undefined
+  if (!f.metaHandle) return f.agent
+  try {
+    const raw: unknown = JSON.parse(await (await f.metaHandle.getFile()).text())
+    if (typeof raw !== 'object' || raw === null) return f.agent
+    const m = raw as Record<string, unknown>
+    const info: AgentRunInfo = { ...f.agent }
+    if (typeof m['agentType'] === 'string') info.agentType = m['agentType']
+    if (typeof m['description'] === 'string') info.description = m['description']
+    if (typeof m['spawnDepth'] === 'number') info.spawnDepth = m['spawnDepth']
+    return info
+  } catch {
+    return f.agent
+  }
+}
+
+/**
+ * Every file that carries usage: top-level session transcripts *and* the
+ * delegated subagent runs nested under them. Runs are tagged with `agent` so the
+ * roll-up can count their tokens without counting them as sessions.
+ */
 function collectFiles(projects: VaultProject[]): FileEntry[] {
   const out: FileEntry[] = []
   for (const p of projects) {
@@ -42,6 +70,16 @@ function collectFiles(projects: VaultProject[]): FileEntry[] {
         handle: s.handle,
         size: s.size,
         lastModified: s.lastModified
+      })
+    }
+    for (const a of p.agentRuns) {
+      out.push({
+        fileId: `${p.id}/${a.parentSessionId}/subagents/${a.fileName}`,
+        handle: a.handle,
+        size: a.size,
+        lastModified: a.lastModified,
+        agent: { agentId: a.id, parentSessionId: a.parentSessionId },
+        ...(a.metaHandle ? { metaHandle: a.metaHandle } : {})
       })
     }
   }
@@ -120,7 +158,7 @@ export function useVaultUsage(projects: VaultProject[], enabled: boolean): Usage
           try {
             const file = await f.handle.getFile()
             const { session } = await parseSession(file, { preserveRaw: false })
-            const aggregate = aggregateFile(session)
+            const aggregate = aggregateFile(session, await readAgentInfo(f))
             aggregates.set(f.fileId, aggregate)
             void storeCachedFile(f.fileId, { size: f.size, lastModified: f.lastModified, aggregate })
           } catch {

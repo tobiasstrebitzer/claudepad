@@ -122,3 +122,73 @@ describe('PRD-13 FR-1: lifted TokenUsage', () => {
     expect(session.events.every((e) => e.usage === undefined)).toBe(true);
   });
 });
+
+describe('PRD-13: rate-limit rejections are lifted from quotaLimits', () => {
+  const REJECTED = JSON.stringify({
+    type: 'assistant',
+    uuid: 'u1',
+    timestamp: '2026-09-02T04:18:46.356Z',
+    message: {
+      id: 'm1',
+      model: '<synthetic>',
+      role: 'assistant',
+      content: [{ type: 'text', text: "You've hit your session limit · resets 12:30pm" }],
+      usage: { input_tokens: 0, output_tokens: 0, cache_creation_input_tokens: 0, cache_read_input_tokens: 0 },
+    },
+    quotaLimits: {
+      status: 'rejected',
+      resetsAt: 1788323400,
+      unifiedRateLimitFallbackAvailable: false,
+      rateLimitType: 'five_hour',
+    },
+    error: 'rate_limit',
+    isApiErrorMessage: true,
+    apiErrorStatus: 429,
+  });
+
+  it('lifts type, reset time and http status', async () => {
+    const { session } = await parseSession(REJECTED);
+    const hit = session.events.find((e) => e.limit)?.limit;
+    expect(hit).toBeDefined();
+    expect(hit!.type).toBe('five_hour');
+    expect(hit!.status).toBe('rejected');
+    expect(hit!.resetsAt).toBe(1788323400);
+    expect(hit!.httpStatus).toBe(429);
+    expect(hit!.fallbackAvailable).toBe(false);
+  });
+
+  it('adds no tokens - the rejected request never ran', async () => {
+    const { session } = await parseSession(REJECTED);
+    expect(sumEvents(session.events, (u) => u.input + u.output)).toBe(0);
+  });
+
+  it('ignores a non-rejection quotaLimits block', async () => {
+    const allowed = JSON.stringify({
+      type: 'assistant',
+      uuid: 'u2',
+      timestamp: '2026-09-02T04:00:00.000Z',
+      message: { id: 'm2', model: 'claude-opus-5', role: 'assistant', content: [] },
+      quotaLimits: { status: 'allowed', rateLimitType: 'five_hour' },
+    });
+    const { session } = await parseSession(allowed);
+    expect(session.events.some((e) => e.limit)).toBe(false);
+  });
+
+  it('leaves ordinary turns untouched', async () => {
+    const ok = JSON.stringify({
+      type: 'assistant',
+      uuid: 'u3',
+      timestamp: '2026-09-02T04:00:00.000Z',
+      message: {
+        id: 'm3',
+        model: 'claude-opus-5',
+        role: 'assistant',
+        content: [{ type: 'text', text: 'hi' }],
+        usage: { input_tokens: 5, output_tokens: 7, cache_creation_input_tokens: 0, cache_read_input_tokens: 0 },
+      },
+    });
+    const { session } = await parseSession(ok);
+    expect(session.events.some((e) => e.limit)).toBe(false);
+    expect(sumEvents(session.events, (u) => u.output)).toBe(7);
+  });
+});
